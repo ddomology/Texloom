@@ -1,8 +1,10 @@
 # PR 02 — Typed operations and references
 
-Status: implemented **validation and preparation contract**. Execution, legacy
-relation lowering and runtime numeric/domain checks belong to PR 03. This is an
-independently authored contract; no Blender, PGF or Manim implementation is copied.
+This document records the PR 02 **validation and preparation contract**, which
+remains `texloom-operations/1`. PR 03 now supplies executable lowering, numeric
+checks and the common runtime plan; see [operation runtime](operation-runtime.md)
+for current behavior and rendering instructions. This is an independently
+authored contract; no Blender, PGF or Manim implementation is copied.
 
 ## Entry points and versioning
 
@@ -100,13 +102,15 @@ the graph does not run that producer twice, or run it at all.
 | `offsetPoint@1` | `origin: vec2(point)`, `direction: vec2(vector)` required; `distance: scalar = 1` | `position: vec2(point)` | `space` |
 | `transformPoint@1` | `point: vec2(point)`, `transform: transform2d` required | `position: vec2(point)` | `from`, `to` |
 
-PR 03 must implement and test the numeric behavior: `sampleCurve` uses normalized
+PR 03 implements the numeric behavior: `sampleCurve` uses normalized
 path parameter progress, returns a unit tangent in the declared curve space, and
 reports undefined tangent/degenerate geometry explicitly. `offsetPoint` computes
 `origin + distance * direction` without hidden normalization. `transformPoint`
 uses the declared affine mapping. Parameter bounds, positive tolerance, numeric
-overflow and any computed singular inverse must be enforced when execution is
-introduced. PR 02 proves socket compatibility, not these numeric results.
+overflow and any computed singular inverse are enforced during execution.
+Preparation proves socket compatibility; sampling performs the numeric checks.
+PR 03 also adds `scalarValue`, `pointValue`, `vectorValue`, `pathValue` and
+`transformValue`; their execution is documented in the runtime guide.
 
 ## Binding outputs to scene properties
 
@@ -130,12 +134,12 @@ child's parent space is the parent's local space. Scale tuple values are
 dimensionless axis factors; the local-space annotation identifies their axes.
 
 The semantic `position/start/end` sinks explicitly consume scene points. PR 03
-must inverse-transform those values to stored target-local coordinates before
+inverse-transforms those values to stored target-local coordinates before
 rendering, including the target's own transform. Concrete scalar properties
 such as `x` remain node-local. Known zero static scales or continuous scale tracks
 crossing zero in the inverse chain already fail PR 02 preparation. Discrete step
 changes between nonzero scales remain legal. Graph-produced transforms need the
-additional runtime invertibility and dependency checks in PR 03.
+additional runtime invertibility and dependency checks implemented in PR 03.
 
 Writer ownership includes both graph bindings and existing tracks/relations.
 Aggregate aliases are expanded, and whole-property writes overlap descendants:
@@ -145,10 +149,11 @@ bindings of the same output still count as two writers when their target slots
 overlap. Style writers can coexist with disjoint geometric writers. Authored
 initial values are inputs, not additional per-frame writers.
 
-Whole matrix bindings are only a preparation contract in this release; the
-current renderer's translate/rotate/scale representation is not a promise to
-render arbitrary affine graph outputs. PR 03 must establish matrix lowering and
-reject unsupported forms explicitly rather than discard shear or reflection.
+Whole matrix bindings lower to the current renderer's translate/rotate/scale
+representation, including reflections. The runtime checks the reconstructed
+matrix and rejects unsupported shear explicitly. General affine value transport
+and forward point mapping do not imply general affine scene-node storage. See
+the runtime guide for the numeric representability check.
 
 ## Diagnostics
 
@@ -184,10 +189,12 @@ The plain CLI outputs diagnostic JSON and exits 0/1 for success/error. Preparati
 mode outputs the frozen-plan serialization or diagnostic JSON. Missing files,
 malformed JSON and missing graphs fail explicitly; invalid command usage exits 2.
 
-`evaluate`, `createEvaluator` and `prepareScene` reject any nonempty operation
-graph with `OPERATION_EXECUTION_UNSUPPORTED`. This fixture is a JSON contract
-demo, not a new rendered animation. Existing graph-free demos still render, and
-the PR 01 historical bundles/images remain unchanged.
+`evaluate`, `createEvaluator` and `prepareScene` now execute supported operation
+graphs. This fixture is also a renderable JSON graph example; its literal inputs
+produce a static sampled curve rather than a time-varying animation. The
+[runtime guide](operation-runtime.md#run-the-json-graph-through-real-renderers)
+gives SVG/player commands. Existing graph-free demos continue through the same
+public APIs, and the PR 01 historical bundles/images remain unchanged.
 
 ## Evidence and handoff
 
@@ -204,8 +211,9 @@ This is a reference-only relationship, with the reuse-review status already
 recorded in `docs/ports/v03-baseline.json`; no execution or equivalence to Blender
 is established here. The active PR 01 PortSpec and its hashes are unchanged.
 
-PR 03 can add a lowerer from legacy relations to these contracts, executable
-built-ins, a unified dependency order including parent transforms and binding
-conversions, and domain checks. It must retain public API compatibility and pass
-the frozen PR 01 baseline. Caches, a plugin executor, expression parsing and
-future geometry types remain separately planned work.
+PR 03 adds named legacy kernels/adapters, executable built-ins, a unified
+dependency order including parent transforms and binding conversions, and
+domain checks. Public API compatibility and the frozen PR 01 baseline remain
+required gates. Caches, a plugin executor, expression parsing and future geometry
+types remain separately planned work; see the runtime guide for the current
+handoff.

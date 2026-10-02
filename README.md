@@ -176,22 +176,35 @@ one-off alternative; treat its returned shared resources as immutable.
 
 ## Verification
 
-### Typed operation preparation (PR 02)
+### Executable typed operations (PR 03)
 
 An optional versioned `operationGraph` on Bundle 0.3 declares typed sockets,
-shared outputs, explicit coordinate spaces and property bindings. The immutable
-registry and `prepareOperationGraph` check defaults, references, cycles and
-writer conflicts against existing tracks/relations. See the
-[operation contract](docs/operations-contract.md) for the API and PR 03 handoff.
+shared outputs, explicit coordinate spaces and property bindings. The common
+runtime now executes these graphs alongside tracks and legacy relations through
+a compiled dependency plan. Property reads/writes and transform ancestors
+determine ordering; every sample receives fresh mutable frame/output state.
+The existing `evaluate`, `createEvaluator` and `prepareScene` APIs are unchanged.
+
+`sampleCurve`, `offsetPoint` and `transformPoint` execute typed computations;
+five value producers support scalar, point, vector, path and transform bindings.
+Scene-space position sinks convert to target-local coordinates at sample time.
+Whole transform bindings support representable translation/rotation/scale,
+including reflections; unsupported shear fails explicitly. See the
+[operation runtime](docs/operation-runtime.md) for execution, limits and handoff,
+and the [PR 02 contract](docs/operations-contract.md) for JSON/socket details.
 
 ```sh
 node tools/validate-bundle.mjs tests/fixtures/operations/sample-curve.json --prepare-operations
+npm run snapshot -- tests/fixtures/operations/sample-curve.json build/operations/sample.svg 1
+node tools/build-player.mjs tests/fixtures/operations/sample-curve.json build/operations/player.html
 ```
 
 The sample shares one curve operation's position and tangent across a dot and
-direction line. This release validates and prepares the graph; execution is the
-next step. Existing evaluators explicitly reject nonempty operation graphs so a
-prepared graph cannot silently render as a static scene.
+direction line and now renders through the normal player and SVG/Canvas paths.
+Its literal inputs are static: graph time sockets and expression inputs belong
+to PR 04. Existing tracks remain available for motion and can drive legacy
+consumers of graph-written sources. Existing TeX examples remain unchanged;
+there is no executable plugin loader or temporal output cache.
 
 ### Historical rendering and compiler regression
 

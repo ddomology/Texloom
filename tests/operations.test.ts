@@ -338,13 +338,20 @@ test('bundle validation includes graph errors while empty graphs preserve legacy
   assert.deepEqual(prepareScene(empty).sample(1), createEvaluator(legacy)(1));
 });
 
-test('every runtime entry refuses nonempty graphs instead of silently dropping bindings', () => {
+test('every runtime entry executes the authored graph and preserves shared output bindings', () => {
   const b = bundle();
-  for (const invoke of [() => evaluate(b, 0), () => createEvaluator(b), () => prepareScene(b)]) {
-    assert.throws(invoke, /OPERATION_EXECUTION_UNSUPPORTED/);
+  for (const invoke of [() => evaluate(b, 0), () => createEvaluator(b)(0), () => prepareScene(b).sample(0)]) {
+    const frame = invoke();
+    const dot = frame.nodes.find(n => n.id === 'dot');
+    const tangent = frame.nodes.find(n => n.id === 'tangent');
+    assert.ok(dot?.kind === 'point' && tangent?.kind === 'line');
+    assert.deepEqual([dot.x, dot.y], [71.25, 17.5]);
+    assert.deepEqual([tangent.x1, tangent.y1, tangent.x2, tangent.y2], [71.25, 17.5, 96.25, 17.5]);
   }
   b.operationGraph!.bindings = [];
-  assert.throws(() => createEvaluator(b), /OPERATION_EXECUTION_UNSUPPORTED/);
+  assert.doesNotThrow(() => createEvaluator(b)(0));
+  b.operationGraph!.operations[0].operator = 'unknownExecutable';
+  assert.throws(() => createEvaluator(b), /OPERATION_UNKNOWN_OPERATOR/);
 });
 
 test('standalone graph APIs enforce the same bundle version boundary as validateBundle', () => {
