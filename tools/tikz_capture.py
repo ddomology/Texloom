@@ -91,6 +91,74 @@ CAPTURE_PREAMBLE = r'''
 '''
 
 
+# Appended only by the explicit texloom-anchors capture profile. Keep the
+# historical preamble above byte-identical for existing scene provenance.
+ANCHOR_CAPTURE_PREAMBLE = r'''
+\makeatletter
+\def\TLAalignment{natural}
+\tikzset{texloom measured alignment/.store in=\TLAalignment,
+  align/left/.append style={texloom measured alignment=left},
+  align/flush left/.append style={texloom measured alignment=flush left},
+  align/right/.append style={texloom measured alignment=right},
+  align/flush right/.append style={texloom measured alignment=flush right},
+  align/center/.append style={texloom measured alignment=center},
+  align/flush center/.append style={texloom measured alignment=flush center},
+  align/justify/.append style={texloom measured alignment=justify}}
+\def\TLAmeasure{%
+  \xdef\TLAwidth{\the\wd\pgfnodeparttextbox}%
+  \xdef\TLAheight{\the\ht\pgfnodeparttextbox}%
+  \xdef\TLAdepth{\the\dp\pgfnodeparttextbox}%
+  \xdef\TLAsavedalignment{\TLAalignment}%
+  \begingroup
+    \pgfmathsetlength\pgf@x{\pgfkeysvalueof{/pgf/inner xsep}}\xdef\TLAinnerx{\the\pgf@x}%
+    \pgfmathsetlength\pgf@x{\pgfkeysvalueof{/pgf/inner ysep}}\xdef\TLAinnery{\the\pgf@x}%
+    \pgfmathsetlength\pgf@x{\pgfkeysvalueof{/pgf/outer xsep}}\xdef\TLAouterx{\the\pgf@x}%
+    \pgfmathsetlength\pgf@x{\pgfkeysvalueof{/pgf/outer ysep}}\xdef\TLAoutery{\the\pgf@x}%
+  \endgroup}
+\let\TLAoriginalmultipartnode\pgfmultipartnode
+\def\pgfmultipartnode#1#2#3#4{%
+  \edef\TLAtestedname{#3}\def\TLAtargetname{TLcaptured}%
+  \ifx\TLAtestedname\TLAtargetname
+    \let\TLAoriginalouterhook\pgf@outer@adjust@hook
+    \def\pgf@outer@adjust@hook{\TLAoriginalouterhook\TLAmeasure}%
+    \TLAoriginalmultipartnode{#1}{#2}{#3}{#4}%
+    \let\pgf@outer@adjust@hook\TLAoriginalouterhook
+  \else
+    \TLAoriginalmultipartnode{#1}{#2}{#3}{#4}%
+  \fi}
+% loomnode captures in its top-level picture coordinate system. Apply PGF's
+% saved node transform to each logical text corner, including transform shape.
+\def\TLAtextcorner#1#2#3{%
+  \TLMsavepoint{logical-corner-#1}{%
+    \csname pgf@sh@ma@\TLMcapturedname\endcsname
+    \csname pgf@sh@np@\TLMcapturedname\endcsname
+    \pgf@sh@reanchor{\TLMcapturedshape}{text}%
+    \advance\pgf@x by #2\relax
+    \advance\pgf@y by #3\relax
+    {\pgfsettransform{\csname pgf@sh@nt@\TLMcapturedname\endcsname}\pgf@pos@transform@glob}}}
+\def\TLMCaptureNode#1{%
+  \immediate\openout\TLMcapturefile=asset.anchors
+  \def\TLMcapturedname{#1}%
+  \edef\TLMcapturedshape{\csname pgf@sh@ns@#1\endcsname}%
+  \immediate\write\TLMcapturefile{shape:\TLMcapturedshape}%
+  \@for\TLManchorname:=center,north,south,east,west,north east,north west,south east,south west,base,base west,base east,mid\do{%
+    \ifcsname pgf@anchor@\TLMcapturedshape @\TLManchorname\endcsname
+      \TLMsavepoint{\TLManchorname}{\pgfpointanchor{#1}{\TLManchorname}}%
+    \else\immediate\write\TLMcapturefile{missing:\TLManchorname}\fi}%
+  \immediate\write\TLMcapturefile{text-metrics:\TLAwidth,\TLAheight,\TLAdepth}%
+  \immediate\write\TLMcapturefile{inner-sep:\TLAinnerx,\TLAinnery}%
+  \immediate\write\TLMcapturefile{outer-sep:\TLAouterx,\TLAoutery}%
+  \immediate\write\TLMcapturefile{alignment:\TLAsavedalignment}%
+  \TLAtextcorner{0}{0pt}{\TLAheight}%
+  \TLAtextcorner{1}{\TLAwidth}{\TLAheight}%
+  \TLAtextcorner{2}{\TLAwidth}{-\TLAdepth}%
+  \TLAtextcorner{3}{0pt}{-\TLAdepth}%
+  \TLMCaptureBounds
+  \immediate\closeout\TLMcapturefile}
+\makeatother
+'''
+
+
 def read_soft_path(path):
     """Decode executed PGF tokens, not TikZ source, into editable contour data."""
     lines = path.read_text(encoding='utf8').splitlines()
@@ -179,10 +247,16 @@ def read_capture(path):
             result['shape'] = value.strip()
         elif key == 'missing':
             result['missing'].append(value.strip())
+        elif key == 'alignment':
+            result['alignment'] = value.strip()
         else:
             values = [round(float(v.strip().removesuffix('pt')) * PT_TO_BP, 8) for v in value.split(',')]
             if key == 'bounds':
                 result['bounds'] = values
+            elif key in ('text-metrics', 'inner-sep', 'outer-sep'):
+                result[key] = values
+            elif key.startswith('logical-corner-'):
+                result.setdefault('logicalCorners', []).append(values)
             else:
                 result['anchors'][key] = values
     if 'bounds' not in result:

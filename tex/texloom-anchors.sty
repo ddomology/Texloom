@@ -1,0 +1,24 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-anchors}[2026/10/02 Texloom measured anchor declarations]
+\RequirePackage{texloom-expressions}
+% Loading this package explicitly opts resource compilation into logical PGF
+% text measurements. Older scenes keep the original capture preamble exactly.
+\immediate\write\TLrecords{\string{"type":"anchor-profile","version":1\string}}
+\newcount\TLAserial
+\TLAserial=0
+\def\TLAstart#1{%
+  \global\advance\TLAserial by 1
+  \edef\TLEbase{\jobname.tl-anchor-\the\TLAserial}%
+  \immediate\write\TLrecords{\string{"type":"anchor-file","kind":"#1","file":"\TLEbase"\string}}}
+\NewDocumentCommand\loomanchor{O{} m m +v}{%
+  \TLAstart{anchor}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEmetadata{source}{#3}%
+  \TLEwrite{inputs}{#4}}
+\NewDocumentCommand\loomplace{O{} m +v}{%
+  \TLAstart{place}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

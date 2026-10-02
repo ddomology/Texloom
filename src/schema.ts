@@ -18,7 +18,9 @@ export interface Style {
 export interface Transform { translate?: [number, number]; rotate?: number; scale?: [number, number] }
 export interface Clip { d: string; fillRule?: 'nonzero' | 'evenodd' }
 export interface NodeBase { id: string; parent?: string; transform?: Transform; style?: Style; clip?: Clip; visible?: boolean; source?: Record<string, unknown> }
-export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]> }
+export interface MeasuredAnchorMetrics {kind:'pgf';shape:string;logicalTextBox:[number,number,number,number];
+  textMetrics:{width:number;height:number;depth:number};innerSep:[number,number];outerSep:[number,number];alignment:string;revision:string}
+export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]>;anchorMetrics?:MeasuredAnchorMetrics }
 export interface ResolvedPath { start: [number, number]; c1: [number, number]; c2: [number, number]; end: [number, number] }
 export interface PathNode extends NodeBase { kind: 'path'; d: string; arrowStart?: boolean; arrowEnd?: boolean; arrowSize?: number; resolvedPath?: ResolvedPath;
   geometry?: PathGeometry; reveal?: number; revealMode?: 'parameter'|'length'; pathTolerance?: number }
@@ -56,7 +58,7 @@ export interface Bundle {
   fields?: FieldProgram;
   deformations?: DeformationProgram;
 }
-export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation }
+export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation }
 
 type Obj = Record<string, any>;
 const object = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -233,6 +235,22 @@ export function validateBundle(input: unknown): Diagnostic[] {
     if (n.kind === 'group' && n.anchors !== undefined) {
       if (!object(n.anchors)) error('ANCHORS', 'Expected an anchor coordinate dictionary.', `${path}.anchors`);
       else for (const [name, point] of Object.entries(n.anchors)) { string(name, `${path}.anchors`); tuple(point, 2, `${path}.anchors.${name}`); }
+    }
+    if(n.anchorMetrics!==undefined) {
+      const a=n.anchorMetrics,at=path+'.anchorMetrics';
+      if(n.kind!=='group'||!object(a))error('ANCHOR_METRICS','Anchor metrics require a group and a PGF measurement object.',at);
+      else {
+        for(const key of Object.keys(a))if(!['kind','shape','logicalTextBox','textMetrics','innerSep','outerSep','alignment','revision'].includes(key))error('ANCHOR_METRICS','Unknown measurement property.',at+'.'+key);
+        if(a.kind!=='pgf')error('ANCHOR_METRICS','Measurement kind must be pgf.',at+'.kind');
+        for(const key of ['shape','alignment','revision'])string(a[key],at+'.'+key);
+        tuple(a.logicalTextBox,4,at+'.logicalTextBox');tuple(a.innerSep,2,at+'.innerSep');tuple(a.outerSep,2,at+'.outerSep');
+        if(!object(a.textMetrics))error('ANCHOR_METRICS','Expected text width, height and depth.',at+'.textMetrics');
+        else {
+          for(const key of Object.keys(a.textMetrics))if(!['width','height','depth'].includes(key))error('ANCHOR_METRICS','Unknown text metric.',at+'.textMetrics.'+key);
+          for(const key of ['width','height','depth'])number(a.textMetrics[key],at+'.textMetrics.'+key);
+        }
+        if(!n.anchors)error('ANCHOR_METRICS','Measured metadata requires the measured anchor dictionary.',at);
+      }
     }
     if (n.kind === 'path') {
       string(n.d, `${path}.d`);
