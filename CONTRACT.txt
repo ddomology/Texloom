@@ -1,5 +1,8 @@
 Texloom v0.1 shared implementation contract (2026-10-02)
 
+Historical planning note. Current contracts are src/schema.ts,
+docs/ir-contract.md and docs/runtime-contract.md; execution plan is docs/ROADMAP.md.
+
 Root: work/Texloom. New local project; do not modify Lemniro or Chalkspace.
 TypeScript core and evaluator; Python compiler/export tools; real TeX execution.
 The canonical bundle is JSON objects, never SVG strings as the scene representation.

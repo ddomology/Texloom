@@ -9,7 +9,9 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./svg": "./src/render-svg.ts"
+    "./svg": "./src/render-svg.ts",
+    "./canvas": "./src/render-canvas.ts",
+    "./chalkspace": "./adapters/chalkspace-canvas.ts"
   },
   "scripts": {
     "check": "tsc --noEmit",

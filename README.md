@@ -1,4 +1,4 @@
-# Texloom 0.2
+# Texloom
 
 TeX-authored mathematical scenes → a portable object bundle → SVG, a seekable
 web player, and video. The renderer receives evaluated objects; it does not
@@ -11,6 +11,19 @@ time evaluator, static SVG output, an offline HTML player, and MP4 export.
 Version 0.2 adds real PGF-measured node anchors, named connections, moving path
 labels and nested transformed groups. v0.1 bundles and source commands remain
 supported.
+
+## Development direction: common runtime, many consumers
+
+The [research-backed roadmap](docs/ROADMAP.md) defines the path from current 2D
+scenes toward live geometry, composed animations, mathematical objects, 3D,
+fields and optional Blender/solver producers. The first foundation is now
+implemented: prepared scenes, capability profiles, host clip timing, native
+Canvas2D rendering, and a Chalkspace board placement adapter.
+
+Both SVG and Canvas consume the same `EvaluatedFrame`. See the
+[runtime contract and dual-consumer demo instructions](docs/runtime-contract.md).
+Full lecture scheduler, chalk strokes, eraser and export-cache integration remain
+explicit follow-up gates; 3D and general simulation operations are planned.
 
 ## Quick start
 

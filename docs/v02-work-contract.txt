@@ -1,5 +1,8 @@
 Texloom v0.2 implementation agreement
 
+Historical implementation assignment. Use src/schema.ts and docs/ir-contract.md
+for current semantics, docs/runtime-contract.md and docs/ROADMAP.md for new work.
+
 Maintain v0.1 reading/playing/compilation. New frontend opt-in package texloom-tikz.
 Core Bundle.version accepts '0.1'|'0.2'. Version 0.2 adds anchor-aware geometry.
 
