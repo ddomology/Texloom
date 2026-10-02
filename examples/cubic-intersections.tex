@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-intersections}
+\usepackage{texloom-geometry}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={When two curves meet}]
+\loomnode[heading] (heading) at (480,48) {When two curves meet};
+\loomnode[small] (intro) at (480,82) {Two deforming cubics. Every contact is recomputed from the geometry.};
+\loomnode[formula] (formula) at (480,126) {$A(u)=\bigl(x(u),\,g(u)+s\,f(u)\bigr),\qquad B(u)=\bigl(x(u),\,g(u)+h\bigr)$};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,163)--(905,163) (55,488)--(905,488);
+};
+\loomnode[label] (curve-title) at (480,187) {CUBIC / CUBIC / BOUNDED SOLVER / EXPLICIT BRANCH ORDER};
+% Both paths have x(u)=120+720u. Their difference before deformation is
+% f(u)=1000(u-.2)(u-.5)(u-.8); neither curve is a straight line.
+\loomgeometry[draw=mint,line width=2.5bp] (curve-a)
+  {(120,240) .. controls (360,473.33333333) and (600,86.66666667) .. (840,400)};
+\loomgeometry[draw=coral,line width=2.1bp] (curve-b)
+  {(120,320) .. controls (360,333.33333333) and (600,226.66666667) .. (840,320)};
+\loomparameter[unit=bp,min=-28,max=28]{height}{0}
+\loomparameter[min=0.6,max=1.4]{bend}{1}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+% Control deformation preserves each cubic exactly and changes both current
+% shapes. Intersections consume those frame geometries through the shared plan.
+\loomdeform[mode=controlDeform]{bend-a}{curve-a}{curve-a}{
+  vec2(dot(position,vec2(1,0)),320bp+(bend+0.12*sin(pi*1rad*time/6s+phase))*(dot(position,vec2(0,1))-320bp))
+}
+\loomdeform[mode=controlDeform]{bend-b}{curve-b}{curve-b}{
+  vec2(dot(position,vec2(1,0)),320bp+(bend+0.12*sin(pi*1rad*time/6s+phase))*(dot(position,vec2(0,1))-320bp)+height+17bp*sin(pi*1rad*time/6s+phase))
+}
+\loomintersections[solver=curves,position-tolerance=0.000001,parameter-tolerance=0.000000001,max-work=65536,max-depth=40]{contacts}{{"a":"curve-a","b":"curve-b"}}
+\TLNode{point-0}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-0-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_0$}}
+\TLNode{label-0}{tex}{"resourceId":"label-0-art","x":70,"y":450,"style":{"fill":"#F3CB84"}}
+\loomintersectionpoint[along=b,index=0,missing=hide]{point-0}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=0,missing=hide]{label-0}{{"intersections":"contacts"}}
+\TLNode{point-1}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#E5F1EF","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-1-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_1$}}
+\TLNode{label-1}{tex}{"resourceId":"label-1-art","x":70,"y":450,"style":{"fill":"#E5F1EF"}}
+\loomintersectionpoint[along=b,index=1,missing=hide]{point-1}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=1,missing=hide]{label-1}{{"intersections":"contacts"}}
+\TLNode{point-2}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#EE8D82","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-2-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_2$}}
+\TLNode{label-2}{tex}{"resourceId":"label-2-art","x":70,"y":450,"style":{"fill":"#EE8D82"}}
+\loomintersectionpoint[along=b,index=2,missing=hide]{point-2}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=2,missing=hide]{label-2}{{"intersections":"contacts"}}
+
+\loomnode[label,text=mint] (cubic-legend) at (240,440) {CURVE A / DEFORMED};
+\loomnode[label,text=coral] (line-legend) at (480,440) {CURVE B / DEFORMED};
+\loomnode[label,text=gold] (branch-legend) at (740,440) {0 / 1 / 2: CURRENT ORDER};
+\loomnode[small] (caption) at (480,467) {Three contacts become one. Missing branches hide and reappear on return.};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / CUBIC INTERSECTIONS / EXPLICIT SELECTION / NO PLAYBACK MEMORY};
+\end{loomscene}
+\end{document}

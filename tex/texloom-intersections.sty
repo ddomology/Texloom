@@ -8,6 +8,8 @@
   \edef\TLEbase{\jobname.tl-intersection-\the\TLXserial}%
   \immediate\write\TLrecords{\string{"type":"intersection-file","kind":"#1","file":"\TLEbase"\string}}}
 % An intersection result is a first-class graph value, not a drawn scene node.
+% solver=basic (default) preserves v1; solver=curves opts into the bounded v2
+% cubic solver. Options max-work/max-depth are available only with curves.
 \NewDocumentCommand\loomintersections{O{} m +v}{%
   \TLXstart{intersect}%
   \TLEmetadata{options}{#1}%

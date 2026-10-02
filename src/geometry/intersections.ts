@@ -1,6 +1,8 @@
 import {PathGeometryError,evaluateSegment,type PathGeometry,type PathPoint,type PathSegment} from '../path-geometry.js';
 import {validatePathGeometry} from '../path-contract.js';
 import type {DeepReadonly} from '../ir/operations.js';
+import {intersectCubicSegments,type CubicControls} from './intersections-cubic.js';
+import {compareIntersectionIncidents,orderedIntersectionPoints} from '../operations/select-result.js';
 
 export type IntersectionMode='segment'|'line';
 export interface IntersectionOptions {modeA?:IntersectionMode;modeB?:IntersectionMode;positionTolerance?:number;parameterTolerance?:number;maxPairs?:number;maxResults?:number}
@@ -10,6 +12,9 @@ export interface IntersectionIncident {a:IntersectionSegmentRef;b:IntersectionSe
 export interface IntersectionPoint {point:PathPoint;incidents:IntersectionIncident[]}
 export interface IntersectionOverlap {a:IntersectionSegmentRef;b:IntersectionSegmentRef;parameterA:[number|null,number|null];parameterB:[number|null,number|null];orientation:1|-1;points:[PathPoint|null,PathPoint|null]}
 export interface IntersectionSet {version:1;points:IntersectionPoint[];overlaps:IntersectionOverlap[];options:Required<IntersectionOptions>;pairsTested:number}
+export interface AdvancedIntersectionOptions extends IntersectionOptions {maxWork?:number;maxDepth?:number}
+export interface AdvancedIntersectionReport {solver:'adaptive-cubic-v2';cubicPairs:number;work:number;maxDepthReached:number;maxWork:number;maxDepth:number}
+export interface AdvancedIntersectionResult {intersections:IntersectionSet;report:AdvancedIntersectionReport}
 type Entry={ref:IntersectionSegmentRef;start:PathPoint;segment:PathSegment;count:number;closed:boolean};
 const EPS=Number.EPSILON;
 function fail(code:string,message:string):never {throw new PathGeometryError(code,message);}
@@ -119,6 +124,22 @@ function topology(entry:Entry,t:number,tolerance:number,mode:IntersectionMode,po
 }
 
 export function intersectPathGeometries(inputA:DeepReadonly<PathGeometry>,inputB:DeepReadonly<PathGeometry>,configuration:IntersectionOptions={}):DeepReadonly<IntersectionSet> {
+  return solvePaths(inputA,inputB,configuration);
+}
+
+/** Opt-in curved solver. Budgets cover all cubic pairs in this call, not each pair separately. */
+export function intersectPathGeometriesV2(inputA:DeepReadonly<PathGeometry>,inputB:DeepReadonly<PathGeometry>,configuration:AdvancedIntersectionOptions={}):DeepReadonly<AdvancedIntersectionResult> {
+  json(configuration);if(!obj(configuration))fail('INTERSECTION_OPTIONS','Expected options object.');
+  keys(configuration,['modeA','modeB','positionTolerance','parameterTolerance','maxPairs','maxResults','maxWork','maxDepth']);
+  const {maxWork=65536,maxDepth=40,...basic}=configuration;
+  if(!Number.isSafeInteger(maxWork)||maxWork<1||maxWork>1048576||!Number.isSafeInteger(maxDepth)||maxDepth<1||maxDepth>52)
+    fail('INTERSECTION_BUDGET','Require maxWork in [1,1048576] and maxDepth in [1,52].');
+  const report:AdvancedIntersectionReport={solver:'adaptive-cubic-v2',cubicPairs:0,work:0,maxDepthReached:0,maxWork,maxDepth};
+  const intersections=solvePaths(inputA,inputB,basic,report);
+  return freeze({intersections:intersections as IntersectionSet,report});
+}
+
+function solvePaths(inputA:DeepReadonly<PathGeometry>,inputB:DeepReadonly<PathGeometry>,configuration:IntersectionOptions,report?:AdvancedIntersectionReport):DeepReadonly<IntersectionSet> {
   const opts=options(configuration),a=inventory(geometry(inputA)),b=inventory(geometry(inputB));
   if(a.length*b.length>opts.maxPairs)fail('INTERSECTION_BUDGET','Segment-pair budget exceeded.');
   if(opts.modeA==='line'&&a.some(e=>e.segment.kind!=='line')||opts.modeB==='line'&&b.some(e=>e.segment.kind!=='line'))fail('INTERSECTION_MODE','Infinite-line mode requires only line segments.');
@@ -137,10 +158,18 @@ export function intersectPathGeometries(inputA:DeepReadonly<PathGeometry>,inputB
     const position:PathPoint=[pa[0]/2+pb[0]/2,pa[1]/2+pb[1]/2];
     if(contact!=='degenerate'&&(opts.modeA==='segment'&&(ca===0||ca===1)||opts.modeB==='segment'&&(cb===0||cb===1)))contact='endpoint';
     const incident:IntersectionIncident={a:structuredClone(ea.ref),b:structuredClone(eb.ref),parameterA:ca,parameterB:cb,contact};
-    const id={a:topology(ea,ca,opts.parameterTolerance,opts.modeA,opts.positionTolerance),b:topology(eb,cb,opts.parameterTolerance,opts.modeB,opts.positionTolerance),ta:ca,tb:cb};
+    // V2 has already isolated cubic parameter pairs. Coarse user tolerances must
+    // not identify two interior visits or relabel them as endpoint vertices.
+    const identityTolerance=report?0:opts.parameterTolerance;
+    const id={a:topology(ea,ca,identityTolerance,opts.modeA,opts.positionTolerance),b:topology(eb,cb,identityTolerance,opts.modeB,opts.positionTolerance),ta:ca,tb:cb};
+    // Adjacent segments can evaluate an exact shared vertex through slightly
+    // different floating-point polynomial paths on the opposite operand.
+    // Permit machine roundoff there, without using the user's coarse tolerance.
+    const sameParameter=(previous:number,current:number,oppositeVertex:boolean)=>
+      Math.abs(previous-current)<=(report&&oppositeVertex?32*EPS*Math.max(1,Math.abs(previous),Math.abs(current)):identityTolerance);
     const existing=result.points.findIndex((p,i)=>identities[i].a===id.a&&identities[i].b===id.b&&distance(p.point,position)<=opts.positionTolerance&&
-      (identities[i].a.includes('vertex')||Math.abs(identities[i].ta-ca)<=opts.parameterTolerance)&&
-      (identities[i].b.includes('vertex')||Math.abs(identities[i].tb-cb)<=opts.parameterTolerance));
+      (identities[i].a.includes('vertex')||sameParameter(identities[i].ta,ca,id.b.includes('vertex')))&&
+      (identities[i].b.includes('vertex')||sameParameter(identities[i].tb,cb,id.a.includes('vertex'))));
     if(existing>=0){const p=result.points[existing];if(!p.incidents.some(v=>JSON.stringify(v)===JSON.stringify(incident))){budget();p.incidents.push(incident);}}
     else {budget();result.points.push({point:position,incidents:[incident]});identities.push(id);}
   };
@@ -153,7 +182,19 @@ export function intersectPathGeometries(inputA:DeepReadonly<PathGeometry>,inputB
   };
   for(const ea of a)for(const eb of b){
     result.pairsTested++;
-    if(ea.segment.kind==='cubic'&&eb.segment.kind==='cubic')fail('INTERSECTION_UNSUPPORTED','Cubic-cubic intersections are not supported in PR 11.');
+    if(ea.segment.kind==='cubic'&&eb.segment.kind==='cubic'){
+      if(!report)fail('INTERSECTION_UNSUPPORTED','Cubic-cubic intersections are not supported in PR 11.');
+      const remaining=report.maxWork-report.work;
+      if(remaining<1)fail('INTERSECTION_BUDGET','Total cubic work budget exhausted; no partial result is returned.');
+      const pair=intersectCubicSegments(controls(ea) as unknown as CubicControls,controls(eb) as unknown as CubicControls,{
+        positionTolerance:opts.positionTolerance,parameterTolerance:opts.parameterTolerance,maxWork:remaining,maxDepth:report.maxDepth,
+      });
+      report.cubicPairs++;report.work+=pair.work;report.maxDepthReached=Math.max(report.maxDepthReached,pair.maxDepthReached);
+      for(const p of pair.points)addPoint(ea,eb,p.parameterA,p.parameterB,p.contact);
+      for(const overlap of pair.overlaps){const [a0,a1]=overlap.parameterA,[b0,b1]=overlap.parameterB;
+        addOverlap(ea,eb,a0,a1,overlap.orientation===1?b0:b1,overlap.orientation===1?b1:b0);}
+      continue;
+    }
     const all=[...controls(ea),...controls(eb)],origin=ea.start,shifted=all.map(p=>sub(p,origin));
     if(shifted.some(p=>!point(p)))fail('INTERSECTION_PRECISION','Coordinate differences overflowed.');
     const scale=powerScale(Math.max(...shifted.flat().map(Math.abs))||1);
@@ -218,6 +259,13 @@ export function intersectPathGeometries(inputA:DeepReadonly<PathGeometry>,inputB
       const slope=derivative(equation),tangentThreshold=128*EPS*slope.reduce((sum,c)=>sum+Math.abs(c),0);
       emit(u,t,Math.abs(evaluate(slope,t))<=tangentThreshold?'tangent':'crossing');
     }
+  }
+  if(report){
+    for(const p of result.points)p.incidents.sort((a,b)=>compareIntersectionIncidents(a,b,'a'));
+    result.points=orderedIntersectionPoints(result.points,'a').map(p=>p.point as IntersectionPoint);
+    result.overlaps.sort((a,b)=>a.a.contourIndex-b.a.contourIndex||a.a.segmentIndex-b.a.segmentIndex||
+      (a.parameterA[0]??-Infinity)-(b.parameterA[0]??-Infinity)||a.b.contourIndex-b.b.contourIndex||a.b.segmentIndex-b.b.segmentIndex||
+      (a.parameterB[0]??-Infinity)-(b.parameterB[0]??-Infinity));
   }
   assertIntersectionSet(result);return freeze(result);
 }

@@ -30,4 +30,5 @@ export {textResourceRevision,type AnchorEvaluation,type AnchorEvaluationEntry} f
 export * from './geometry/curves.js';
 export {curveOperatorDefinitions,executeCurveOperation,type CurveEvaluation} from './operations/curves.js';
 export * from './geometry/intersections.js';
+export * from './geometry/intersections-cubic.js';
 export {intersectionOperatorDefinitions,executeIntersectionOperation,type IntersectionEvaluation} from './operations/intersections.js';

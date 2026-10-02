@@ -4,6 +4,10 @@ Compute intersections once and let multiple points or labels consume the same
 typed result set. Solving, selecting a branch, and displaying it are separate
 steps. All consumers use the shared absolute-time evaluator.
 
+This page documents the default `basic` / `intersectPaths@1` contract. Opt-in
+`solver=curves` adds [PR 12 cubic-cubic intersections](cubic-intersections.md)
+without changing the behavior below.
+
 ## Build the example
 
 ```sh
@@ -95,7 +99,7 @@ infinite-line mode.
 Every contour and segment participates, including a nonzero implicit closing
 edge. There are no connectors between disconnected contours. A cubic-cubic pair
 is rejected explicitly, even if other segment pairs in the paths are supported;
-PR 12 owns general cubic-cubic solving.
+The opt-in PR 12 solver handles supported cubic-cubic pairs.
 
 Finite degenerate segments are point-like inputs with a canonical local
 parameter of zero. An infinite line needs a nonzero direction. Contact records
