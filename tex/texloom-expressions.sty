@@ -5,6 +5,11 @@
 \newwrite\TLEfile
 \newcount\TLEserial
 \TLEserial=0
+\ExplSyntaxOn
+% Generate CR after tokenization; a literal ^^M in a definition would already
+% be interpreted as an input line ending by TeX's mouth.
+\cs_new:Npn \TLEnewline { \char_generate:nn {13} {12} }
+\ExplSyntaxOff
 
 % Generated filenames are the only strings inserted into declaration JSON.
 % User text lives in separate files. In particular, expression text is scanned
@@ -15,9 +20,10 @@
   \immediate\write\TLrecords{\string{"type":"expression-file","kind":"#1","file":"\TLEbase"\string}}}
 \long\def\TLEwrite#1#2{%
   \immediate\openout\TLEfile=\TLEbase.#1.txt
-  % xparse's +v scanner makes user backslashes character tokens. Its only
-  % control token is \obeyedline, which we intentionally map back to a newline.
-  \begingroup\newlinechar=10\def\obeyedline{^^J}%
+  % Older xparse returns literal CR tokens; newer versions use \obeyedline.
+  % Serialize both as newlines while preserving literal character text ^^M.
+  % User backslashes are character tokens, so user macros remain unexpanded.
+  \begingroup\newlinechar=13\let\obeyedline\TLEnewline
   \immediate\write\TLEfile{#2}%
   \endgroup
   \immediate\closeout\TLEfile}

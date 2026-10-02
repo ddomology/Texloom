@@ -45,7 +45,7 @@ class ExpressionCompilerTests(unittest.TestCase):
         return folder, records, bundle
 
     def test_verbatim_specials_and_macros_are_not_expanded_or_json_interpolated(self):
-        text = r'"quoted" + \undefinedmacro + % # ## && ^ $ < > !='
+        text = r'"quoted" + \undefinedmacro + % # ## && ^ ^^M ^^J $ < > !='
         folder, records, bundle = self.capture('literal', '\\loomexpr{P}{x}{' + text + '}')
         lower_expressions(records, bundle, folder, folder)
         binding = bundle['expressions']['bindings'][0]
@@ -65,6 +65,30 @@ class ExpressionCompilerTests(unittest.TestCase):
         self.assertEqual(binding['expression'], text)
         self.assertEqual(binding['sourceSpan']['end'], {'line': 4, 'column': 1})
         self.assertEqual((folder / binding['sourceSpan']['file']).read_text(encoding='utf8'), text + '\n')
+
+    def test_writer_accepts_old_raw_cr_and_new_obeyedline_tokens(self):
+        # Exercise both historical xparse representations under the installed
+        # real TeX engine, independent of which scanner that installation uses.
+        folder, records, bundle = self.capture('newline-representations', r'''
+\ExplSyntaxOn
+\TLEstart{binding}
+\TLEmetadata{target}{P}
+\TLEmetadata{property}{position}
+\exp_args:Nnx \TLEwrite {body}
+  {\char_generate:nn{13}{12}vec2(20bp,\char_generate:nn{13}{12}30bp)\char_generate:nn{13}{12}}
+\TLEstart{binding}
+\TLEmetadata{target}{P}
+\TLEmetadata{property}{position}
+\TLEwrite{body}{\obeyedline vec2(20bp,\obeyedline 30bp)\obeyedline}
+\ExplSyntaxOff
+''')
+        lower_expressions(records, bundle, folder, folder)
+        self.assertEqual(len(bundle['expressions']['bindings']), 2)
+        expected = '\nvec2(20bp,\n30bp)\n'
+        for binding in bundle['expressions']['bindings']:
+            self.assertEqual(binding['expression'], expected)
+            self.assertEqual(binding['sourceSpan']['end'], {'line': 4, 'column': 1})
+            self.assertEqual((folder / binding['sourceSpan']['file']).read_text(encoding='utf8'), expected + '\n')
 
     def test_checked_scalar_boolean_and_vector_parameter_declarations(self):
         folder, records, bundle = self.capture('parameters', r'''
