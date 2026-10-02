@@ -45,3 +45,6 @@ export * from './geometry/data-space.js';
 export {axesOperatorDefinitions,executeAxesOperation} from './operations/axes.js';
 export * from './geometry/adaptive-sampling.js';
 export {validatePlotProgram,preparePlotProgram,type PlotProgram,type PlotOperation,type PlotMode,type PlotEvaluation,type PreparedPlotProgram} from './operations/plot.js';
+export * from './timeline/ast.js';
+export {compileTimeline,lowerTimeline} from './timeline/compile.js';
+export {evaluateTrack,trackHasSingularScale} from './timeline/track.js';

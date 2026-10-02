@@ -383,6 +383,15 @@ This is a documented subset of decoration behavior, not a PGF state-machine
 interpreter. See the [authoring and API guide](docs/decorations.md) and
 [animated example](examples/path-decorations.tex).
 
+## Animation composition (PR 19)
+
+`texloom-animation` composes actions with sequence, parallel, stagger, waits
+and named cues. The shared compiler lowers relative timing to numeric tracks,
+including mixed easing, exact instantaneous changes and holds. Property
+conflicts are diagnosed before playback; no renderer owns a second clock.
+See the [authoring and timing contract](docs/animation.md) and
+[`examples/animation-composition.tex`](examples/animation-composition.tex).
+
 ## Function and parametric plots (PR 18)
 
 `texloom-plots` generates editable paths from typed functions, parametric

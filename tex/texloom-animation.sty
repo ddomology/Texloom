@@ -1,0 +1,35 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-animation}[2026/10/03 Texloom animation composition capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLAnimationSerial
+\TLAnimationSerial=0
+\def\TLAnimationStart#1{%
+  \global\advance\TLAnimationSerial by 1
+  \edef\TLEbase{\jobname.tl-animation-\the\TLAnimationSerial}%
+  \immediate\write\TLrecords{\string{"type":"animation-file","kind":"#1","file":"\TLEbase"\string}}}
+\def\TLAnimationBegin#1#2{%
+  \TLAnimationStart{begin}\TLEmetadata{group}{#1}\TLEmetadata{options}{#2}}
+\def\TLAnimationEnd#1{%
+  \TLAnimationStart{end}\TLEmetadata{group}{#1}}
+% Environments are executed normally; their bodies are not pre-scanned macro
+% arguments, so nested commands keep their last argument genuinely verbatim.
+\NewDocumentEnvironment{loomanimation}{O{}}{%
+  \TLAnimationBegin{animation}{#1}}{\TLAnimationEnd{animation}}
+\NewDocumentEnvironment{loomsequence}{O{}}{%
+  \TLAnimationBegin{sequence}{#1}}{\TLAnimationEnd{sequence}}
+\NewDocumentEnvironment{loomparallel}{O{}}{%
+  \TLAnimationBegin{parallel}{#1}}{\TLAnimationEnd{parallel}}
+\NewDocumentEnvironment{loomstagger}{O{} m}{%
+  \TLAnimationBegin{stagger}{#1}\TLEmetadata{lag}{#2}}{\TLAnimationEnd{stagger}}
+\NewDocumentCommand\loomwait{m}{%
+  \TLAnimationStart{wait}\TLEmetadata{duration}{#1}}
+\NewDocumentCommand\loomcue{m}{%
+  \TLAnimationStart{cue}\TLEmetadata{name}{#1}}
+\NewDocumentCommand\loomtween{O{} m m +v}{%
+  \TLAnimationStart{tween}\TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}\TLEmetadata{property}{#3}\TLEwrite{values}{#4}}
+% loomset already belongs to the TikZ style frontend; never redefine it here.
+\NewDocumentCommand\loomsetvalue{O{} m m +v}{%
+  \TLAnimationStart{set}\TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}\TLEmetadata{property}{#3}\TLEwrite{value}{#4}}
+\endinput

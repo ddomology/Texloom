@@ -11,6 +11,7 @@ import {validateAnchorInput,anchorInputReads,resolveAnchorInput,type AnchorEvalu
 import type {PathGeometry} from '../path-geometry.js';
 import {seedCurveProvenance,transformCurveInput,type CurveProvenance} from '../geometry/curves.js';
 import {measureNodeBox,boxInputReads,resolveBoxesInput} from './boxes.js';
+import {trackHasSingularScale} from '../timeline/track.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -65,8 +66,7 @@ export function validateDynamicInput(raw:unknown,bundle:Bundle,path:string,span?
     // not reject that obsolete value; the resolved matrix is checked at runtime.
     if(!hasTransformWriter(chain,bundle))try{spaceTransform({kind:'scene'},to,nodes);}catch(error){diagnostics.push(...located(error,path,span));}
     for(const [i,track] of bundle.tracks.entries())if(chain.has(track.target)&&track.property==='transform.scale'){
-      const scales=track.keys.map(([,value])=>value as number[]);
-      if(scales.some((value,j)=>value.some((v,axis)=>v===0||j>0&&track.interpolation!=='step'&&Math.sign(v)!==Math.sign(scales[j-1][axis]))))
+      if(trackHasSingularScale(track))
         fail('OPERATION_SINGULAR_SPACE',`Destination space becomes singular in scale track ${i}.`,path);
     }
   };

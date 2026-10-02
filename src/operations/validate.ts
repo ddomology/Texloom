@@ -11,6 +11,7 @@ import {validateDynamicInput,hasTransformWriter} from './inputs.js';
 import {sameSpace} from '../geometry/spaces.js';
 import type {Unit} from '../fields/ast.js';
 import {validatePlotProgramInContext} from './plot.js';
+import {trackHasSingularScale} from '../timeline/track.js';
 
 type Obj = Record<string, any>;
 type ResolvedType = {type: string; unit?:Unit; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
@@ -250,8 +251,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
   bundle.tracks.forEach((track,index) => {
     const binding = inverseChain.get(track.target);
     if (!binding || track.property !== 'transform.scale') return;
-    const scales = track.keys.map(([,value]) => value as number[]);
-    if (scales.some((value,i) => value.some((v,axis) => v === 0 || (i > 0 && track.interpolation !== 'step' && Math.sign(v) !== Math.sign(scales[i-1][axis])))))
+    if (trackHasSingularScale(track))
       error('OPERATION_SINGULAR_SPACE', 'Scale track makes a scene-position inverse singular.', `$.tracks[${index}]`, binding.span,
         [{message:'Scene-position binding.',path:binding.path}]);
   });

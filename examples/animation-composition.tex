@@ -1,0 +1,98 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-animation}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{29}{34}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  formula/.style={text=ink,font=\fontsize{21}{25}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=14,title={A sequence of mathematical motion}]
+\loomnode[heading] (heading) at (480,47) {A sequence of mathematical motion};
+\loomnode[small] (intro) at (480,84) {Draw the curve. Move and reshape together. Introduce the mathematics.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,112)--(905,112) (620,154)--(620,405);};
+\loomnode[label,text=mint] (left-label) at (327,144) {ONE CURVE / SHARED GEOMETRY};
+\loomnode[label,text=gold] (right-label) at (767,144) {STAGGERED EXPLANATION};
+\begin{loomgroup}[at={(330,292)}]{geometry-stage}
+  \loomgeometry[draw=mint,line width=3bp,line cap=round,reveal=0,mode=length]
+    (curve) {(-245,55) .. controls (-150,-140) and (125,135) .. (245,-55)};
+  \begin{loomgroup}[opacity=0]{markers}
+    \loomdirection[on=curve,point=P,length=75,draw=gold,line width=2bp] (T);
+    \loompoint[on=curve,at=.07,radius=5.5,fill=ink,draw=mint,line width=2bp,mode=length] (P);
+  \end{loomgroup}
+\end{loomgroup}
+\begin{loomgroup}[opacity=0]{formula-a}
+  \loomnode[formula,text=mint] (curve-formula) at (767,224) {$\gamma:[0,1]\longrightarrow\mathbb R^2$};
+\end{loomgroup}
+\begin{loomgroup}[opacity=0]{formula-b}
+  \loomnode[formula] (point-formula) at (767,286) {$P(s)=\gamma(s)$};
+\end{loomgroup}
+\begin{loomgroup}[opacity=0]{formula-c}
+  \loomnode[formula,text=gold] (tangent-formula) at (767,352) {$T(s)=\dfrac{\gamma'(s)}{\|\gamma'(s)\|}$};
+\end{loomgroup}
+\begin{loomgroup}[opacity=0]{conclusion}
+  \loomnode[small] (conclusion-text) at (330,407) {The same source time gives the same frame.};
+\end{loomgroup}
+\loomnode[label,text=mint] (stage-a) at (196,456) {01 / DRAW};
+\loomnode[label,text=gold] (stage-b) at (480,456) {02 / MOVE + RESHAPE};
+\loomnode[label,text=coral] (stage-c) at (764,456) {03 / EXPLAIN};
+\loomgeometry[draw=mint,line width=3bp,reveal=0] (rail-a) {(81,476)--(311,476)};
+\loomgeometry[draw=gold,line width=3bp,reveal=0] (rail-b) {(365,476)--(595,476)};
+\loomgeometry[draw=coral,line width=3bp,reveal=0] (rail-c) {(649,476)--(879,476)};
+\loomnode[small] (footer) at (480,518) {TEXLOOM / SEQUENCE + PARALLEL + STAGGER / ONE SHARED CLOCK};
+
+% The only absolute start is the composition origin. Child timing is relative.
+\begin{loomanimation}[origin=0.5]
+  \loomcue{begin}
+  \begin{loomparallel}[id=draw]
+    \loomtween[duration=2,easing=smooth,id=draw-curve]{curve}{reveal}|{"to":1}|
+    \loomtween[duration=2,id=draw-rail]{rail-a}{reveal}|{"to":1}|
+  \end{loomparallel}
+  \loomcue{follow}
+  \begin{loomparallel}[id=follow-and-reshape]
+    \begin{loomsequence}
+      \loomtween[duration=0.4]{markers}{style.opacity}|{"to":1}|
+      \loomtween[duration=5.6,easing=smooth,id=move-point]{P}{progress}|{"to":0.93}|
+    \end{loomsequence}
+    \begin{loomsequence}
+      \begin{loomparallel}
+        \loomtween[duration=3,easing=smooth]{curve}{geometry.contour-0.segment-0.c1}|{"to":[-100,-25]}|
+        \loomtween[duration=3,easing=smooth]{curve}{geometry.contour-0.segment-0.c2}|{"to":[95,-65]}|
+      \end{loomparallel}
+      \begin{loomparallel}
+        \loomtween[duration=3,easing=smooth]{curve}{geometry.contour-0.segment-0.c1}|{"to":[-150,-140]}|
+        \loomtween[duration=3,easing=smooth]{curve}{geometry.contour-0.segment-0.c2}|{"to":[125,135]}|
+      \end{loomparallel}
+    \end{loomsequence}
+    \loomtween[duration=6]{rail-b}{reveal}|{"to":1}|
+  \end{loomparallel}
+  \loomcue{explain}
+  \begin{loomparallel}
+    \begin{loomstagger}[id=formulas]{0.45}
+      \loomtween[duration=0.8,easing=smooth]{formula-a}{style.opacity}|{"to":1}|
+      \loomtween[duration=0.8,easing=smooth]{formula-b}{style.opacity}|{"to":1}|
+      \loomtween[duration=0.8,easing=smooth]{formula-c}{style.opacity}|{"to":1}|
+    \end{loomstagger}
+    \loomtween[duration=1.7]{rail-c}{reveal}|{"to":1}|
+  \end{loomparallel}
+  \loomwait{0.8}
+  \loomcue{conclude}
+  \begin{loomparallel}
+    \loomtween[duration=0.6,easing=smooth]{markers}{style.opacity}|{"to":0}|
+    \loomtween[duration=1,easing=smooth]{curve}{style.opacity}|{"from":1,"to":0.45}|
+    \loomtween[duration=1,easing=smooth]{conclusion}{style.opacity}|{"to":1}|
+  \end{loomparallel}
+  \loomwait{1.5}
+  \loomcue{finish}
+\end{loomanimation}
+\end{loomscene}
+\end{document}
