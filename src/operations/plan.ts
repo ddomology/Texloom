@@ -13,6 +13,7 @@ import {prepareExpressionProgram, evaluateExpressionBinding, type PreparedExpres
 import {prepareFieldProgram, type PreparedFieldProgram} from '../fields/program-fields.js';
 import type {FieldEvaluation} from '../fields/types.js';
 import {prepareDeformationProgram, type DeformationEvaluation} from './deform.js';
+import {prepareOperationInputs,type PreparedOperationInputs} from './inputs.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -64,11 +65,13 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     for (const node of legacyParticipants(step.lowered.relation)) step.reads.push({node,property:'transform'});
   }
   const graph = bundle.operationGraph ? prepareOperationGraph(bundle.operationGraph,bundle).graph : undefined;
+  const operationInputs=new Map<string,PreparedOperationInputs>();
   for (const [index,operation] of (graph?.operations ?? []).entries()) {
     requireAuthoredImplementation(operation.operator,operation.version);
     const dependencies = Object.values(operation.inputs).flatMap(input => input.kind === 'output' ? [operationID(input.ref.operation)] : []);
+    const inputs=prepareOperationInputs(operation,bundle,`$.operationGraph.operations[${index}]`);operationInputs.set(operation.id,inputs);
     steps.push({id:operationID(operation.id),path:`$.operationGraph.operations[${index}]`,sourceSpan:operation.sourceSpan,
-      kind:'operation',operation,dependencies,reads:[],writes:[]});
+      kind:'operation',operation,dependencies,reads:[...inputs.reads],writes:[]});
   }
   for (const [index,binding] of (graph?.bindings ?? []).entries()) {
     const reads = ['position','start','end'].includes(binding.property) ? transformReads(binding.target,nodes) : [];
@@ -144,9 +147,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
           validateLegacyLocalTransforms(step.lowered.relation,frameNodes);
           executeLegacyOperation(step.lowered.relation,context);
         } else if (step.kind === 'operation') {
-          const inputs: Record<string,LiteralValue> = Object.create(null);
-          for (const [name,input] of Object.entries(step.operation.inputs)) inputs[name] = input.kind === 'literal'
-            ? structuredClone(input.value) as LiteralValue : values.get(input.ref.operation)![input.ref.socket];
+          const inputs=operationInputs.get(step.operation.id)!.resolve(frameNodes,time,parameters,values);
           values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs));
         } else if (step.kind === 'deformation') {
           const prepared=deformations!.operations[step.index];

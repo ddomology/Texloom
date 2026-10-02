@@ -20,3 +20,5 @@ export {compileDeformation, type CompiledDeformation} from './geometry/deform-ex
 export {deformGeometry, type DeformationMode, type DeformationOptions, type DeformationReport} from './geometry/deform.js';
 export {validateDeformationProgram, prepareDeformationProgram,
   type DeformationOperation, type DeformationProgram, type DeformationEvaluation, type PreparedDeformationProgram} from './operations/deform.js';
+export {coordinateOperatorDefinitions,executeCoordinateOperation} from './operations/coordinates.js';
+export {sameSpace,spaceMatrix,spaceTransform,nodePosition} from './geometry/spaces.js';

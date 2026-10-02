@@ -7,14 +7,15 @@ import {defaultOperatorRegistry, type OperatorRegistry} from './registry.js';
 import {freezeSnapshot, validateJsonData, validateLiteralValue, validateSourceSpan, validateSpaceRef} from './values.js';
 import {bindingProperties, propertiesOverlap} from './properties.js';
 import {deformationWrites} from './deform.js';
+import {validateDynamicInput,hasTransformWriter} from './inputs.js';
+import {sameSpace} from '../geometry/spaces.js';
+import type {Unit} from '../fields/ast.js';
 
 type Obj = Record<string, any>;
-type ResolvedType = {type: string; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
+type ResolvedType = {type: string; unit?:Unit; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
 const object = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
 const named = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
 const own = (v: object, key: string) => Object.prototype.hasOwnProperty.call(v, key);
-const sameSpace = (a: SpaceRef | undefined, b: SpaceRef | undefined) => a?.kind === b?.kind &&
-  (a?.kind !== 'local' || (b?.kind === 'local' && a.node === b.node));
 
 /** Validate a graph in a valid legacy scene context, without running any operator. */
 function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, validatedContext = false): {diagnostics: Diagnostic[]; order: string[]} {
@@ -46,8 +47,11 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     const errors = validateSpaceRef(v, path);
     diagnostics.push(...errors.map(d => ({...d, ...(span ? {sourceSpan:span} : {})})));
     if (errors.length) return false;
-    if ((v as SpaceRef).kind === 'local' && !nodes.has((v as {node:string}).node)) {
+    if ((v as SpaceRef).kind !== 'scene' && !nodes.has((v as {node:string}).node)) {
       error('OPERATION_SPACE_REFERENCE', `Missing local-space node ${(v as {node:string}).node}.`, path, span); return false;
+    }
+    if((v as SpaceRef).kind==='plot'&&nodes.get((v as {node:string}).node)?.kind!=='group'){
+      error('OPERATION_PLOT_SPACE','Plot space requires a group node.',path,span);return false;
     }
     return true;
   };
@@ -91,7 +95,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     }
   });
   const resolveType = (socket: DeepReadonly<SocketType>, entry: Entry): ResolvedType | undefined => {
-    if (socket.type === 'scalar') return {type:'scalar'};
+    if (socket.type === 'scalar') return {type:'scalar',...(socket.unit===undefined?{}:{unit:socket.unit})};
     if (socket.type === 'transform2d') {
       const from = entry.spaces[socket.from], to = entry.spaces[socket.to];
       return from && to ? {type:socket.type, from, to} : undefined;
@@ -120,6 +124,8 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     }
     if (!sameSpace(expected.space, actual.space) || !sameSpace(expected.from, actual.from) || !sameSpace(expected.to, actual.to))
       error('OPERATION_SPACE_MISMATCH', 'Coordinate spaces must match exactly; use an explicit transform operation.', path, span);
+    if(expected.type==='scalar'&&expected.unit!==undefined&&expected.unit!==(actual.unit??'1'))
+      error('OPERATION_UNIT_MISMATCH',`Expected scalar unit ${expected.unit}; received ${actual.unit??'1'}.`,path,span);
   };
   for (const [id, entry] of entries) {
     const {raw,path,span,definition} = entry;
@@ -138,7 +144,9 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
         if (!errors.length) {actual = value.value; valueSpaces(value.value, ip + '.value', span);}
       } else if (value.kind === 'output') {
         keys(value, ['kind','ref'], ip, span); actual = output(value.ref, ip + '.ref', span, id);
-      } else error('OPERATION_INPUT_REF', 'Input kind must be literal or output.', ip + '.kind', span);
+      } else {
+        const dynamic=validateDynamicInput(value,{...bundle,operationGraph:graph as unknown as OperationGraph},ip,span);diagnostics.push(...dynamic.diagnostics);actual=dynamic.type;
+      }
       compatible(resolveType(socket.value, entry), actual, ip, span);
     }
   }
@@ -218,7 +226,8 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     }
   }
   for (const [id,binding] of inverseChain) {
-    if (nodes.get(id)?.transform?.scale?.some(v => v === 0))
+    if (nodes.get(id)?.transform?.scale?.some(v => v === 0)&&
+        !hasTransformWriter(new Set([id]),{...bundle,operationGraph:graph as unknown as OperationGraph}))
       error('OPERATION_SINGULAR_SPACE', `Scene-position binding requires an invertible transform; ${id} has zero scale.`, binding.path, binding.span);
   }
   bundle.tracks.forEach((track,index) => {

@@ -1,5 +1,6 @@
 import {OperationValidationError, type DeepReadonly, type Diagnostic, type OperatorDefinition} from '../ir/operations.js';
 import {freezeSnapshot, validateJsonData, validateLiteralValue} from './values.js';
+import {coordinateOperatorDefinitions} from './coordinates.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -47,7 +48,10 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
         if (!name(input[key]) || !spaces.has(input[key] as string)) fail('SOCKET_SPACE', 'Socket space must reference a declared space variable.', `${location}.${key}`);
       };
       switch (input.type) {
-        case 'scalar': keys(input, ['type'], location); break;
+        case 'scalar':
+          keys(input, ['type','unit'], location);
+          if(input.unit!==undefined&&!['1','bp','s','rad'].includes(input.unit as string))fail('SOCKET_UNIT','Expected 1, bp, s or rad.',location+'.unit');
+          break;
         case 'vec2':
           keys(input, ['type', 'role', 'space'], location);
           if (input.role !== 'point' && input.role !== 'vector') fail('SOCKET_ROLE', 'Expected point or vector role.', `${location}.role`);
@@ -72,6 +76,8 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
         if (object(input.default) && object(input.value) && (input.default.type !== input.value.type ||
             (input.value.type === 'vec2' && input.default.role !== input.value.role)))
           fail('SOCKET_DEFAULT_TYPE', 'Default literal type and vector role must match the socket.', `${ip}.default`);
+        if(object(input.default)&&object(input.value)&&input.value.type==='scalar'&&input.value.unit!==undefined&&
+            (input.default.unit??'1')!==input.value.unit)fail('SOCKET_DEFAULT_UNIT','Default scalar unit must match the socket.',`${ip}.default`);
       }
     }
     if (!object(raw.outputs) || !Object.keys(raw.outputs).length) fail('OPERATOR_OUTPUTS', 'Expected at least one output socket.', `${path}.outputs`);
@@ -91,6 +97,7 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
 }
 
 export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry([
+  ...coordinateOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {
@@ -122,8 +129,8 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
   },
   {
     name: 'scalarValue', version: 1, spaces: [], pure: true, deterministic: true,
-    inputs: {value: {value: {type: 'scalar'}, required: true}},
-    outputs: {value: {type: 'scalar'}},
+    inputs: {value: {value: {type: 'scalar',unit:'1'}, required: true}},
+    outputs: {value: {type: 'scalar',unit:'1'}},
   },
   {
     name: 'pointValue', version: 1, spaces: ['space'], pure: true, deterministic: true,
