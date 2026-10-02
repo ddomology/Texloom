@@ -3,6 +3,7 @@ import {validatePathGeometry} from '../path-contract.js';
 import {validatePrimitive} from '../geometry/primitives.js';
 import {assertCurveProvenance} from '../geometry/curves.js';
 import {assertIntersectionSet} from '../geometry/intersections.js';
+import {assertBoxList} from '../geometry/boxes.js';
 
 type RecordValue = Record<string, unknown>;
 const object = (value: unknown): value is RecordValue =>
@@ -124,6 +125,13 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
       errors.push(...validateSpaceRef(input.space, `${path}.space`));
       errors.push(...validatePrimitive(input.value).map(d=>({...d,path:`${path}.value${d.path?.replace(/^\$\.primitive/,'')??''}`})));
       break;
+    case 'boxes2d':
+      keys(input, ['type','space','value'], path, errors);
+      errors.push(...validateSpaceRef(input.space, `${path}.space`));
+      try {assertBoxList(input.value);} catch(error) {
+        fail(errors,'LITERAL_BOXES',error instanceof Error?error.message:String(error),`${path}.value`);
+      }
+      break;
     case 'path2d':
       keys(input, ['type', 'space', 'value','provenance'], path, errors);
       errors.push(...validateSpaceRef(input.space, `${path}.space`));
@@ -155,7 +163,7 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
       keys(input, ['type', 'from', 'to', 'value'], path, errors);
       errors.push(...validateSpaceRef(input.from, `${path}.from`), ...validateSpaceRef(input.to, `${path}.to`)); tuple(6);
       break;
-    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, points2d, shape2d, path2d, intersections2d or transform2d.', `${path}.type`);
+    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, points2d, boxes2d, shape2d, path2d, intersections2d or transform2d.', `${path}.type`);
   }
   return errors;
 }

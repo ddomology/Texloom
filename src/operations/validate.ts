@@ -56,7 +56,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     return true;
   };
   const valueSpaces = (v: Obj, path: string, span?: SourceSpan) => {
-    if (['vec2','points2d','shape2d','path2d','intersections2d'].includes(v.type)) space(v.space, path + '.space', span);
+    if (['vec2','points2d','boxes2d','shape2d','path2d','intersections2d'].includes(v.type)) space(v.space, path + '.space', span);
     if (v.type === 'transform2d') {space(v.from, path + '.from', span); space(v.to, path + '.to', span);}
   };
   if (!object(graph)) {error('OPERATION_GRAPH', 'Expected an operation graph object.', '$.operationGraph'); return {diagnostics, order};}

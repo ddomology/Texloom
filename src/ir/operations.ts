@@ -4,6 +4,7 @@ import type {Primitive2D} from '../geometry/primitives.js';
 import type {AnchorName} from './text.js';
 import type {CurveProvenance} from '../geometry/curves.js';
 import type {IntersectionSet} from '../geometry/intersections.js';
+import type {LayoutBox} from '../geometry/boxes.js';
 
 /** Lines/columns are 1-based; end is exclusive. Columns count Unicode code points. */
 export interface SourceSpan {
@@ -16,7 +17,7 @@ export interface Diagnostic {
   sourceSpan?: SourceSpan;
   related?: {message: string; path?: string; sourceSpan?: SourceSpan}[];
 }
-export type ValueType = 'scalar' | 'vec2' | 'points2d' | 'shape2d' | 'path2d' | 'intersections2d' | 'transform2d';
+export type ValueType = 'scalar' | 'vec2' | 'points2d' | 'boxes2d' | 'shape2d' | 'path2d' | 'intersections2d' | 'transform2d';
 /** Scene coordinates exclude the camera. Local spaces are distinct even at identity. */
 export type SpaceRef = {kind: 'scene'} | {kind: 'local'|'parent'|'plot'; node: string};
 export type Vec2Role = 'point' | 'vector';
@@ -24,13 +25,15 @@ export type Vec2Role = 'point' | 'vector';
 export type SocketType =
   | {type: 'scalar'; unit?:Unit}
   | {type: 'vec2'; role: Vec2Role; space: string}
-  | {type: 'points2d'|'shape2d'|'intersections2d'; space: string}
+  | {type: 'points2d'|'boxes2d'|'shape2d'|'intersections2d'; space: string}
   | {type: 'path2d'; space: string}
   | {type: 'transform2d'; from: string; to: string};
 export type LiteralValue =
   | {type: 'scalar'; value: number; unit?:Unit}
   | {type: 'vec2'; role: Vec2Role; space: SpaceRef; value: [number, number]}
   | {type: 'points2d'; space: SpaceRef; value: [number,number][]}
+  /** Intrinsic content metrics in the declared layout chart; null reserves an empty slot. */
+  | {type: 'boxes2d'; space: SpaceRef; value: (LayoutBox|null)[]}
   | {type: 'shape2d'; space: SpaceRef; value: Primitive2D}
   | {type: 'path2d'; space: SpaceRef; value: PathGeometry; provenance?:CurveProvenance}
   | {type: 'intersections2d'; space: SpaceRef; value: IntersectionSet}
@@ -51,6 +54,8 @@ export type InputRef = {kind: 'literal'; value: LiteralValue} | {kind: 'output';
   | {kind:'pointExpression';expression:string;space:SpaceRef;sourceSpan?:SourceSpan}
   | {kind:'property';node:string;property:string;unit:Unit}
   | {kind:'points';space:SpaceRef;items:InputRef[]}
+  /** Measures content only, excluding each node's authored position and transform. */
+  | {kind:'boxes';space:SpaceRef;nodes:(string|null)[]}
   | {kind:'spaceTransform';from:SpaceRef;to:SpaceRef};
 export interface InputSocket {value: SocketType; required?: true; default?: LiteralValue}
 /** Metadata only. Implementations, closures and code never travel in the bundle. */

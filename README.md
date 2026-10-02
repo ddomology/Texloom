@@ -383,6 +383,20 @@ This is a documented subset of decoration behavior, not a PGF state-machine
 interpreter. See the [authoring and API guide](docs/decorations.md) and
 [animated example](examples/path-decorations.tex).
 
+## Measured box layout (PR 16)
+
+`texloom-layout` places measured TeX content into matrices, rows, columns and
+explicit alignments. Logical width, height and depth determine column widths and
+row baselines. Null slots retain matrix cells. Distribution can wrap at a declared
+extent; overflow never silently shrinks the content. A fit path follows the same
+measurement and placement outputs with explicit padding.
+
+Layouts own placement transforms. Live TeX scale and layout parameters update
+the shared operation graph before downstream connectors and labels are sampled.
+Measured PGF groups use their captured logical text metrics; independently edited
+child artwork requires new measurement. See the [layout guide](docs/layout.md)
+and [commutative diagram example](examples/box-layout.tex).
+
 ## Core API
 
 ```ts
