@@ -1,0 +1,93 @@
+{
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "pythonExecutable": "C:\\Users\\NowKyeong\\Documents\\Codex\\2026-10-01\\x20\\work\\Texloom\\.venv\\Scripts\\python.exe",
+  "packages": {
+    "playwright": "1.63.0",
+    "Pillow": "12.3.0"
+  },
+  "dependencyFiles": {
+    "package-lock.json": "0b4010bec626441ac12d206e8d55b905411bce629285ec2ff641c32a419a5dd2",
+    "requirements-port.txt": "e43e00479ee42ef59e944846ce4d49d8f6f1c59ab96e190fff22ac39b0061e64"
+  },
+  "node": "v22.15.0",
+  "implementationFiles": {
+    "src/capabilities.ts": "2d0f25e8608f4acfaacb639a05cdc5f0608a5e6f7ce9121a1c3b33ce1996c696",
+    "src/evaluate.ts": "0953bb49702a7cdaf177d9305c0e3136c552d007b964cd5e8c1c26b7965ff4c9",
+    "src/geometry.ts": "214580098d181c6cf0972ac52f811e63f6226f643868cd26ca9af59419cd6d28",
+    "src/index.ts": "9a8f3aef121994a24c690e76d376c104e4f0015bdbb0a5359cb7698af26b8b35",
+    "src/path-contract.ts": "d6c560776b9d50caaa5e3b0473504954632009fa7f5ed4eb865080ad02afe0a9",
+    "src/path-geometry.ts": "5b1948632721d52340cf7e039bccd806a6a4ae73baf342e277835bf1568cc6d5",
+    "src/player.ts": "6c4e88b3759d138c35cc013668b3dc8e43643ed3f913cfe03575f624937c7790",
+    "src/render-canvas.ts": "89ea3ed8a0f74b3550e82aa467078afc5315f39b0dd1165094a9ce79946c6ec2",
+    "src/render-svg.ts": "b81d37663ab7b9fc7fa13b16d67fe7c4031a82c069ad2d52ac0c45946ac09c61",
+    "src/runtime.ts": "e76c0f706bd28f5d80428950606bb2c265cd7eb8a092a9f80268e430eb751e63",
+    "src/schema.ts": "c5d274b1a110aee07d374b74e8d929b79dc936587ec6ce1b79c1ac493ddfe12e",
+    "tex/texloom-tikz.sty": "46111b1383f1dd138569e564fe177b161d86a7f0cc346516f69ff2904f9be2fc",
+    "tex/texloom.sty": "dde5e5950a1078a2383c9fa094fa2b5d14fa5f39efba99c8797bba7215879c30",
+    "tools/build-dual-demo.mjs": "bcdd3c318cb7b9781b90407bb9359db2a9616d61f42f213504f035a29ebb428c",
+    "tools/build-player.mjs": "3b75d384811f7b6b94348443bf720de4a439d4fdce71da69f34418d1e9509c05",
+    "tools/build-port-browser.mjs": "561a8f25cdb59a7d032face106b877cf7141c6f4318b903ec197ccb44ceb18a8",
+    "tools/build.py": "9b689b3b69cd6311871a1d87b452e6088a1493bc0871980b0489e0ea76d56a5e",
+    "tools/build_v02_index.py": "bb980fd1b7ef7d0d1fd0326c1b5bbfb8175e29177766a8166541325ae9365bcd",
+    "tools/compile.py": "2928a9bbd191e06d4976dced03d7e43ccefdd37c8e62117d1e58865612797110",
+    "tools/compiler_probe.py": "dac2447cfd64518cf46ecaf7e1fb680ae38960e72b01a5d4ebdccbb08abc1243",
+    "tools/export_video.py": "96a3109c8a55b2c9728dedafc604fb19d647abf2a653fce038f5f85d2920f1c4",
+    "tools/generate_field.py": "da6d97f7a3f731a65f7538dd6ab025bed4099c2aa9016a7fb1c39b2ab30050ef",
+    "tools/inspect.ts": "08108e9c2263a153df9a29a814ed8d34a96cb0c8a19bb80e5deb7062a58be89d",
+    "tools/package_delivery.py": "4e3f59bec80cbe7b528bc8eb3cfe8dea1b91fbb4e949a55551ae28c67f4204ed",
+    "tools/package_v02.py": "94786bf372fb2e51e2c6ce4d763eb30c9bfe1f18da1120214d7ae9bf2ada6f8a",
+    "tools/port-browser.ts": "d1090570c511431aa670564be17874d6bb2c4c7b0dad683f70e1ff7912d8134c",
+    "tools/port-regression.ts": "6652cfc1869f430e02f219a3fe5a66bdbbb5826a8c7b558019f0f998dfd7925f",
+    "tools/port_baseline.py": "d80fd3b71909bbb26a8b507301ceef240137c3e4b0e46e872472843d4601af74",
+    "tools/qa_anchors.py": "683b8decc11a799278ec67fcf906957d2385b63cf8a5dcc513f65769b4671d58",
+    "tools/qa_dual.py": "547e75ddb8737a159e7c206444cb44eb98c685a6b434476842fae5f396152f34",
+    "tools/qa_paths.py": "0716c50a6e7dc5a9c544dc3e95db15523b4e4c6072856914aa373f6de7608199",
+    "tools/qa_player.py": "3727a6471af85d222132163bac844dd37e3e03962c691dd116767556bca8c8ba",
+    "tools/resource-snapshots.ts": "e16f837509c2abf18066341e98f565c3c2a5b54465c240da5c0e05f5da92243a",
+    "tools/snapshot.ts": "433fa5f9a8db8d7eb64137365da86256f7dd39d2246e9a956733f3094c1fe0b1",
+    "tools/svg_import.py": "30d67592e7dd8cb6ef6027599c6fd151a856c9f654e82727f96b52d2157eec47",
+    "tools/tikz_capture.py": "0fcd9043ce87db5f2b511634a4215ca619c5179519508006afe202b87f867f34",
+    "tools/validate-bundle.mjs": "656378a1589b0b93ab3f1405c3440328ca692c8836dfb47644b1850633df591e",
+    "tools/verify-port.py": "ff726ff270d4ed127a834e40f899a0ffe5cea79a92109f988049a84611fad2b4",
+    "adapters/chalkspace-canvas.ts": "a0ad157972c0d46a9ad17969326b634095719e04da167e54f2f546d452b672f2",
+    "adapters/chalkspace.ts": "8a59a3b09fe02110c9ee51b0c55d75f3ec8b1cb00afba1b2d118a91179a8de9a",
+    "adapters/lemniro.ts": "5fc76c48f9e99e1da1b5b83c6f06f73ac1d09fc50269ba5fe84e7da1e9d81e01"
+  },
+  "latex": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+  "dvisvgm": "dvisvgm 3.6",
+  "texFiles": {
+    "latex.ltx": {
+      "sha256": "95c2ef02c2d92aa29e4a77a5e5a7d9f25b5589143d1e879fb80ffa0b20be1e6d",
+      "path": "c:/texlive/2026/texmf-dist/tex/latex/base/latex.ltx"
+    },
+    "pgf.sty": {
+      "sha256": "99e08946749446e0b9b7faa985f8202740a94476f9e99bab5286cca5ce4766e9",
+      "path": "c:/texlive/2026/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty"
+    },
+    "pgfsyssoftpath.code.tex": {
+      "sha256": "6ea4caeea5bcb6cd60b80ef4607e8a79824ec0cdcebb47424c1bdbe0c2ea6671",
+      "path": "c:/texlive/2026/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex"
+    },
+    "lmodern.sty": {
+      "sha256": "d2877369dcb4bfe7b1b6bba1a3d96c46e93366459c9b46576f1b221009bbe359",
+      "path": "c:/texlive/2026/texmf-dist/tex/latex/lm/lmodern.sty"
+    },
+    "amsmath.sty": {
+      "sha256": "4c0bfd7d67ea18214810a21244f8426da40d04af5bb90ed201b85cc5e211d321",
+      "path": "c:/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty"
+    },
+    "lmr10.pfb": {
+      "sha256": "84eb01245abb17c0530ca3909427256d73df8bed2d7243b9f2717ca08c010ac8",
+      "path": "c:/texlive/2026/texmf-dist/fonts/type1/public/lm/lmr10.pfb"
+    }
+  },
+  "texFormat": {
+    "sha256": "4b8fd0176e36578da52eec131fd9e90038fc292371c0f3765b40185d4d9ec0a8",
+    "path": "c:/texlive/2026/texmf-var/web2c/pdftex/latex.fmt"
+  },
+  "browser": {
+    "name": "chromium",
+    "version": "153.0.8010.12"
+  }
+}

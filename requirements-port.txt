@@ -1,0 +1,3 @@
+# Frozen browser raster profile for the port-regression gate.
+playwright==1.63.0
+Pillow==12.3.0

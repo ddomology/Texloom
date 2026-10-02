@@ -1,0 +1,6 @@
+# Byte hashes of authored inputs and approved artifacts must survive a checkout.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.mp4 binary
+*.pdf binary

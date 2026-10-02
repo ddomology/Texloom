@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "REPLACE_WITH_STABLE_PORT_ID",
+  "title": "REPLACE_WITH_SUPPORTED_BEHAVIOR",
+  "implementation": {
+    "mode": "REPLACE_WITH_INDEPENDENT_IMPLEMENTATION_OR_ADAPTER_APPROACH",
+    "supportedProfile": ["REPLACE_WITH_CONCRETE_INPUT_AND_OUTPUT_PROFILE"],
+    "excluded": ["REPLACE_WITH_KNOWN_UNSUPPORTED_BEHAVIOR"]
+  },
+  "upstream": [
+    {
+      "project": "REPLACE_WITH_OWNER_REPOSITORY",
+      "revision": "REPLACE_WITH_IMMUTABLE_40_HEX_COMMIT",
+      "path": "REPLACE_WITH_REPOSITORY_RELATIVE_SOURCE_PATH",
+      "symbols": ["REPLACE_WITH_SYMBOL_VERIFIED_AT_THIS_REVISION"],
+      "documentation": ["https://example.invalid/replace-with-primary-documentation"],
+      "role": "REPLACE_WITH_REFERENCE_ROLE_AND_SCOPE",
+      "license": {
+        "status": "review-required",
+        "note": "Record actual review status. Complete file-level obligations before copying or adapting upstream code."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": ["REPLACE_WITH_INPUT_TYPES_AND_VALID_RANGES"],
+    "outputs": ["REPLACE_WITH_OBSERVABLE_OUTPUTS_AND_IDENTITIES"],
+    "coordinates": ["REPLACE_WITH_UNITS_SPACES_AND_ORIENTATION"],
+    "errorPolicy": ["REPLACE_WITH_DEGENERACY_APPROXIMATION_AND_ERROR_RULES"]
+  },
+  "fixtures": ["REPLACE_WITH_REGISTERED_FIXTURE_ID"],
+  "verification": {
+    "command": "python tools/verify-port.py",
+    "claims": ["REPLACE_WITH_CLAIMS_THE_EXECUTABLE_CHECKS_ESTABLISH"],
+    "notEstablished": ["REPLACE_WITH_UNRUN_OR_UNSUPPORTED_EQUIVALENCE_CLAIMS"]
+  }
+}

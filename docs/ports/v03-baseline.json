@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "id": "v03-baseline",
+  "title": "Texloom 0.1–0.3 compatibility and reproducibility baseline",
+  "implementation": {
+    "mode": "independent-regression-baseline",
+    "supportedProfile": [
+      "Executed trusted Texloom TeX declarations producing validated Bundle versions 0.1, 0.2 and 0.3",
+      "Deterministic absolute-time 2D evaluation with immutable shared resources",
+      "SVG and native Canvas rendering of the four registered scenes"
+    ],
+    "excluded": [
+      "Unwrapped arbitrary TikZ animation semantics or universal TeX package support",
+      "Manim or Blender behavioral equivalence",
+      "3D, a general operation graph, topology-changing morphs, numerical PDE solving or manifold simulation",
+      "Full Chalkspace lesson scheduler, eraser, sound and frame-cache integration"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "pgf-tikz/pgf",
+      "revision": "1d6234878836bc50b5e5a15ae266d74911466e7a",
+      "path": "tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex",
+      "symbols": [
+        "\\pgfsyssoftpath@getcurrentpath",
+        "\\pgfsyssoftpath@moveto",
+        "\\pgfsyssoftpath@lineto",
+        "\\pgfsyssoftpath@curveto",
+        "\\pgfsyssoftpath@closepath"
+      ],
+      "documentation": [
+        "https://tikz.dev/pgfsys-paths",
+        "https://github.com/pgf-tikz/pgf/blob/1d6234878836bc50b5e5a15ae266d74911466e7a/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex"
+      ],
+      "role": "protocol-reference; installed PGF executes the fixture, and its exact local version is recorded independently of this consulted source revision",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned source header identifies LPPL and/or GNU Public License distribution and points to the project license file. File and symbols inspected; full reuse/notice review remains required before copying or adapting this source. This baseline introduces no upstream source copy."
+      }
+    },
+    {
+      "project": "ManimCommunity/manim",
+      "revision": "5dc0d3b8dfe23b1dbf2284cca111c5d146a44db0",
+      "path": "manim/mobject/types/vectorized_mobject.py",
+      "symbols": [
+        "VMobject",
+        "VMobject.point_from_proportion",
+        "VMobject.pointwise_become_partial"
+      ],
+      "documentation": [
+        "https://docs.manim.community/en/stable/reference/manim.mobject.types.vectorized_mobject.VMobject.html",
+        "https://github.com/ManimCommunity/manim/blob/5dc0d3b8dfe23b1dbf2284cca111c5d146a44db0/manim/mobject/types/vectorized_mobject.py"
+      ],
+      "role": "reference-only; identifies vector sampling and partial-path behavior for later ports, with no Manim execution or equivalence claim in PR 01",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned file and symbols inspected. File-level reuse and required notices have not been approved in this baseline. No Manim source is copied or adapted by PR 01."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/depsgraph/intern/eval/deg_eval.cc",
+      "symbols": [
+        "blender::deg::deg_evaluate_on_refresh"
+      ],
+      "documentation": [
+        "https://developer.blender.org/docs/features/core/depsgraph/",
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/depsgraph/intern/eval/deg_eval.cc"
+      ],
+      "role": "reference-only; identifies dependency evaluation architecture for later ports, with no Blender execution or equivalence claim in PR 01",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned file declares SPDX GPL-2.0-or-later. File and symbol inspected; this is not a license clearance for reuse. PR 01 introduces no Blender source copy or adaptation."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "Four registered authored TeX scenes and the committed scalar-field sample data; input hashes identify the exact evidence",
+      "Finite absolute source time in seconds; out-of-range time holds the nearest scene endpoint",
+      "An explicitly recorded local compiler, runtime and browser toolchain"
+    ],
+    "outputs": [
+      "Validated semantic scene objects, resource geometry and measured TeX boxes; node and paint order are retained",
+      "Sampled EvaluatedFrame geometry, camera state and scalar values at fixture-declared times",
+      "SVG/Canvas raster observations and structured comparison reports with artifact hashes and tool provenance"
+    ],
+    "coordinates": [
+      "Scene units are bp, 72 per inch; positive x points right and positive y down",
+      "TeX pt measurements convert with 72/72.27; logical width/height/depth and visible ink bounds are distinct",
+      "Local transforms compose translate times rotate times scale; parents establish local spaces, while view camera remains separate",
+      "Runtime angles are radians; authored TikZ rotation options are degrees before lowering",
+      "Length progress is measured in local path coordinates; direction length and perpendicular normal are in world bp before camera application",
+      "Scalar-field grid order is row-major, y then x, with linear temporal interpolation between external samples"
+    ],
+    "errorPolicy": [
+      "Missing required fixtures, invalid PortSpecs, missing immutable upstream revisions, compiler failures and failed comparisons fail verification",
+      "Canonical comparison excludes explicitly nonsemantic run/provenance data; it preserves geometry, metrics, style, paint order and data samples",
+      "Numerical and raster tolerances are declared by the fixture registry and are not silently widened on failure",
+      "Record toolchain drift separately from semantic/raster differences; a mismatch does not authorize automatic golden replacement",
+      "Unsupported input and undefined/singular geometry follow existing typed validator/runtime errors; this PR does not broaden accepted semantics"
+    ]
+  },
+  "fixtures": [
+    "orbit",
+    "commutative",
+    "living-paths",
+    "scalar-field"
+  ],
+  "verification": {
+    "command": "python tools/verify-port.py",
+    "claims": [
+      "The four fixtures can be compiled and checked using the recorded toolchain and registered inputs",
+      "Approved semantic regression evidence can detect changes in the supported objects and sampled coordinates",
+      "Repeated and reverse-time samples remain independent of playback history",
+      "SVG and Canvas observations meet the declared fixture raster tolerances",
+      "An active PortSpec without an immutable source revision is rejected"
+    ],
+    "notEstablished": [
+      "Identical output bytes across all TeX distributions, fonts, browsers and operating systems",
+      "Historical visual correctness from current SVG/Canvas agreement alone",
+      "Algorithmic equivalence to the pinned PGF source revision or any Manim/Blender release",
+      "Complete upstream test coverage or permission to copy upstream implementation code",
+      "General mathematical validity of a numerical solver, a manifold wave model or arbitrary scenes beyond the registered fixtures"
+    ]
+  }
+}
