@@ -6,6 +6,7 @@ import {isCoordinateOperator, executeCoordinateOperation} from '../coordinates.j
 import {sameSpace} from '../../geometry/spaces.js';
 import {isShapeOperator,executeShapeOperation,type ShapeEvaluation} from '../shapes.js';
 import {isCurveOperator,executeCurveOperation,type CurveEvaluation} from '../curves.js';
+import {isIntersectionOperator,executeIntersectionOperation,type IntersectionEvaluation} from '../intersections.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -159,6 +160,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isIntersectionOperator(name,version))return;
   if(isCurveOperator(name,version))return;
   if(isShapeOperator(name,version))return;
   if(isCoordinateOperator(name,version))return;
@@ -168,7 +170,9 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 }
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
-export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation): Record<string, LiteralValue> {
+export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation,intersections?:IntersectionEvaluation): Record<string, LiteralValue> {
+  const intersection=executeIntersectionOperation(operation,inputs,intersections);
+  if(intersection)return intersection;
   const curve=executeCurveOperation(operation,inputs,curves);
   if(curve)return curve;
   const shape=executeShapeOperation(operation,inputs,shapes);

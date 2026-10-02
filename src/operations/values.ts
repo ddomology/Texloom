@@ -2,6 +2,7 @@ import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import {validatePathGeometry} from '../path-contract.js';
 import {validatePrimitive} from '../geometry/primitives.js';
 import {assertCurveProvenance} from '../geometry/curves.js';
+import {assertIntersectionSet} from '../geometry/intersections.js';
 
 type RecordValue = Record<string, unknown>;
 const object = (value: unknown): value is RecordValue =>
@@ -143,11 +144,18 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
         fail(errors,'LITERAL_PATH_PROVENANCE',error instanceof Error?error.message:String(error),path+'.provenance');
       }
       break;
+    case 'intersections2d':
+      keys(input, ['type','space','value'], path, errors);
+      errors.push(...validateSpaceRef(input.space, `${path}.space`));
+      try {assertIntersectionSet(input.value);} catch(error) {
+        fail(errors,'LITERAL_INTERSECTIONS',error instanceof Error?error.message:String(error),`${path}.value`);
+      }
+      break;
     case 'transform2d':
       keys(input, ['type', 'from', 'to', 'value'], path, errors);
       errors.push(...validateSpaceRef(input.from, `${path}.from`), ...validateSpaceRef(input.to, `${path}.to`)); tuple(6);
       break;
-    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, points2d, shape2d, path2d or transform2d.', `${path}.type`);
+    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, points2d, shape2d, path2d, intersections2d or transform2d.', `${path}.type`);
   }
   return errors;
 }
