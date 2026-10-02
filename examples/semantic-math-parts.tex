@@ -1,0 +1,102 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-animation,texloom-math}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{34}\selectfont},
+  subtitle/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{10}{14}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=14,title={One formula. Many meaningful parts.}]
+\loomnode[heading] (heading) at (480,47) {One formula. Many meaningful parts.};
+\loomnode[subtitle] (subtitle) at (480,84) {Give the symbols a name. Keep the mathematics exactly where TeX put it.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,113)--(905,113) (480,135)--(480,308) (55,335)--(905,335) (55,490)--(905,490);};
+
+\loomnode[label,text=mint] (identity-label) at (265,145) {01 / THE SAME SYMBOL, TWO IDENTITIES};
+\TLMath{identity-art}{\loompart{whole}{\loompart{left-x}{x}+\loompart{right-x}{x}}=2x}
+\TLNode{identity}{tex}{"resourceId":"identity-art","x":151,"y":234,"scale":4,"style":{"fill":"#E5F1EF"}}
+\loomnode[small] (identity-caption) at (265,284) {Select the left $x$, the right $x$, or their shared expression.};
+\loomnode[small,text=mint] (identity-names) at (265,308) {\texttt{left-x}\quad /\quad \texttt{right-x}\quad /\quad \texttt{whole}};
+
+\loomnode[label,text=gold] (fraction-label) at (700,145) {02 / A FRACTION WITH STRUCTURE};
+\TLMath{fraction-art}{\loompart{fraction}{\frac{\loompart{numerator}{x_{\loompart{index}{i+1}}^{\loompart{power}{n-1}}+1}}{\loompart{denominator}{x^2-1}}}}
+\TLNode{fraction}{tex}{"resourceId":"fraction-art","x":647,"y":230,"scale":3.1,"style":{"fill":"#E5F1EF"}}
+\loomnode[small] (fraction-caption) at (700,284) {The numerator, denominator, and scripts remain distinct.};
+\loomnode[small,text=gold] (fraction-names) at (700,308) {A parent selects its descendants explicitly.};
+
+\loomnode[label,text=coral] (phantom-label) at (480,365) {03 / AN INVISIBLE PART STILL TAKES UP SPACE};
+\TLMath{phantom-art}{a+\loompartbox{reserved}{\phantom{x^2}}+b}
+\TLNode{phantom}{tex}{"resourceId":"phantom-art","x":120,"y":434,"scale":2.8,"style":{"fill":"#E5F1EF"}}
+\loomnode[small,align=left] (phantom-caption) at (620,414) {A measured phantom keeps its true TeX box.\\Its selection contains no painted shape.};
+\loomnode[small,text=coral] (phantom-name) at (192,466) {\texttt{reserved}: real width, no ink};
+\loomnode[small] (footer) at (480,518) {TEXLOOM / NATIVE TEX LAYOUT / SEMANTIC PARTS / SHARED RENDERING};
+
+% Part views below are independent scene nodes sharing the native coordinates.
+% Their opacity can animate without rewriting the source formula or its parts.
+\loompartview{left-highlight}{identity}|{"query":{"ids":["left-x"],"scope":"exact","overlap":"error"},"style":{"fill":"#71DFC2","opacity":0}}|
+\loompartview{right-highlight}{identity}|{"query":{"ids":["right-x"],"scope":"exact","overlap":"error"},"style":{"fill":"#EE8D82","opacity":0}}|
+\loompartview{whole-highlight}{identity}|{"query":{"ids":["whole"],"scope":"descendants","overlap":"error"},"style":{"fill":"#F3CB84","opacity":0}}|
+\loompartview{numerator-highlight}{fraction}|{"query":{"ids":["numerator"],"scope":"descendants","overlap":"error"},"style":{"fill":"#F3CB84","opacity":0}}|
+\loompartview{denominator-highlight}{fraction}|{"query":{"ids":["denominator"],"scope":"exact","overlap":"error"},"style":{"fill":"#EE8D82","opacity":0}}|
+\loompartview{index-highlight}{fraction}|{"query":{"ids":["index"],"scope":"exact","overlap":"error"},"style":{"fill":"#71DFC2","opacity":0}}|
+\loompartview{power-highlight}{fraction}|{"query":{"ids":["power"],"scope":"exact","overlap":"error"},"style":{"fill":"#71DFC2","opacity":0}}|
+\loompartview{fraction-highlight}{fraction}|{"query":{"ids":["fraction"],"scope":"descendants","overlap":"error"},"style":{"fill":"#F3CB84","opacity":0}}|
+% This valid view has an empty paint tree and a genuine measured source part.
+\loompartview{phantom-selection}{phantom}|{"query":{"ids":["reserved"],"scope":"exact","overlap":"error"},"style":{"fill":"#EE8D82"}}|
+
+\begin{loomanimation}[origin=0.5]
+  \loomcue{identify-parts}
+  \begin{loomparallel}
+    \begin{loomsequence}
+      \loomenter[duration=0.5]{left-highlight}
+      \loomcue{left-identified}
+      \loomwait{1.5}
+      \loomexit[duration=0.5]{left-highlight}
+      \loomenter[duration=0.5]{right-highlight}
+      \loomcue{right-identified}
+      \loomwait{1.5}
+      \loomexit[duration=0.5]{right-highlight}
+      \loomenter[duration=0.6]{whole-highlight}
+      \loomcue{shared-expression}
+      \loomwait{2.4}
+      \loomexit[duration=0.5]{whole-highlight}
+      \begin{loomparallel}
+        \loomenter[duration=0.5]{left-highlight}
+        \loomenter[duration=0.5]{right-highlight}
+      \end{loomparallel}
+      \loomwait{3.5}
+    \end{loomsequence}
+    \begin{loomsequence}
+      \loomwait{0.5}
+      \loomenter[duration=0.5]{numerator-highlight}
+      \loomwait{2.5}
+      \loomexit[duration=0.5]{numerator-highlight}
+      \loomenter[duration=0.5]{denominator-highlight}
+      \loomwait{2}
+      \loomexit[duration=0.5]{denominator-highlight}
+      \begin{loomparallel}
+        \loomenter[duration=0.5]{index-highlight}
+        \loomenter[duration=0.5]{power-highlight}
+      \end{loomparallel}
+      \loomcue{fine-detail}
+      \loomwait{1.5}
+      \begin{loomparallel}
+        \loomexit[duration=0.5]{index-highlight}
+        \loomexit[duration=0.5]{power-highlight}
+      \end{loomparallel}
+      \loomenter[duration=0.6]{fraction-highlight}
+      \loomwait{2.4}
+    \end{loomsequence}
+  \end{loomparallel}
+  \loomcue{complete}
+\end{loomanimation}
+\end{loomscene}
+\end{document}

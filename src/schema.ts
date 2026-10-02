@@ -13,6 +13,7 @@ import {validatePlotProgramInContext, type PlotProgram, type PlotEvaluation} fro
 import {validateTimelineMetadata,type TimelineMetadata,type Easing} from './timeline/ast.js';
 import {trackHasSingularScale} from './timeline/track.js';
 import {validateMorphProgramInContext,type MorphProgram,type MorphEvaluation} from './timeline/morph.js';
+import {validateTextPartsInContext,type TextParts} from './ir/text-parts.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -38,7 +39,7 @@ export interface FieldNode extends NodeBase { kind: 'field'; resourceId: string;
 export type Node = GroupNode | PathNode | EllipseNode | PointNode | LineNode | TexNode | FieldNode;
 export type Matrix = [number, number, number, number, number, number];
 export interface PaintItem { kind: 'path' | 'group'; d?: string; transform?: Matrix; style?: Style; clip?: Clip & { transform?: Matrix }; children?: PaintItem[] }
-export interface VectorResource { kind: 'vector'; items: PaintItem[]; metrics: { width: number; height: number; depth: number }; inkBounds: [number, number, number, number]; sourceTex?: string; glyphs?: unknown[]; capabilities?: string[] }
+export interface VectorResource { kind: 'vector'; items: PaintItem[]; metrics: { width: number; height: number; depth: number }; inkBounds: [number, number, number, number]; sourceTex?: string; glyphs?: unknown[]; capabilities?: string[];textParts?:TextParts }
 export interface ScalarFieldResource { kind: 'scalar-field'; columns: number; rows: number; times: number[]; samples: number[][]; range: [number, number]; interpolation: 'linear' | 'step'; provenance?: Record<string, unknown> }
 export type Resource = VectorResource | ScalarFieldResource;
 export type TrackValue = number | number[];
@@ -208,6 +209,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       if (r.sourceTex !== undefined && typeof r.sourceTex !== 'string') error('SOURCE_TEX', 'sourceTex must be a string.', `${path}.sourceTex`);
       if (r.glyphs !== undefined && !Array.isArray(r.glyphs)) error('GLYPHS', 'glyphs must be an array.', `${path}.glyphs`);
       if (r.capabilities !== undefined && (!Array.isArray(r.capabilities) || !r.capabilities.every(nonempty))) error('CAPABILITIES', 'capabilities must be an array of strings.', `${path}.capabilities`);
+      if(r.textParts!==undefined&&!errors.some(d=>d.severity==='error'))errors.push(...validateTextPartsInContext(r.textParts,r as VectorResource,path+'.textParts'));
     } else if (r.kind === 'scalar-field') {
       for (const key of ['columns', 'rows']) { number(r[key], `${path}.${key}`, { min: 1 }); if (!Number.isInteger(r[key])) error('GRID_INTEGER', 'Grid dimensions must be integers.', `${path}.${key}`); }
       choice(r.interpolation, ['linear', 'step'], `${path}.interpolation`);

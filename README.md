@@ -434,6 +434,20 @@ Measured PGF groups use their captured logical text metrics; independently edite
 child artwork requires new measurement. See the [layout guide](docs/layout.md)
 and [commutative diagram example](examples/box-layout.tex).
 
+### Native TeX semantic parts (PR 21)
+
+`\loompart{id}{body}` assigns explicit identity while TeX typesets the whole
+formula. The compiler compares annotated paint and metrics with a native
+reference and rejects layout changes. `\loompartbox` opts into measured atomic
+boxes; transparent markers never infer logical boxes from ink.
+
+`selectTextParts` selects original paint by authored ID, with explicit nesting
+and overlap rules. `\loompartview` creates ordinary independently animatable
+nodes using that selection, consumed by the existing SVG, Canvas and Chalkspace
+renderers. See the [semantic parts guide](docs/text-parts.md) and
+[real TeX example](examples/semantic-math-parts.tex). Formula-to-formula matching
+and semantic morphs are the next milestone.
+
 ## Core API
 
 ```ts

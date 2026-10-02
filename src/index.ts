@@ -50,3 +50,5 @@ export {compileTimeline,lowerTimeline} from './timeline/compile.js';
 export {evaluateTrack,trackHasSingularScale} from './timeline/track.js';
 export * from './geometry/correspondence.js';
 export {validateMorphProgram,prepareMorphProgram,morphWrites,type MorphProgram,type MorphOperation,type MorphReport,type MorphEvaluation} from './timeline/morph.js';
+export * from './ir/text-parts.js';
+export {lowerTextPartViews,type TextPartViewRecord} from './ir/text-part-views.js';

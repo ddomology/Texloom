@@ -34,6 +34,9 @@ from layout_capture import lower_layouts
 from axes_capture import prepare_axes_records, lower_axes
 from plot_capture import lower_plots
 from animation_capture import lower_animation
+from text_parts_capture import PART_PREAMBLE, BARE_PART_PREAMBLE, parse_text_parts, TextPartCaptureDiagnostic
+from text_parts_compare import assert_same_layout
+from text_part_views_capture import lower_part_views
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -82,21 +85,68 @@ def asset_document(body,kind,setup,anchor_capture=False):
 \end{document}
 '''
 
-def compile_resource(resource,execution,out,setup,commands,anchor_capture=False):
+def compile_resource(resource,execution,out,setup,commands,anchor_capture=False,part_capture=False,source_context=None,archive_out=None):
     rid=resource['id']
     if not re.fullmatch(r'[A-Za-z][\w-]*',rid): raise CompileDiagnostic(f'Invalid resource ID: {rid}')
     path=execution/resource['file']
     if path.parent!=execution or not path.exists(): raise CompileDiagnostic(f'Missing generated TeX asset {path.name}')
     body=decode_detokenized(path.read_text(encoding='utf8')).strip()
+    part_capture=part_capture or '\\loompart' in body or '\\loompart' in setup
+    source_path=f'math-sources/{rid}.tex'
+    if part_capture:
+        archive=Path(archive_out or out)/'math-sources';archive.mkdir(parents=True,exist_ok=True)
+        (archive/f'{rid}.tex').write_text(body,encoding='utf8')
+    body_lines=body.split('\n')
+    body_span={'file':source_path,'start':{'line':1,'column':1},
+               'end':{'line':len(body_lines),'column':len(body_lines[-1])+1}}
+    declarations=parse_text_parts(body,source_path) if part_capture else None
+    source_precision={}
+    if declarations:
+        # Only map a literal original occurrence when ID, parent and body agree.
+        # Macro expansion and ambiguous IDs retain exact generated-asset spans.
+        normalize=lambda s:re.sub(r'\\([A-Za-z@]+)\s+',r'\\\1',s).strip()
+        original_parts=(source_context or {}).get('parts',{})
+        original_text=(source_context or {}).get('text','')
+        for part in declarations:
+            original=original_parts.get(part['id'])
+            source_precision[part['id']]='generated-asset'
+            if original and original.get('parent')==part.get('parent'):
+                a,b=part['sourceRange'],original['sourceRange']
+                if normalize(body[a['start']:a['end']])==normalize(original_text[b['start']:b['end']]):
+                    part['sourceSpan']=original['sourceSpan'];source_precision[part['id']]='original-literal'
     folder=out/'assets'/rid; folder.mkdir(parents=True,exist_ok=True)
-    (folder/'asset.tex').write_text(asset_document(body,resource['kind'],setup,anchor_capture),encoding='utf8')
+    (folder/'asset.tex').write_text(asset_document(body,resource['kind'],setup+(PART_PREAMBLE if part_capture else ''),anchor_capture),encoding='utf8')
     result=run(['latex','-no-shell-escape','-interaction=nonstopmode','-halt-on-error','asset.tex'],folder)
     commands.append({'resource':rid,**{k:v for k,v in result.items() if k!='output'}})
     values=(folder/'asset.metrics').read_text().strip().split(',')
     metrics={k:round(float(v.removesuffix('pt'))*PT_TO_BP,8) for k,v in zip(('width','height','depth'),values)}
     result=run(['dvisvgm','--no-fonts','--exact-bbox','--bbox=min','--precision=6','--currentcolor','--output=asset.svg','asset.dvi'],folder)
     commands.append({'resource':rid,**{k:v for k,v in result.items() if k!='output'}})
-    vector=import_svg(folder/'asset.svg',metrics,body)
+    try: vector=import_svg(folder/'asset.svg',metrics,body,declarations)
+    except ImportDiagnostic as error:
+        if str(error).startswith('TEXT_PART_'):
+            code,message=str(error).split(':',1)
+            raise TextPartCaptureDiagnostic(code,message.strip(),body_span) from error
+        raise
+    if declarations:
+        native=folder/'native';native.mkdir()
+        (native/'asset.tex').write_text(asset_document(body,resource['kind'],setup+BARE_PART_PREAMBLE,anchor_capture),encoding='utf8')
+        for command in (
+            ['latex','-no-shell-escape','-interaction=nonstopmode','-halt-on-error','asset.tex'],
+            ['dvisvgm','--no-fonts','--exact-bbox','--bbox=min','--precision=6','--currentcolor','--output=asset.svg','asset.dvi']):
+            native_result=run(command,native)
+            commands.append({'resource':rid,'pass':'native-reference',**{k:v for k,v in native_result.items() if k!='output'}})
+        native_values=(native/'asset.metrics').read_text().strip().split(',')
+        native_metrics={k:round(float(v.removesuffix('pt'))*PT_TO_BP,8) for k,v in zip(('width','height','depth'),native_values)}
+        reference=import_svg(native/'asset.svg',native_metrics,body)
+        try: proof=assert_same_layout(reference,vector)
+        except ValueError as error:
+            error.sourceSpan=body_span
+            raise
+        vector['provenance']['textPartsValidation']={**proof,'nativeDviSha256':digest(native/'asset.dvi'),
+            'nativeSvgSha256':digest(native/'asset.svg'),'sourcePrecision':source_precision,
+            'generatedSource':source_path,'logicalBoxPolicy':'measured-only; transparent markers have no inferred box'}
+        write_json(folder/'text-parts-proof.json',vector['provenance']['textPartsValidation'])
     vector['provenance'].update({'engine':'latex-dvi','dvi':str((folder/'asset.dvi').relative_to(out)).replace('\\','/'),
         'dviSha256':digest(folder/'asset.dvi'),'texSha256':digest(folder/'asset.tex'),'svgTransportSha256':digest(folder/'asset.svg'),
         'logicalMetricsTeXPt':{k:float(v.removesuffix('pt')) for k,v in zip(('width','height','depth'),values)}})
@@ -156,6 +206,15 @@ def compile_scene(source,out):
     setup_path=execution/'scene.tl-setup.tex'; setup=decode_detokenized(setup_path.read_text(encoding='utf8')) if setup_path.exists() else ''
     tikz_setup_path=execution/'scene.tl-tikz-setup.tex'
     if tikz_setup_path.exists(): setup+='\n'+decode_detokenized(tikz_setup_path.read_text(encoding='utf8'))
+    original_source=source.read_text(encoding='utf8')
+    part_capture='texloom-math' in original_source or '\\loompart' in original_source or '\\loompart' in setup
+    source_context={'text':original_source,'parts':{}}
+    if part_capture:
+        original_path=f'math-sources/original/{source.name}'
+        archive=out/'math-sources'/'original';archive.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(source,archive/source.name)
+        try: source_context['parts']={p['id']:p for p in parse_text_parts(original_source,original_path)}
+        except TextPartCaptureDiagnostic: pass # Precise generated spans remain available.
     seen_resources=set()
     for number,record in enumerate(records,1):
         kind=record['type']
@@ -171,12 +230,13 @@ def compile_scene(source,out):
             if rid in seen_resources: raise CompileDiagnostic(f'Duplicate resource ID: {rid}')
             seen_resources.add(rid)
             if kind=='resource':
-                vector=compile_resource(record,execution,run_root,setup,commands,anchor_capture)
+                vector=compile_resource(record,execution,run_root,setup,commands,anchor_capture,part_capture,source_context,out)
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file','animation-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file','animation-file','part-view-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
+    if any(r.get('textParts') for r in bundle['resources'].values()): bundle['version']='0.3'
     lower_expressions(records,bundle,execution,out)
     lower_fields(records,bundle,execution,out)
     lower_deformations(records,bundle,execution,out)
@@ -191,6 +251,7 @@ def compile_scene(source,out):
     lower_layouts(records,bundle,execution,out)
     lower_axes(records,bundle,execution,out)
     lower_plots(records,bundle,execution,out)
+    lower_part_views(records,bundle,execution,out)
     lower_animation(records,bundle,execution,out)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
@@ -219,7 +280,9 @@ def main():
         print(f'Compiled {bundle["title"]}: {len(bundle["nodes"])} nodes, {len(bundle["resources"])} resources -> {Path(args.out)/"bundle.json"}')
     except (CompileDiagnostic,ImportDiagnostic,KeyError,OSError,ValueError) as e:
         out=Path(args.out); out.mkdir(parents=True,exist_ok=True)
-        write_json(out/'compile-report.json',{'success':False,'diagnostics':[{'severity':'error','code':'COMPILER_ERROR','message':str(e)}]})
+        diagnostic={'severity':'error','code':getattr(e,'code','COMPILER_ERROR'),'message':str(e)}
+        if getattr(e,'sourceSpan',None): diagnostic['sourceSpan']=e.sourceSpan
+        write_json(out/'compile-report.json',{'success':False,'diagnostics':[diagnostic]})
         print(str(e),file=sys.stderr); return 1
     return 0
 
