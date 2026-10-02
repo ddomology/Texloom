@@ -383,6 +383,15 @@ This is a documented subset of decoration behavior, not a PGF state-machine
 interpreter. See the [authoring and API guide](docs/decorations.md) and
 [animated example](examples/path-decorations.tex).
 
+## Mathematical coordinates and axes (PR 17)
+
+`texloom-axes` maps dimensionless mathematical data into bp geometry, with
+linear/log axes, stable bounded ticks, derived grids and real TeX label catalogs.
+Ranges, sizes and tick steps can depend on time or typed parameters. The same
+evaluated paths and placements feed SVG, Canvas, Chalkspace and video.
+See [the coordinate and label contract](docs/axes.md) and
+[`examples/cartesian-axes.tex`](examples/cartesian-axes.tex).
+
 ## Measured box layout (PR 16)
 
 `texloom-layout` places measured TeX content into matrices, rows, columns and

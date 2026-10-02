@@ -12,6 +12,7 @@ import {isPathLabelOperator,executePathLabelOperation} from '../path-labels.js';
 import {isArrowOperator,executeArrowOperation} from '../arrows.js';
 import {isDecorationOperator,executeDecorationOperation} from '../decorations.js';
 import {isLayoutOperator,executeLayoutOperation} from '../layout.js';
+import {isAxesOperator,executeAxesOperation} from '../axes.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -165,6 +166,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isAxesOperator(name,version))return;
   if(isArrowOperator(name,version))return;
   if(isDecorationOperator(name,version))return;
   if(isLayoutOperator(name,version))return;
@@ -180,6 +182,8 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
 export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation,intersections?:IntersectionEvaluation): Record<string, LiteralValue> {
+  const axes=executeAxesOperation(operation,inputs);
+  if(axes)return axes;
   const arrows=executeArrowOperation(operation,inputs);
   const decorations=executeDecorationOperation(operation,inputs);
   const layout=executeLayoutOperation(operation,inputs);

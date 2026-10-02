@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\usepackage{texloom-axes}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{33}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  caption/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Coordinates stay. The frame changes.}]
+\loomnode[heading] (heading) at (480,45) {Coordinates stay. The frame changes.};
+\loomnode[small] (intro) at (480,81) {Resize the view. The mathematical points keep their meaning.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,111)--(905,111) (55,454)--(905,454);};
+\loomnode[label,text=mint] (left-heading) at (295,139) {01 / LINEAR COORDINATES};
+\loomnode[label,text=gold] (right-heading) at (755,139) {02 / LOGARITHMIC COORDINATES};
+\loomparameter[unit=1,min=3.5,max=5.5]{range}{4.5}
+\loomparameter[unit=1,min=1,max=2]{step}{1}
+
+% Paths receive evaluated geometry in bp. No renderer interprets data units.
+\loomgeometry[draw=rule,line width=.6bp] (lg) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1.2bp] (lx) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1.2bp] (ly) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1bp] (lt) {(0,0)--(1,0)};
+\loomaxes{linear}|{"origin":[92,167],"width":"408bp+24bp*sin(pi*time/6s)","height":230,"xMin":"-range-1.25*sin(pi*time/6s)","xMax":"range+1.25*sin(pi*time/6s)","yMin":-3,"yMax":3,"xStep":"step","yStep":1,"xAxis":"lx","yAxis":"ly","ticks":"lt","grid":"lg"}|
+\loomaxisticks{linear}|{"idPrefix":"linear-x-tick","axis":"x","values":[-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6],"precision":0,"anchor":"base","offset":[0,19],"scale":0.82,"style":{"fill":"#91ACB5"}}|
+\loomaxisticks{linear}|{"idPrefix":"linear-y-tick","axis":"y","values":[-3,-2,-1,1,2,3],"precision":0,"anchor":"base east","offset":[-11,4],"scale":0.82,"style":{"fill":"#91ACB5"}}|
+\TLNode{P}{point}{"x":0,"y":0,"r":5,"style":{"fill":"#71DFC2"}}
+\loomdatapoint{P}|{"axes":"linear","x":2,"y":1}|
+\TLText{p-label-art}{\fontsize{16}{20}\selectfont $P=(2,1)$}
+\TLNode{p-label}{tex}{"resourceId":"p-label-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+\loomaxislabel{p-label}|{"axes":"linear","axis":"point","x":2,"y":1,"anchor":"base west","offset":[10,-11]}|
+
+\loomgeometry[draw=rule,line width=.6bp] (gg) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.2bp] (gx) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.2bp] (gy) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1bp] (gt) {(0,0)--(1,0)};
+\loomaxes{logarithmic}|{"origin":[644,180],"width":210,"height":210,"xMin":1,"xMax":1000,"yMin":1,"yMax":1000,"xScale":"log","yScale":"log","xStep":1,"yStep":1,"xAxis":"gx","yAxis":"gy","ticks":"gt","grid":"gg"}|
+\loomaxisticks{logarithmic}|{"idPrefix":"log-x-tick","axis":"x","values":[1,10,100,1000],"precision":0,"anchor":"base","offset":[0,19],"scale":0.82,"style":{"fill":"#91ACB5"}}|
+\loomaxisticks{logarithmic}|{"idPrefix":"log-y-tick","axis":"y","values":[10,100,1000],"precision":0,"anchor":"base east","offset":[-11,4],"scale":0.82,"style":{"fill":"#91ACB5"}}|
+\TLNode{Q}{point}{"x":0,"y":0,"r":5,"style":{"fill":"#F3CB84"}}
+\loomdatapoint{Q}|{"axes":"logarithmic","x":10,"y":100}|
+\TLText{q-label-art}{\fontsize{14}{18}\selectfont $Q=(10,100)$}
+\TLNode{q-label}{tex}{"resourceId":"q-label-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+\loomaxislabel{q-label}|{"axes":"logarithmic","axis":"point","x":10,"y":100,"anchor":"base west","offset":[9,-11]}|
+
+\loomnode[caption,text=mint] (left-caption) at (295,430) {CHANGING RANGE + WIDTH / FIXED DATA POINT};
+\loomnode[caption,text=gold] (right-caption) at (755,430) {EQUAL DISTANCE / TENFOLD CHANGE};
+\loomnode[small] (explanation) at (480,480) {The point, ticks, grid and TeX labels use one coordinate mapping.};
+\loomnode[caption] (footer) at (480,516) {TEXLOOM / DATA COORDINATES / SVG, CANVAS AND VIDEO};
+\end{loomscene}
+\end{document}
