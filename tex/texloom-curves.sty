@@ -1,0 +1,24 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-curves}[2026/10/03 Texloom reusable curve operations]
+\RequirePackage{texloom-expressions}
+\newcount\TLCserial
+\TLCserial=0
+\def\TLCstart#1{%
+  \global\advance\TLCserial by 1
+  \edef\TLEbase{\jobname.tl-curve-\the\TLCserial}%
+  \immediate\write\TLrecords{\string{"type":"curve-file","kind":"#1","file":"\TLEbase"\string}}}
+% Geometry targets are declared paths. JSON inputs are literal, not TeX code.
+\NewDocumentCommand\loomcurve{O{} m m +v}{%
+  \TLCstart{operation}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEmetadata{operation}{#3}%
+  \TLEwrite{inputs}{#4}}
+% Sampling writes an existing point's position. The final JSON object contains
+% the path reference and sample location; named output sockets remain reusable.
+\NewDocumentCommand\loomcurvesample{O{} m +v}{%
+  \TLCstart{sample}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

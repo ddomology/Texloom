@@ -5,6 +5,7 @@ import {validateLiteralValue} from '../values.js';
 import {isCoordinateOperator, executeCoordinateOperation} from '../coordinates.js';
 import {sameSpace} from '../../geometry/spaces.js';
 import {isShapeOperator,executeShapeOperation,type ShapeEvaluation} from '../shapes.js';
+import {isCurveOperator,executeCurveOperation,type CurveEvaluation} from '../curves.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -130,7 +131,8 @@ const pathValue: Executor = (operation, inputs) => {
   requireSpace(operation, value.space, space, '.inputs.value.space');
   const diagnostics = validateLiteralValue(value, '.inputs.value');
   if (diagnostics.length) fail(operation, diagnostics[0].code, diagnostics[0].message, diagnostics[0].path);
-  return {value: {type: 'path2d', space: copySpace(space), value: structuredClone(value.value)}};
+  return {value: {type: 'path2d', space: copySpace(space), value: structuredClone(value.value),
+    ...(value.provenance?{provenance:structuredClone(value.provenance)}:{})}};
 };
 
 const transformValue: Executor = (operation, inputs) => {
@@ -157,6 +159,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isCurveOperator(name,version))return;
   if(isShapeOperator(name,version))return;
   if(isCoordinateOperator(name,version))return;
   if (!implementations.get(name)?.has(version)) throw new OperationValidationError([
@@ -165,7 +168,9 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 }
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
-export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation): Record<string, LiteralValue> {
+export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation): Record<string, LiteralValue> {
+  const curve=executeCurveOperation(operation,inputs,curves);
+  if(curve)return curve;
   const shape=executeShapeOperation(operation,inputs,shapes);
   if(shape)return shape;
   const coordinate=executeCoordinateOperation(operation,inputs);

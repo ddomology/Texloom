@@ -2,6 +2,7 @@ import {OperationValidationError, type DeepReadonly, type LiteralValue, type Ope
   type SpaceRef} from '../ir/operations.js';
 import {primitiveToPath, samplePrimitive, validatePrimitive, type Primitive2D, type PrimitivePathReport} from '../geometry/primitives.js';
 import {transformGeometry} from '../path-geometry.js';
+import {transformCurveInput,type CurveProvenance} from '../geometry/curves.js';
 import type {PathGeometry} from '../path-geometry.js';
 import {validateLiteralValue} from './values.js';
 
@@ -68,6 +69,11 @@ export function executeShapeOperation(op:Authored,inputs:Inputs,metadata?:ShapeE
     if(op.operator==='transformPath') {
       const from=getSpace(op,'from'),to=getSpace(op,'to'),path=input(op,inputs,'path','path2d',from),matrix=input(op,inputs,'transform','transform2d');
       if(!sameSpace(matrix.from,from)||!sameSpace(matrix.to,to))fail(op,'OPERATION_RUNTIME_SPACE','Transform spaces differ from the declared mapping.','.inputs.transform');
+      if(path.provenance){
+        const transformed=transformCurveInput({geometry:path.value,provenance:path.provenance},matrix.value);
+        return {path:{type:'path2d',space:to,value:structuredClone(transformed.geometry) as PathGeometry,
+          provenance:structuredClone(transformed.provenance) as CurveProvenance}};
+      }
       return {path:{type:'path2d',space:to,value:transformGeometry(path.value,matrix.value)}};
     }
     const space=getSpace(op,'space');

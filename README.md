@@ -295,6 +295,22 @@ python tools/build.py examples/anchor-layout.tex --out build/anchor-layout --vid
 See [anchors and text placement](docs/anchors.md) for literal TeX syntax,
 coordinate spaces, opt-in PGF metadata and supported provider limits.
 
+## Reusable curve operations (PR 10)
+
+The `texloom-curves` package trims, resamples, reverses and joins editable paths
+as typed graph values. Sample positions, tangents and distances remain live;
+chained outputs retain source-segment provenance. Length and parameter modes,
+contour selection, closed wrap and join policies are explicit.
+
+```sh
+python tools/build.py examples/curve-operations.tex --out build/curve-operations --video
+```
+
+The demo combines a trimmed cubic, nine equal arc-length markers, a sampled
+polyline and a moving reverse-direction probe. See [curve operations](docs/curves.md)
+for TeX syntax, current-geometry reads, reusable outputs, numerical tolerances
+and resampling limits. The historical sampler and renderer APIs remain unchanged.
+
 ## Core API
 
 ```ts

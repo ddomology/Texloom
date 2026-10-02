@@ -2,6 +2,7 @@ import type {PathGeometry} from '../path-geometry.js';
 import type {Unit} from '../fields/ast.js';
 import type {Primitive2D} from '../geometry/primitives.js';
 import type {AnchorName} from './text.js';
+import type {CurveProvenance} from '../geometry/curves.js';
 
 /** Lines/columns are 1-based; end is exclusive. Columns count Unicode code points. */
 export interface SourceSpan {
@@ -30,7 +31,7 @@ export type LiteralValue =
   | {type: 'vec2'; role: Vec2Role; space: SpaceRef; value: [number, number]}
   | {type: 'points2d'; space: SpaceRef; value: [number,number][]}
   | {type: 'shape2d'; space: SpaceRef; value: Primitive2D}
-  | {type: 'path2d'; space: SpaceRef; value: PathGeometry}
+  | {type: 'path2d'; space: SpaceRef; value: PathGeometry; provenance?:CurveProvenance}
   /** SVG affine convention [a,b,c,d,e,f]; maps from -> to, no inverse implied. */
   | {type: 'transform2d'; from: SpaceRef; to: SpaceRef; value: [number, number, number, number, number, number]};
 export interface OutputRef {operation: string; socket: string}
@@ -40,6 +41,7 @@ export type AnchorInput = {kind:'anchor';source:AnchorSource;query:{kind:'named'
 export type TextPlacementInput = {kind:'textPlacement';node:string;anchor:AnchorName;point:InputRef;innerSep?:[number,number];outerSep?:[number,number]};
 export type InputRef = {kind: 'literal'; value: LiteralValue} | {kind: 'output'; ref: OutputRef}
   | AnchorInput | TextPlacementInput
+  | {kind:'path';node:string;space:SpaceRef}
   | {kind:'node';node:string;property:'position';space:SpaceRef}
   | {kind:'expression';expression:string;unit:Unit;sourceSpan?:SourceSpan}
   | {kind:'pointExpression';expression:string;space:SpaceRef;sourceSpan?:SourceSpan}
