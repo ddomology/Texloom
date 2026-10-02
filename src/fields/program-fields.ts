@@ -10,6 +10,7 @@ import {createFieldContext} from './context.js';
 import {compileFieldExpression, evaluateFieldExpression, type CompiledFieldExpression} from './evaluate.js';
 import {captureAttribute, setFieldPositions} from '../operations/attributes.js';
 import {validateDeformationProgramInContext} from '../operations/deform.js';
+import {validateMorphProgramInContext} from '../timeline/morph.js';
 
 type Obj = Record<string, any>;
 const object = (v:unknown):v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -142,6 +143,8 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):Inspection 
   });
   if (!validatedContext && bundle.deformations && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateDeformationProgramInContext(bundle.deformations,{...bundle,fields:input as FieldProgram}));
+  if (!validatedContext && bundle.morphs !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,fields:input as FieldProgram}));
   return {diagnostics,operations};
 }
 

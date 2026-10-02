@@ -6,6 +6,7 @@ import {compileDeformation, type CompiledDeformation} from '../geometry/deform-e
 import {deformGeometry, type DeformationReport, type DeformationMode} from '../geometry/deform.js';
 import {pathGeometryData} from '../path-geometry.js';
 import type {ExpressionValue} from '../fields/ast.js';
+import {validateMorphProgramInContext} from '../timeline/morph.js';
 
 export interface DeformationOperation {
   id:string; source:string; target:string; mode:DeformationMode; expression:string;
@@ -105,6 +106,8 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):Inspection 
     active.delete(entry);done.add(entry);
   };
   for(const entry of entries)visit(entry);
+  if(!validatedContext&&bundle.morphs!==undefined&&!diagnostics.some(d=>d.severity==='error'))
+    diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,deformations:input as DeformationProgram}));
   return {diagnostics,entries};
 }
 
