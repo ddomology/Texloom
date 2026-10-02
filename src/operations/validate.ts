@@ -5,6 +5,7 @@ import {OperationValidationError, type Diagnostic, type OperationGraph, type Ope
   type PreparedOperationGraph, type SourceSpan, type SpaceRef, type SocketType, type DeepReadonly} from '../ir/operations.js';
 import {defaultOperatorRegistry, type OperatorRegistry} from './registry.js';
 import {freezeSnapshot, validateJsonData, validateLiteralValue, validateSourceSpan, validateSpaceRef} from './values.js';
+import {bindingProperties, propertiesOverlap} from './properties.js';
 
 type Obj = Record<string, any>;
 type ResolvedType = {type: string; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
@@ -13,7 +14,6 @@ const named = (v: unknown): v is string => typeof v === 'string' && v.trim().len
 const own = (v: object, key: string) => Object.prototype.hasOwnProperty.call(v, key);
 const sameSpace = (a: SpaceRef | undefined, b: SpaceRef | undefined) => a?.kind === b?.kind &&
   (a?.kind !== 'local' || (b?.kind === 'local' && a.node === b.node));
-const overlaps = (a: string, b: string) => a === b || a.startsWith(b + '.') || b.startsWith(a + '.');
 
 /** Validate a graph in a valid legacy scene context, without running any operator. */
 function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, validatedContext = false): {diagnostics: Diagnostic[]; order: string[]} {
@@ -158,23 +158,21 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     if (!named(raw.property)) {error('OPERATION_BINDING_PROPERTY', 'Expected a property name.', path + '.property', span); return;}
     const local: SpaceRef = {kind:'local',node:raw.target};
     const parent: SpaceRef = target?.parent ? {kind:'local',node:target.parent} : {kind:'scene'};
-    let expected: ResolvedType | undefined, slots: string[] = [];
+    let expected: ResolvedType | undefined;
+    const slots = bindingProperties({target:raw.target,property:raw.property},nodes).map(access => access.property);
     if (raw.property === 'position' && ['point','tex','ellipse'].includes(kind)) {
       expected = {type:'vec2',role:'point',space:{kind:'scene'}};
-      slots = kind === 'ellipse' ? ['cx','cy'] : ['x','y'];
       inverseBindings.set(raw.target, {path,span});
     } else if (['start','end'].includes(raw.property) && kind === 'line') {
       expected = {type:'vec2',role:'point',space:{kind:'scene'}};
-      slots = raw.property === 'start' ? ['x1','y1'] : ['x2','y2'];
       inverseBindings.set(raw.target, {path,span});
     } else if (raw.property === 'geometry' && kind === 'path') {
-      expected = {type:'path2d',space:local}; slots = ['geometry','d'];
+      expected = {type:'path2d',space:local};
     } else if (raw.property === 'transform' && kind !== 'camera') {
-      expected = {type:'transform2d',from:local,to:parent}; slots = ['transform'];
+      expected = {type:'transform2d',from:local,to:parent};
     } else {
       const spec = propertySpec(kind, raw.property);
       if (spec) {
-        slots = [raw.property];
         if (raw.property === 'transform.translate') expected = {type:'vec2',role:'vector',space:parent};
         else if (raw.property === 'transform.scale') expected = {type:'vec2',role:'vector',space:local};
         else if (parseGeometryProperty(raw.property)) {
@@ -186,7 +184,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     }
     if (!expected) {error('OPERATION_BINDING_PROPERTY', `Unsupported ${kind} binding ${raw.property}.`, path + '.property', span); return;}
     compatible(expected, actual, path + '.value', span);
-    for (const previous of writers) if (previous.target === raw.target && slots.some(a => previous.slots.some(b => overlaps(a,b))))
+    for (const previous of writers) if (slots.some(a => previous.slots.some(b => propertiesOverlap({node:raw.target,property:a},{node:previous.target,property:b}))))
       error('OPERATION_WRITER_CONFLICT', `Multiple writers overlap on ${raw.target}.${raw.property}.`, path, span,
         [{message:'Earlier writer.',path:previous.path,...(previous.span ? {sourceSpan:previous.span} : {})}]);
     writers.push({target:raw.target,slots,path,span});

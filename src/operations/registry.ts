@@ -120,4 +120,29 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
     },
     outputs: {position: {type: 'vec2', role: 'point', space: 'to'}},
   },
+  {
+    name: 'scalarValue', version: 1, spaces: [], pure: true, deterministic: true,
+    inputs: {value: {value: {type: 'scalar'}, required: true}},
+    outputs: {value: {type: 'scalar'}},
+  },
+  {
+    name: 'pointValue', version: 1, spaces: ['space'], pure: true, deterministic: true,
+    inputs: {value: {value: {type: 'vec2', role: 'point', space: 'space'}, required: true}},
+    outputs: {value: {type: 'vec2', role: 'point', space: 'space'}},
+  },
+  {
+    name: 'vectorValue', version: 1, spaces: ['space'], pure: true, deterministic: true,
+    inputs: {value: {value: {type: 'vec2', role: 'vector', space: 'space'}, required: true}},
+    outputs: {value: {type: 'vec2', role: 'vector', space: 'space'}},
+  },
+  {
+    name: 'pathValue', version: 1, spaces: ['space'], pure: true, deterministic: true,
+    inputs: {value: {value: {type: 'path2d', space: 'space'}, required: true}},
+    outputs: {value: {type: 'path2d', space: 'space'}},
+  },
+  {
+    name: 'transformValue', version: 1, spaces: ['from', 'to'], pure: true, deterministic: true,
+    inputs: {value: {value: {type: 'transform2d', from: 'from', to: 'to'}, required: true}},
+    outputs: {value: {type: 'transform2d', from: 'from', to: 'to'}},
+  },
 ]);

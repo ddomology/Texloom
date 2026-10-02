@@ -1,7 +1,8 @@
 import type {PathGeometry} from './path-geometry.js';
 import {validatePathGeometry, parseGeometryProperty, geometryPointSlot} from './path-contract.js';
-import type {Diagnostic, OperationGraph} from './ir/operations.js';
+import type {Diagnostic, OperationGraph, SourceSpan} from './ir/operations.js';
 import {validateOperationGraphInContext} from './operations/validate.js';
+import {validateSourceSpan} from './operations/values.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -29,7 +30,7 @@ export interface ScalarFieldResource { kind: 'scalar-field'; columns: number; ro
 export type Resource = VectorResource | ScalarFieldResource;
 export type TrackValue = number | number[];
 export interface Track { target: string; property: string; keys: [number, TrackValue][]; interpolation?: 'linear' | 'smooth' | 'step' }
-export type Relation =
+export type Relation = (
   | { type: 'pointOnEllipse'; target: string; source: string }
   | { type: 'tangent'; target: string; source: string; point: string; length: number }
   | { type: 'attach'; target: string; source: string; offset: [number, number] }
@@ -37,13 +38,14 @@ export type Relation =
   | { type: 'pointOnPath'; target: string; source: string; mode?: 'parameter'|'length'; tolerance?: number }
   | { type: 'pathDirection'; target: string; source: string; point: string; length: number; normal?: boolean }
   | { type: 'connect'; target: string; from: { node: string; anchor: string }; to: { node: string; anchor: string }; bend?: number }
-  | { type: 'pathLabel'; target: string; path: string; position: number; offset: number; rotate?: boolean };
+  | { type: 'pathLabel'; target: string; path: string; position: number; offset: number; rotate?: boolean }
+  ) & {sourceSpan?: SourceSpan};
 export interface Camera { x: number; y: number; zoom: number; rotation?: number }
 export interface Bundle {
   version: '0.1' | '0.2' | '0.3'; title: string; duration: number; units: 'bp'; viewport: { width: number; height: number };
   nodes: Node[]; resources: Record<string, Resource>; tracks: Track[]; relations: Relation[]; camera: Camera;
   document?: { blocks: unknown[] }; provenance?: Record<string, unknown>; diagnostics?: Diagnostic[];
-  /** Validated metadata in PR 02; executable graph lowering follows separately. */
+  /** Typed declarations validated at preparation and executed by the shared plan. */
   operationGraph?: OperationGraph;
 }
 export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource> }
@@ -254,7 +256,16 @@ export function validateBundle(input: unknown): Diagnostic[] {
   const checkCycles = (graph: Map<string, string[]>, code: string) => {
     const active = new Set<string>(), done = new Set<string>();
     const walk = (id: string, chain: string[]) => {
-      if (active.has(id)) { error(code, `Dependency cycle: ${[...chain, id].join(' -> ')}.`, '$'); return; }
+      if (active.has(id)) {
+        const cycle = [...chain.slice(chain.indexOf(id)), id];
+        const related = Array.isArray(b.relations) ? b.relations.flatMap((r: unknown,index: number) =>
+          object(r) && cycle.includes(r.target) ? [{message:`Relation writing ${r.target}.`,path:`$.relations[${index}]`,
+            ...(r.sourceSpan && !validateSourceSpan(r.sourceSpan).length ? {sourceSpan:r.sourceSpan as SourceSpan} : {})}] : []) : [];
+        errors.push({severity:'error',code,message:`Dependency cycle: ${cycle.join(' -> ')}.`,path:related[0]?.path ?? '$',
+          ...(related.find(r => r.sourceSpan)?.sourceSpan ? {sourceSpan:related.find(r => r.sourceSpan)!.sourceSpan} : {}),
+          ...(related.length ? {related} : {})});
+        return;
+      }
       if (done.has(id)) return;
       active.add(id); for (const dep of graph.get(id) ?? []) walk(dep, [...chain, id]); active.delete(id); done.add(id);
     };
@@ -302,6 +313,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
   else b.relations.forEach((r: unknown, i: number) => {
     const path = `$.relations[${i}]`;
     if (!object(r)) { error('RELATION_TYPE', 'Expected relation object.', path); return; }
+    if (r.sourceSpan !== undefined) errors.push(...validateSourceSpan(r.sourceSpan,path + '.sourceSpan'));
     if(r.type==='pointOnPath'||r.type==='pathDirection'){
       if(b.version!=='0.3')error('PATH_VERSION','Path sampling relations require version 0.3.',path);
       const expected=r.type==='pointOnPath'?{target:'point',source:'path'}:{target:'line',source:'path',point:'point'};

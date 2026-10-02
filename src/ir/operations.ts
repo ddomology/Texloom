@@ -44,7 +44,7 @@ export interface Operation {
 export interface OperationBinding {
   target: string; property: string; value: OutputRef; sourceSpan?: SourceSpan;
 }
-/** Experimental validation contract; executable lowering is introduced separately. */
+/** Portable declarations, lowered separately into a deterministic execution plan. */
 export interface OperationGraph {version: 1; operations: Operation[]; bindings: OperationBinding[]}
 export type DeepReadonly<T> = T extends object ? {readonly [K in keyof T]: DeepReadonly<T[K]>} : T;
 export interface PreparedOperationGraph {
