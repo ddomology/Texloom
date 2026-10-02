@@ -279,6 +279,22 @@ for richer future node capture. Run `python tools/compiler_probe.py` to repeat.
 - Export is silent video. Narration, sound design, and teaching choreography are
   consumer features.
 
+## Anchors and baseline placement (PR 09)
+
+The opt-in `texloom-anchors` package connects logical TeX baselines, measured
+native PGF anchors and analytic closed-shape boundaries through the same typed
+operation graph. `\loomplace` aligns a raw formula's selected anchor to a scene
+point; `\loomanchor` resolves a named anchor or analytic border into an existing
+point node. Metrics, ink bounds and native padding remain distinct. Existing
+scenes retain their original capture output unless the package is loaded.
+
+```sh
+python tools/build.py examples/anchor-layout.tex --out build/anchor-layout --video
+```
+
+See [anchors and text placement](docs/anchors.md) for literal TeX syntax,
+coordinate spaces, opt-in PGF metadata and supported provider limits.
+
 ## Core API
 
 ```ts

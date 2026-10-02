@@ -1,12 +1,13 @@
 import type {Bundle, Node} from '../schema.js';
 import {BundleValidationError,relationOutputs,propertySpec} from '../schema.js';
 import {OperationValidationError, type DeepReadonly, type Diagnostic, type InputRef, type LiteralValue,
-  type Operation, type SourceSpan, type SpaceRef} from '../ir/operations.js';
+  type Operation, type OperatorDefinition, type OutputRef, type SourceSpan, type SpaceRef} from '../ir/operations.js';
 import type {CompiledExpression, ExpressionValue, Unit} from '../fields/ast.js';
 import {compileExpression,evaluateExpression} from '../fields/scalar.js';
 import {validateSpaceRef,validateSourceSpan} from './values.js';
 import {scalarPropertyUnit,type PropertyAccess} from './properties.js';
 import {nodePosition,nodePositionReads,spaceTransform,spaceTransformReads} from '../geometry/spaces.js';
+import {validateAnchorInput,anchorInputReads,resolveAnchorInput,type AnchorEvaluation} from './anchors.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -78,6 +79,14 @@ export function validateDynamicInput(raw:unknown,bundle:Bundle,path:string,span?
     const from=space(raw.from,path+'.from'),to=space(raw.to,path+'.to');
     if(to)inverse(raw.to);
     if(from&&to)type={type:'transform2d',from:raw.from,to:raw.to};
+  }else if(raw.kind==='anchor'||raw.kind==='textPlacement'){
+    const valid=raw.kind==='textPlacement'||space(raw.space,path+'.space');
+    if(raw.kind==='anchor'&&valid)inverse(raw.space);
+    if(!resolveInput)fail('ANCHOR_CONTEXT','Anchor validation requires its containing graph.');
+    else {
+      const result=validateAnchorInput(raw,bundle,path,span,resolveInput);
+      diagnostics.push(...result.diagnostics);if(valid)type=result.type;
+    }
   }else if(raw.kind==='property'){
     keys(['kind','node','property','unit']);
     const node=name(raw.node)?nodes.get(raw.node):undefined;
@@ -113,31 +122,49 @@ const sameInputSpace=(a:SpaceRef,b:SpaceRef|undefined)=>!!b&&a.kind===b.kind&&(a
 /** Nested point lists participate in the same graph and property dependency plan. */
 export function flattenOperationInputs(inputs:Readonly<Record<string,DeepReadonly<InputRef>>>):DeepReadonly<InputRef>[] {
   const result:DeepReadonly<InputRef>[]=[];
-  const visit=(input:DeepReadonly<InputRef>)=>{result.push(input);if(input.kind==='points')input.items.forEach(visit);};
+  const visit=(input:DeepReadonly<InputRef>)=>{
+    result.push(input);
+    if(input.kind==='points')input.items.forEach(visit);
+    else if(input.kind==='textPlacement')visit(input.point);
+    else if(input.kind==='anchor') {
+      if(input.source.kind==='shape')visit({kind:'output',ref:input.source.ref});
+      if(input.query.kind==='border')visit(input.query.towards);
+    }
+  };
   Object.values(inputs).forEach(visit);return result;
 }
 
 export interface PreparedOperationInputs {
   readonly reads:readonly PropertyAccess[];
   resolve(nodes:Map<string,Node>,time:number,parameters:Readonly<Record<string,ExpressionValue>>,
-    outputs:ReadonlyMap<string,Record<string,LiteralValue>>):Record<string,LiteralValue>;
+    outputs:ReadonlyMap<string,Record<string,LiteralValue>>,anchors?:AnchorEvaluation):Record<string,LiteralValue>;
 }
 /** The containing operation and scene have already passed graph validation. */
-export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:Bundle,path:string):PreparedOperationInputs{
+export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:Bundle,path:string,
+  definitions:readonly DeepReadonly<OperatorDefinition>[]):PreparedOperationInputs{
   const nodes=new Map(bundle.nodes.map(n=>[n.id,n])),reads:PropertyAccess[]=[],compiled=new Map<DeepReadonly<InputRef>,CompiledExpression>();
+  const outputSpace=(ref:DeepReadonly<OutputRef>):SpaceRef=>{
+    const producer=bundle.operationGraph!.operations.find(p=>p.id===ref.operation)!;
+    const definition=definitions.find(d=>d.name===producer.operator&&d.version===producer.version)!;
+    const socket=definition.outputs[ref.socket];
+    if(socket.type!=='shape2d')throw new Error('Anchor source is not a shape output.');
+    return producer.spaces[socket.space];
+  };
   for(const input of flattenOperationInputs(operation.inputs)){
     if(input.kind==='node')reads.push(...nodePositionReads(input.node,input.space,nodes));
     else if(input.kind==='spaceTransform')reads.push(...spaceTransformReads(input.from,nodes),...spaceTransformReads(input.to,nodes));
     else if(input.kind==='property')reads.push({node:input.node,property:input.property});
+    else if(input.kind==='anchor'||input.kind==='textPlacement')reads.push(...anchorInputReads(input,nodes,outputSpace));
     else if(input.kind==='expression'||input.kind==='pointExpression')compiled.set(input,compileInput(input,bundle));
   }
-  return Object.freeze({reads:Object.freeze(reads),resolve(frameNodes,time,parameters,outputs){
+  return Object.freeze({reads:Object.freeze(reads),resolve(frameNodes,time,parameters,outputs,anchors){
     const resolve=(input:DeepReadonly<InputRef>,at:string):LiteralValue=>{
       try{
         if(input.kind==='literal')return structuredClone(input.value) as LiteralValue;
         if(input.kind==='output')return outputs.get(input.ref.operation)![input.ref.socket];
         if(input.kind==='node')return {type:'vec2',role:'point',space:structuredClone(input.space),value:nodePosition(input.node,input.space,frameNodes)};
         if(input.kind==='spaceTransform')return {type:'transform2d',from:structuredClone(input.from),to:structuredClone(input.to),value:spaceTransform(input.from,input.to,frameNodes)};
+        if(input.kind==='anchor'||input.kind==='textPlacement')return resolveAnchorInput(input,frameNodes,bundle.resources,resolve,at,anchors);
         if(input.kind==='points')return {type:'points2d',space:structuredClone(input.space),value:input.items.map((item,index)=>{
           const value=resolve(item,`${at}.items[${index}]`);
           if(value.type!=='vec2'||value.role!=='point')throw new Error('Point list item did not resolve to a point.');return [...value.value];

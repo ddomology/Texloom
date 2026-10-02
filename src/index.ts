@@ -24,3 +24,6 @@ export {coordinateOperatorDefinitions,executeCoordinateOperation} from './operat
 export {sameSpace,spaceMatrix,spaceTransform,nodePosition} from './geometry/spaces.js';
 export * from './geometry/primitives.js';
 export {shapeOperatorDefinitions,executeShapeOperation,type ShapeEvaluation} from './operations/shapes.js';
+export * from './ir/text.js';
+export * from './geometry/anchors.js';
+export {textResourceRevision,type AnchorEvaluation,type AnchorEvaluationEntry} from './operations/anchors.js';

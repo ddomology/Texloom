@@ -18,12 +18,13 @@ import time
 import tempfile
 
 from svg_import import import_svg, ImportDiagnostic
-from tikz_capture import CAPTURE_PREAMBLE, read_capture, read_soft_path, lower_records
+from tikz_capture import CAPTURE_PREAMBLE, ANCHOR_CAPTURE_PREAMBLE, read_capture, read_soft_path, lower_records
 from expression_capture import lower_expressions
 from field_capture import lower_fields
 from deformation_capture import lower_deformations
 from coordinate_capture import lower_coordinates
 from shape_capture import lower_shapes
+from anchor_capture import lower_anchors
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -53,14 +54,14 @@ def version(executable):
     p=subprocess.run([executable,'--version'],capture_output=True,text=True,encoding='utf8',errors='replace')
     return p.stdout.splitlines()[0] if p.stdout else 'unknown'
 
-def asset_document(body,kind,setup):
+def asset_document(body,kind,setup,anchor_capture=False):
     content=(r'$\displaystyle '+body+'$') if kind=='math' else body
     return r'''\documentclass[12pt]{article}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern,amsmath,amssymb,tikz}
 \usetikzlibrary{arrows.meta,calc,shapes.geometric}
 \pagestyle{empty}
-'''+setup+CAPTURE_PREAMBLE+r'''
+'''+setup+CAPTURE_PREAMBLE+(ANCHOR_CAPTURE_PREAMBLE if anchor_capture else '')+r'''
 \newsavebox{\TLbox}
 \newwrite\TLmetrics
 \begin{document}
@@ -72,14 +73,14 @@ def asset_document(body,kind,setup):
 \end{document}
 '''
 
-def compile_resource(resource,execution,out,setup,commands):
+def compile_resource(resource,execution,out,setup,commands,anchor_capture=False):
     rid=resource['id']
     if not re.fullmatch(r'[A-Za-z][\w-]*',rid): raise CompileDiagnostic(f'Invalid resource ID: {rid}')
     path=execution/resource['file']
     if path.parent!=execution or not path.exists(): raise CompileDiagnostic(f'Missing generated TeX asset {path.name}')
     body=decode_detokenized(path.read_text(encoding='utf8')).strip()
     folder=out/'assets'/rid; folder.mkdir(parents=True,exist_ok=True)
-    (folder/'asset.tex').write_text(asset_document(body,resource['kind'],setup),encoding='utf8')
+    (folder/'asset.tex').write_text(asset_document(body,resource['kind'],setup,anchor_capture),encoding='utf8')
     result=run(['latex','-no-shell-escape','-interaction=nonstopmode','-halt-on-error','asset.tex'],folder)
     commands.append({'resource':rid,**{k:v for k,v in result.items() if k!='output'}})
     values=(folder/'asset.metrics').read_text().strip().split(',')
@@ -136,6 +137,7 @@ def compile_scene(source,out):
     scenes=[r for r in records if r['type']=='scene']
     if len(scenes)!=1: raise CompileDiagnostic('Exactly one TLScene declaration is required')
     scene=scenes[0]
+    anchor_capture=any(record['type']=='anchor-profile' for record in records)
     for record in records:
         if record['type']=='tikz-geometry' and record['stroke']=='none' and record['fill']=='none':
             raise CompileDiagnostic('Live geometry currently requires draw or fill paint for its PGF reference artifact')
@@ -159,17 +161,18 @@ def compile_scene(source,out):
             if rid in seen_resources: raise CompileDiagnostic(f'Duplicate resource ID: {rid}')
             seen_resources.add(rid)
             if kind=='resource':
-                vector=compile_resource(record,execution,run_root,setup,commands)
+                vector=compile_resource(record,execution,run_root,setup,commands,anchor_capture)
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     lower_expressions(records,bundle,execution,out)
     lower_fields(records,bundle,execution,out)
     lower_deformations(records,bundle,execution,out)
     lower_coordinates(records,bundle,execution,out)
     lower_shapes(records,bundle,execution,out)
+    lower_anchors(records,bundle,execution,out)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
     targets=[(t['target'],t['property']) for t in bundle['tracks']]

@@ -15,6 +15,7 @@ import type {FieldEvaluation} from '../fields/types.js';
 import {prepareDeformationProgram, type DeformationEvaluation} from './deform.js';
 import {prepareOperationInputs,flattenOperationInputs,type PreparedOperationInputs} from './inputs.js';
 import {isShapeOperator,type ShapeEvaluation} from './shapes.js';
+import type {AnchorEvaluation} from './anchors.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -24,7 +25,7 @@ type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
   {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
@@ -65,12 +66,13 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   for (const step of steps) if (step.kind === 'relation') {
     for (const node of legacyParticipants(step.lowered.relation)) step.reads.push({node,property:'transform'});
   }
-  const graph = bundle.operationGraph ? prepareOperationGraph(bundle.operationGraph,bundle).graph : undefined;
+  const preparedGraph = bundle.operationGraph ? prepareOperationGraph(bundle.operationGraph,bundle) : undefined;
+  const graph = preparedGraph?.graph;
   const operationInputs=new Map<string,PreparedOperationInputs>();
   for (const [index,operation] of (graph?.operations ?? []).entries()) {
     requireAuthoredImplementation(operation.operator,operation.version);
     const dependencies = [...new Set(flattenOperationInputs(operation.inputs).flatMap(input => input.kind === 'output' ? [operationID(input.ref.operation)] : []))];
-    const inputs=prepareOperationInputs(operation,bundle,`$.operationGraph.operations[${index}]`);operationInputs.set(operation.id,inputs);
+    const inputs=prepareOperationInputs(operation,bundle,`$.operationGraph.operations[${index}]`,preparedGraph!.definitions);operationInputs.set(operation.id,inputs);
     steps.push({id:operationID(operation.id),path:`$.operationGraph.operations[${index}]`,sourceSpan:operation.sourceSpan,
       kind:'operation',operation,dependencies,reads:[...inputs.reads],writes:[]});
   }
@@ -140,7 +142,8 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     let fieldResult:FieldEvaluation|undefined;
     const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
     const shapes:ShapeEvaluation={definitions:Object.create(null),approximations:Object.create(null)};
-    if(metadata){delete metadata.deformations;delete metadata.shapes;}
+    const anchors:AnchorEvaluation=Object.create(null);
+    if(metadata){delete metadata.deformations;delete metadata.shapes;delete metadata.anchors;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -150,7 +153,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
           validateLegacyLocalTransforms(step.lowered.relation,frameNodes);
           executeLegacyOperation(step.lowered.relation,context);
         } else if (step.kind === 'operation') {
-          const inputs=operationInputs.get(step.operation.id)!.resolve(frameNodes,time,parameters,values);
+          const inputs=operationInputs.get(step.operation.id)!.resolve(frameNodes,time,parameters,values,anchors);
           values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs,shapes));
         } else if (step.kind === 'deformation') {
           const prepared=deformations!.operations[step.index];
@@ -167,6 +170,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     }
     if(metadata&&deformations)metadata.deformations=freezeSnapshot(deformationResults);
     if(metadata&&hasShapes)metadata.shapes=structuredClone(shapes);
+    if(metadata&&Object.keys(anchors).length)metadata.anchors=structuredClone(anchors);
     return fieldResult;
   }});
 }

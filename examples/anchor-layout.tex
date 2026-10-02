@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-shapes}
+\usepackage{texloom-anchors}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Layout has a reference point}]
+\loomnode[heading] (heading) at (480,48) {Layout has a reference point};
+\loomnode[small] (intro) at (480,82) {TeX baselines. Native PGF anchors. Analytic shape boundaries.};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,108)--(905,108) (55,270)--(905,270) (55,488)--(905,488);
+  \draw[gold,opacity=.55,line width=.8bp,dash pattern=on 4bp off 5bp] (92,212)--(868,212);
+};
+\loomnode[label] (baseline-title) at (480,133) {ONE BASELINE / DIFFERENT LOGICAL BOXES};
+% These are raw TeX resources. Their origins and logical baselines stay distinct
+% from the visible ink, including ascenders, descenders and large operators.
+\TLMath{fraction-art}{\frac{g_j}{1+x^2}}
+\TLMath{integral-art}{\int_0^1 f(t)\,dt}
+\TLMath{sequence-art}{\lim_{n\to\infty} a_n=L}
+\TLNode{fraction}{tex}{"resourceId":"fraction-art","x":0,"y":0,"scale":1.75,"style":{"fill":"#71DFC2"}}
+\TLNode{integral}{tex}{"resourceId":"integral-art","x":0,"y":0,"scale":1.75,"style":{"fill":"#E5F1EF"}}
+\TLNode{sequence}{tex}{"resourceId":"sequence-art","x":0,"y":0,"scale":1.75,"style":{"fill":"#EE8D82"}}
+\loomplace[anchor=base]{fraction}{[230,212]}
+\loomplace[anchor=base]{integral}{[470,212]}
+\loomplace[anchor=base]{sequence}{[720,212]}
+\TLNode{fraction-base}{point}{"x":0,"y":0,"r":2.6,"style":{"fill":"#F3CB84"}}
+\TLNode{integral-base}{point}{"x":0,"y":0,"r":2.6,"style":{"fill":"#F3CB84"}}
+\TLNode{sequence-base}{point}{"x":0,"y":0,"r":2.6,"style":{"fill":"#F3CB84"}}
+\loomanchor{fraction-base}{fraction}{"base"}
+\loomanchor{integral-base}{integral}{"base"}
+\loomanchor{sequence-base}{sequence}{"base"}
+\loomnode[label] (baseline-caption) at (480,245) {The yellow reference line does not follow the ink's bounding box.};
+\loomnode[label] (connection-title) at (480,293) {LIVE BOUNDARIES / STABLE ATTACHMENTS};
+\TLNode{ellipse}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"#71DFC2","fillOpacity":0.045,"stroke":"#71DFC2","strokeWidth":2}}
+\TLNode{connector}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.7}}
+\TLNode{ellipse-center}{point}{"x":270,"y":387,"r":0,"visible":false}
+\TLNode{shape-border}{point}{"x":0,"y":0,"r":4.5,"style":{"fill":"#F3CB84"}}
+\TLNode{node-border}{point}{"x":0,"y":0,"r":4.5,"style":{"fill":"#F3CB84"}}
+\TLMath{ellipse-label-art}{E(t)}
+\TLNode{ellipse-label}{tex}{"resourceId":"ellipse-label-art","x":0,"y":0,"scale":1.6,"style":{"fill":"#71DFC2"}}
+\loomplace[anchor=center]{ellipse-label}{"ellipse-center"}
+\loomnode[draw=ink,text=ink,rounded corners=8bp,line width=1bp,inner xsep=16bp,inner ysep=12bp,outer sep=1bp,text width=110bp,align=left,font=\sffamily\fontsize{12}{16}\selectfont] (destination) at (760,387) {Measured by PGF\\$g_j+\displaystyle\frac{1}{x}$};
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomparameter[unit=bp,min=85,max=145]{radius}{115}
+\loomexpr{destination}{transform.translate}{vec2(760bp,387bp+30bp*sin(0.8rad*time/1s+phase))}
+\loomshape[id=orbit,tolerance=0.06]{ellipse}{ellipse}{{"center":"ellipse-center","rx":"radius+12bp*sin(0.8rad*time/1s+phase)","ry":61}}
+\loomanchor{shape-border}{shape:orbit}{{"towards":"node-border"}}
+\loomanchor{node-border}{destination}{"west"}
+\TLRelation{lineBetween}{"target":"connector","a":"shape-border","b":"node-border"}
+\loomnode[label] (ellipse-caption) at (270,470) {ANALYTIC ELLIPSE};
+\loomnode[label] (destination-caption) at (760,470) {NATIVE TEXT + PADDING};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / LOGICAL METRICS / NAMED ANCHORS / DECLARATIVE PLACEMENT};
+\end{loomscene}
+\end{document}
