@@ -1,5 +1,12 @@
 import type {Node} from '../schema.js';
 import type {OperationBinding} from '../ir/operations.js';
+import type {Unit} from '../fields/ast.js';
+
+/** Units shared by expression destinations and scalar property input reads. */
+export function scalarPropertyUnit(property:string):Unit {
+  return ['transform.rotate','rotation','phase'].includes(property)?'rad'
+    : ['x','y','cx','cy','x1','x2','y1','y2','rx','ry','r','width','height','style.strokeWidth'].includes(property)?'bp':'1';
+}
 
 /** Node IDs and property paths are separate, including when an ID has dots. */
 export interface PropertyAccess {node: string; property: string}

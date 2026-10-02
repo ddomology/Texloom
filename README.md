@@ -189,6 +189,28 @@ reflection/scale behavior, exact source spans and real PGF comparison tests.
 python tools/build.py examples/triangle-coordinates.tex --out build/triangle-coordinates --video
 ```
 
+### Parametric shapes (PR 08)
+
+Circle, ellipse, arc, rectangle, rounded rectangle and polyline constructors
+produce typed analytic shapes. Separate graph operations sample those shapes or
+convert them to paths under an explicit approximation profile and tolerance.
+
+```tex
+\usepackage{texloom-shapes}
+\loomshape[tolerance=0.1]{orbit}{circle}{{"center":"O","radius":"40bp+10bp*sin(1rad*time/1s)"}}
+\loomshapesample{P}{shape:orbit}{"time/12s"}
+```
+
+`orbit` is an existing path and `P` an existing point. Shape inputs can consume
+live positions, typed expressions, property values and explicit point lists.
+The target path receives geometry converted into its local space. See the
+[shape guide](docs/shapes.md) for the six constructors, analytic sampling,
+source spans, units and approximation limits.
+
+```sh
+python tools/build.py examples/parametric-shapes.tex --out build/parametric-shapes --video
+```
+
 ## Architecture
 
 ```text

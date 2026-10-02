@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-shapes}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={A shape is more than its outline}]
+\loomnode[heading] (heading) at (480,49) {A shape is more than its outline};
+\loomnode[small] (intro) at (480,84) {Change the parameters. Keep the geometric meaning.};
+\loomnode[formula] (formula) at (480,126)
+  {$p(u,t)=c+\bigl(r_x(t)\cos\theta,\,r_y\sin\theta\bigr),\qquad\theta=\alpha+u\,\beta(t)$};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,163)--(905,163) (55,488)--(905,488);
+  \draw[rule,line width=.65bp] (557,185)--(557,466);
+};
+\loomnode[label] (analytic-title) at (300,187) {ANALYTIC CURVE};
+\loomnode[label] (gallery-title) at (744,187) {SIX PRIMITIVES};
+\loomnode[small] (analytic-caption) at (300,458) {Exact sample. A bounded approximation of the outline.};
+\loomnode[label] (circle-caption) at (650,264) {CIRCLE};
+\loomnode[label] (ellipse-caption) at (820,264) {ELLIPSE};
+\loomnode[label] (arc-caption) at (650,360) {ARC};
+\loomnode[label] (rectangle-caption) at (820,360) {RECTANGLE};
+\loomnode[label] (rounded-caption) at (650,455) {ROUNDED RECTANGLE};
+\loomnode[label] (polyline-caption) at (820,455) {POLYLINE};
+% The paths are explicit renderer targets; constructors own their geometry.
+\TLNode{ghost-ellipse}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#31505C","strokeWidth":1.1,"dash":[3,5]}}
+\TLNode{main-arc}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#71DFC2","strokeWidth":3,"lineCap":"round"}}
+\TLNode{circle}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#E5F1EF","strokeWidth":2}}
+\TLNode{ellipse}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#E5F1EF","strokeWidth":2}}
+\TLNode{arc}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#F3CB84","strokeWidth":2,"lineCap":"round"}}
+\TLNode{rectangle}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"#71DFC2","fillOpacity":0.07,"stroke":"#E5F1EF","strokeWidth":2}}
+\TLNode{rounded}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"#71DFC2","fillOpacity":0.07,"stroke":"#E5F1EF","strokeWidth":2}}
+\TLNode{polyline}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#EE8D82","strokeWidth":2,"lineCap":"round","lineJoin":"round"}}
+\TLNode{ray}{line}{"x1":300,"y1":315,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.3,"opacity":0.8}}
+\TLNode{O}{point}{"x":300,"y":315,"r":2.8,"style":{"fill":"#91ACB5"}}
+\TLNode{radius-driver}{point}{"x":300,"y":315,"r":170,"style":{"opacity":0}}
+\TLNode{P}{point}{"x":0,"y":0,"r":5.3,"style":{"fill":"#E5F1EF","stroke":"#71DFC2","strokeWidth":1.8}}
+\TLNode{start}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"#F3CB84"}}
+\TLNode{end}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"#EE8D82"}}
+\TLRelation{lineBetween}{"target":"ray","a":"O","b":"P"}
+\loomparameter[unit=bp,min=130,max=190]{radius}{170}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomexpr{radius-driver}{r}{radius + 12bp*sin(0.65rad*time/1s + phase)}
+\loomshape[tolerance=0.08]{ghost-ellipse}{ellipse}{{"center":"O","rx":{"node":"radius-driver","property":"r"},"ry":105}}
+\loomshape[tolerance=0.08]{main-arc}{arc}{
+  {"center":"O","rx":{"node":"radius-driver","property":"r"},"ry":105,
+   "startAngle":"-0.75*pi*1rad","sweepAngle":"(1.2 + 0.5*sin(0.55rad*time/1s + phase))*pi*1rad"}
+}
+\loomshapesample{P}{shape:main-arc}{"0.5 + 0.42*sin(0.8rad*time/1s + phase)"}
+\loomshapesample{start}{shape:main-arc}{0}
+\loomshapesample{end}{shape:main-arc}{1}
+\loomshape{circle}{circle}{{"center":[650,225],"radius":"20bp+3bp*sin(0.8rad*time/1s+phase)"}}
+\loomshape{ellipse}{ellipse}{{"center":[820,225],"rx":34,"ry":20}}
+\loomshape{arc}{arc}{{"center":[650,324],"rx":30,"ry":22,"startAngle":"-0.8*pi*1rad","sweepAngle":"1.55*pi*1rad"}}
+\loomshape{rectangle}{rectangle}{{"origin":[788,303],"width":64,"height":42}}
+\loomshape{rounded}{roundedRectangle}{{"origin":[618,395],"width":64,"height":39,"cornerRadius":10}}
+\loomshape{polyline}{polyline}{
+  {"points":[[789,430],[806,400],{"expression":"vec2(825bp,423bp+5bp*sin(0.8rad*time/1s+phase))"},[849,393]],"closed":false}
+}
+\loomnode[small] (footer) at (480,515) {TEXLOOM / PARAMETRIC SHAPES / ANALYTIC SAMPLING / SHARED PATH OUTPUT};
+\end{loomscene}
+\end{document}

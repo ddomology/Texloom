@@ -1,5 +1,6 @@
 import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import {validatePathGeometry} from '../path-contract.js';
+import {validatePrimitive} from '../geometry/primitives.js';
 
 type RecordValue = Record<string, unknown>;
 const object = (value: unknown): value is RecordValue =>
@@ -110,6 +111,17 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
       if (input.role !== 'point' && input.role !== 'vector') fail(errors, 'LITERAL_ROLE', 'Expected point or vector role.', `${path}.role`);
       errors.push(...validateSpaceRef(input.space, `${path}.space`)); tuple(2);
       break;
+    case 'points2d':
+      keys(input, ['type','space','value'], path, errors);
+      errors.push(...validateSpaceRef(input.space, `${path}.space`));
+      if(!Array.isArray(input.value)||input.value.length>16384||!input.value.every(p=>Array.isArray(p)&&p.length===2&&p.every(finite)))
+        fail(errors,'LITERAL_POINTS','Expected at most 16384 finite coordinate pairs.',`${path}.value`);
+      break;
+    case 'shape2d':
+      keys(input, ['type','space','value'], path, errors);
+      errors.push(...validateSpaceRef(input.space, `${path}.space`));
+      errors.push(...validatePrimitive(input.value).map(d=>({...d,path:`${path}.value${d.path?.replace(/^\$\.primitive/,'')??''}`})));
+      break;
     case 'path2d':
       keys(input, ['type', 'space', 'value'], path, errors);
       errors.push(...validateSpaceRef(input.space, `${path}.space`));
@@ -131,7 +143,7 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
       keys(input, ['type', 'from', 'to', 'value'], path, errors);
       errors.push(...validateSpaceRef(input.from, `${path}.from`), ...validateSpaceRef(input.to, `${path}.to`)); tuple(6);
       break;
-    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, path2d or transform2d.', `${path}.type`);
+    default: fail(errors, 'LITERAL_TYPE', 'Expected scalar, vec2, points2d, shape2d, path2d or transform2d.', `${path}.type`);
   }
   return errors;
 }

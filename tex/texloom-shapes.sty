@@ -1,0 +1,25 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-shapes}[2026/10/02 Texloom parametric shape declarations]
+\RequirePackage{texloom-expressions}
+\newcount\TLSserial
+\TLSserial=0
+\def\TLSstart#1{%
+  \global\advance\TLSserial by 1
+  \edef\TLEbase{\jobname.tl-shape-\the\TLSserial}%
+  \immediate\write\TLrecords{\string{"type":"shape-file","kind":"#1","file":"\TLEbase"\string}}}
+% The final argument is literal JSON. A path target already exists in the scene.
+\NewDocumentCommand\loomshape{O{} m m +v}{%
+  \TLSstart{constructor}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEmetadata{constructor}{#3}%
+  \TLEwrite{inputs}{#4}}
+% Sample the analytic constructor output, not its rendered approximation.
+% The final literal JSON value can be a number, expression string or output ref.
+\NewDocumentCommand\loomshapesample{O{} m m +v}{%
+  \TLSstart{sample}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEmetadata{shape}{#3}%
+  \TLEwrite{inputs}{#4}}
+\endinput

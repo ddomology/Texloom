@@ -3,7 +3,7 @@ import {propertySpec, relationOutputs, validateBundle} from '../schema.js';
 import {geometryPointSlot, parseGeometryProperty} from '../path-contract.js';
 import {OperationValidationError, type Diagnostic, type LiteralValue, type DeepReadonly, type SpaceRef} from '../ir/operations.js';
 import {freezeSnapshot, validateJsonData, validateSourceSpan} from '../operations/values.js';
-import {bindingProperties, propertiesOverlap, type PropertyAccess} from '../operations/properties.js';
+import {bindingProperties, propertiesOverlap, scalarPropertyUnit, type PropertyAccess} from '../operations/properties.js';
 import type {CompiledExpression, ExpressionBinding, ExpressionProgram, ExpressionValue, ParameterDefinition, Unit, Dimension} from './ast.js';
 import {compileExpression, evaluateExpression} from './scalar.js';
 import {validateFieldProgramInContext} from './program-fields.js';
@@ -44,8 +44,7 @@ function destination(binding: ExpressionBinding,nodes: ReadonlyMap<string,Node>)
   if (p === 'transform.translate') return {kind:'vec2',unit:'bp',role:'vector',space:n?.parent ? {kind:'local',node:n.parent} : {kind:'scene'}};
   if (p === 'transform.scale') return {kind:'vec2',unit:'1',role:'vector',space:{kind:'local',node:binding.target}};
   if (p === 'reveal' && (n?.kind !== 'path' || !n.geometry)) return;
-  const unit: Unit = ['transform.rotate','rotation','phase'].includes(p) ? 'rad'
-    : ['x','y','cx','cy','x1','x2','y1','y2','rx','ry','r','width','height','style.strokeWidth'].includes(p) ? 'bp' : '1';
+  const unit = scalarPropertyUnit(p);
   return {kind:'scalar',unit};
 }
 

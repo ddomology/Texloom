@@ -13,7 +13,8 @@ import {prepareExpressionProgram, evaluateExpressionBinding, type PreparedExpres
 import {prepareFieldProgram, type PreparedFieldProgram} from '../fields/program-fields.js';
 import type {FieldEvaluation} from '../fields/types.js';
 import {prepareDeformationProgram, type DeformationEvaluation} from './deform.js';
-import {prepareOperationInputs,type PreparedOperationInputs} from './inputs.js';
+import {prepareOperationInputs,flattenOperationInputs,type PreparedOperationInputs} from './inputs.js';
+import {isShapeOperator,type ShapeEvaluation} from './shapes.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -23,7 +24,7 @@ type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
   {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
@@ -68,7 +69,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   const operationInputs=new Map<string,PreparedOperationInputs>();
   for (const [index,operation] of (graph?.operations ?? []).entries()) {
     requireAuthoredImplementation(operation.operator,operation.version);
-    const dependencies = Object.values(operation.inputs).flatMap(input => input.kind === 'output' ? [operationID(input.ref.operation)] : []);
+    const dependencies = [...new Set(flattenOperationInputs(operation.inputs).flatMap(input => input.kind === 'output' ? [operationID(input.ref.operation)] : []))];
     const inputs=prepareOperationInputs(operation,bundle,`$.operationGraph.operations[${index}]`);operationInputs.set(operation.id,inputs);
     steps.push({id:operationID(operation.id),path:`$.operationGraph.operations[${index}]`,sourceSpan:operation.sourceSpan,
       kind:'operation',operation,dependencies,reads:[...inputs.reads],writes:[]});
@@ -133,11 +134,13 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
       related:blocked.map(s => ({message:s.id,path:s.path,...(s.sourceSpan ? {sourceSpan:structuredClone(s.sourceSpan)} : {})}))}]);
   }
   const ordered = order.map(id => freezeSnapshot(byID.get(id)!));
+  const hasShapes=graph?.operations.some(operation=>isShapeOperator(operation.operator,operation.version));
   return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>,metadata?:ExecutionMetadata) {
     const parameters = expressions.resolveParameters(overrides);
     let fieldResult:FieldEvaluation|undefined;
     const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
-    if(metadata)delete metadata.deformations;
+    const shapes:ShapeEvaluation={definitions:Object.create(null),approximations:Object.create(null)};
+    if(metadata){delete metadata.deformations;delete metadata.shapes;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -148,7 +151,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
           executeLegacyOperation(step.lowered.relation,context);
         } else if (step.kind === 'operation') {
           const inputs=operationInputs.get(step.operation.id)!.resolve(frameNodes,time,parameters,values);
-          values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs));
+          values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs,shapes));
         } else if (step.kind === 'deformation') {
           const prepared=deformations!.operations[step.index];
           deformationResults[prepared.operation.id]=prepared.apply(frameNodes,time,parameters);
@@ -163,6 +166,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
       } catch (error) {diagnosticAt(error,step);}
     }
     if(metadata&&deformations)metadata.deformations=freezeSnapshot(deformationResults);
+    if(metadata&&hasShapes)metadata.shapes=structuredClone(shapes);
     return fieldResult;
   }});
 }
