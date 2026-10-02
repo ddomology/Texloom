@@ -1,0 +1,3568 @@
+{
+  "manifest": {
+    "contract": "texloom-runtime/1",
+    "sceneVersion": "0.2",
+    "title": "Relations that move",
+    "duration": 12,
+    "viewport": {
+      "width": 960,
+      "height": 540
+    },
+    "features": [
+      "paint.clip",
+      "paint.current-color",
+      "paint.opacity",
+      "path.2d",
+      "path.arrowheads",
+      "tex.outlines",
+      "transform.affine.2d"
+    ]
+  },
+  "frames": [
+    {
+      "time": 0,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2,
+            "line": 24
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              58
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -13.44085679
+            ],
+            "south": [
+              0,
+              13.44085679
+            ],
+            "east": [
+              128.40828892,
+              0
+            ],
+            "west": [
+              -128.40828892,
+              0
+            ],
+            "north east": [
+              128.40828892,
+              -13.44085679
+            ],
+            "north west": [
+              -128.40828892,
+              -13.44085679
+            ],
+            "south east": [
+              128.40828892,
+              13.44085679
+            ],
+            "south west": [
+              -128.40828892,
+              13.44085679
+            ],
+            "base": [
+              0,
+              9.34005479
+            ],
+            "mid": [
+              0,
+              6.76637609
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -128.20903611,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4,
+            "line": 25
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              96
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              129.00332752,
+              0
+            ],
+            "west": [
+              -129.00332752,
+              0
+            ],
+            "north east": [
+              129.00332752,
+              -7.9058132
+            ],
+            "north west": [
+              -129.00332752,
+              -7.9058132
+            ],
+            "south east": [
+              129.00332752,
+              7.9058132
+            ],
+            "south west": [
+              -129.00332752,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -128.80408468,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "decoration",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          }
+        },
+        {
+          "id": "decoration-art",
+          "kind": "tex",
+          "parent": "decoration",
+          "resourceId": "decoration-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "diagram",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              297
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 8,
+            "line": 39
+          }
+        },
+        {
+          "id": "triangle",
+          "kind": "group",
+          "parent": "diagram",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 9,
+            "line": 40
+          }
+        },
+        {
+          "id": "f",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 10,
+            "line": 42
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -183.01121793 -79 C -61.00373931 -79 61.003739309999986 -79 183.01121793 -79",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -183.01121793,
+              -79
+            ],
+            "c1": [
+              -61.00373931,
+              -79
+            ],
+            "c2": [
+              61.003739309999986,
+              -79
+            ],
+            "end": [
+              183.01121793,
+              -79
+            ]
+          }
+        },
+        {
+          "id": "g",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 11,
+            "line": 43
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M 183.01121793 -43.01120797 C 140.33707264333333 -3.3370693233333313 97.66292735666667 36.33706932333334 54.98878207 76.01120797",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              183.01121793,
+              -43.01120797
+            ],
+            "c1": [
+              140.33707264333333,
+              -3.3370693233333313
+            ],
+            "c2": [
+              97.66292735666667,
+              36.33706932333334
+            ],
+            "end": [
+              54.98878207,
+              76.01120797
+            ]
+          }
+        },
+        {
+          "id": "composition",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 12,
+            "line": 44
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -183.01121793 -43.01120797 C -147.14601951009172 3.9867440662650866 -104.47187422342506 43.66088271293176 -54.98878207 76.01120797",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -183.01121793,
+              -43.01120797
+            ],
+            "c1": [
+              -147.14601951009172,
+              3.9867440662650866
+            ],
+            "c2": [
+              -104.47187422342506,
+              43.66088271293176
+            ],
+            "end": [
+              -54.98878207,
+              76.01120797
+            ]
+          }
+        },
+        {
+          "id": "X",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13,
+            "line": 46
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -238,
+              -79
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "X-art",
+          "kind": "tex",
+          "parent": "X",
+          "resourceId": "X-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13
+          }
+        },
+        {
+          "id": "Y",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15,
+            "line": 47
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              238,
+              -79
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Y-art",
+          "kind": "tex",
+          "parent": "Y",
+          "resourceId": "Y-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15
+          }
+        },
+        {
+          "id": "Z",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17,
+            "line": 48
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              112
+            ],
+            "rotate": 0
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Z-art",
+          "kind": "tex",
+          "parent": "Z",
+          "resourceId": "Z-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "f-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 19,
+            "line": 50
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "f-label-art",
+          "x": -7.046435870000003,
+          "y": -95.02241594,
+          "scale": 2,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "g-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 21,
+            "line": 51
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "g-label-art",
+          "x": 129.98811560689597,
+          "y": 37.63230806399605,
+          "scale": 2,
+          "style": {
+            "fill": "#F3CB84"
+          }
+        },
+        {
+          "id": "composition-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 23,
+            "line": 52
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "composition-label-art",
+          "x": -167.07729595734395,
+          "y": 49.49356546649407,
+          "scale": 1.85,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25,
+            "line": 56
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              513
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              136.00408468,
+              0
+            ],
+            "west": [
+              -136.00408468,
+              0
+            ],
+            "north east": [
+              136.00408468,
+              -9.58025405
+            ],
+            "north west": [
+              -136.00408468,
+              -9.58025405
+            ],
+            "south east": [
+              136.00408468,
+              9.58025405
+            ],
+            "south west": [
+              -136.00408468,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -135.80483188,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25
+          }
+        }
+      ]
+    },
+    {
+      "time": 3,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2,
+            "line": 24
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              58
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -13.44085679
+            ],
+            "south": [
+              0,
+              13.44085679
+            ],
+            "east": [
+              128.40828892,
+              0
+            ],
+            "west": [
+              -128.40828892,
+              0
+            ],
+            "north east": [
+              128.40828892,
+              -13.44085679
+            ],
+            "north west": [
+              -128.40828892,
+              -13.44085679
+            ],
+            "south east": [
+              128.40828892,
+              13.44085679
+            ],
+            "south west": [
+              -128.40828892,
+              13.44085679
+            ],
+            "base": [
+              0,
+              9.34005479
+            ],
+            "mid": [
+              0,
+              6.76637609
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -128.20903611,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4,
+            "line": 25
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              96
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              129.00332752,
+              0
+            ],
+            "west": [
+              -129.00332752,
+              0
+            ],
+            "north east": [
+              129.00332752,
+              -7.9058132
+            ],
+            "north west": [
+              -129.00332752,
+              -7.9058132
+            ],
+            "south east": [
+              129.00332752,
+              7.9058132
+            ],
+            "south west": [
+              -129.00332752,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -128.80408468,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "decoration",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 0.725
+          }
+        },
+        {
+          "id": "decoration-art",
+          "kind": "tex",
+          "parent": "decoration",
+          "resourceId": "decoration-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "diagram",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              297
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 8,
+            "line": 39
+          }
+        },
+        {
+          "id": "triangle",
+          "kind": "group",
+          "parent": "diagram",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0.026179938779914945,
+            "scale": [
+              0.99,
+              0.99
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 9,
+            "line": 40
+          }
+        },
+        {
+          "id": "f",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 10,
+            "line": 42
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -166.51121792999993 -89.49999999999997 C -53.236923070933244 -80.8333333333333 60.03737178813344 -72.16666666666664 173.3116666472001 -63.49999999999997",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -166.51121792999993,
+              -89.49999999999997
+            ],
+            "c1": [
+              -53.236923070933244,
+              -80.8333333333333
+            ],
+            "c2": [
+              60.03737178813344,
+              -72.16666666666664
+            ],
+            "end": [
+              173.3116666472001,
+              -63.49999999999997
+            ]
+          }
+        },
+        {
+          "id": "g",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 11,
+            "line": 43
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M 173.3116666472001 -26.071656288799964 C 127.77420898511079 8.490245991197895 82.2367513230215 43.052148271195755 36.699293660932206 77.6140505511936",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              173.3116666472001,
+              -26.071656288799964
+            ],
+            "c1": [
+              127.77420898511079,
+              8.490245991197895
+            ],
+            "c2": [
+              82.2367513230215,
+              43.052148271195755
+            ],
+            "end": [
+              36.699293660932206,
+              77.6140505511936
+            ]
+          }
+        },
+        {
+          "id": "composition",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 12,
+            "line": 44
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -166.51121792999993 -53.511207969999965 C -143.63704397126713 -2.836917314663763 -112.53706303409648 42.15088940475176 -73.21127511848806 81.45221218824662",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -166.51121792999993,
+              -53.511207969999965
+            ],
+            "c1": [
+              -143.63704397126713,
+              -2.836917314663763
+            ],
+            "c2": [
+              -112.53706303409648,
+              42.15088940475176
+            ],
+            "end": [
+              -73.21127511848806,
+              81.45221218824662
+            ]
+          }
+        },
+        {
+          "id": "X",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13,
+            "line": 46
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -221.5,
+              -89.5
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "X-art",
+          "kind": "tex",
+          "parent": "X",
+          "resourceId": "X-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13
+          }
+        },
+        {
+          "id": "Y",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15,
+            "line": 47
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              230.5,
+              -63.5
+            ],
+            "scale": [
+              1.04,
+              1.04
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Y-art",
+          "kind": "tex",
+          "parent": "Y",
+          "resourceId": "Y-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15
+          }
+        },
+        {
+          "id": "Z",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17,
+            "line": 48
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -17,
+              115.5
+            ],
+            "rotate": -0.03490658503988659
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Z-art",
+          "kind": "tex",
+          "parent": "Z",
+          "resourceId": "Z-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "f-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 19,
+            "line": 50
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "f-label-art",
+          "x": -1.9678868898709512,
+          "y": -92.45830494557188,
+          "scale": 2,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "g-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 21,
+            "line": 51
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "g-label-art",
+          "x": 114.08539923517765,
+          "y": 48.50783236727366,
+          "scale": 2,
+          "style": {
+            "fill": "#F3CB84"
+          }
+        },
+        {
+          "id": "composition-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 23,
+            "line": 52
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "composition-label-art",
+          "x": -173.2517679003857,
+          "y": 40.82408212432587,
+          "scale": 1.85,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25,
+            "line": 56
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              513
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              136.00408468,
+              0
+            ],
+            "west": [
+              -136.00408468,
+              0
+            ],
+            "north east": [
+              136.00408468,
+              -9.58025405
+            ],
+            "north west": [
+              -136.00408468,
+              -9.58025405
+            ],
+            "south east": [
+              136.00408468,
+              9.58025405
+            ],
+            "south west": [
+              -136.00408468,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -135.80483188,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25
+          }
+        }
+      ]
+    },
+    {
+      "time": 6,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2,
+            "line": 24
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              58
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -13.44085679
+            ],
+            "south": [
+              0,
+              13.44085679
+            ],
+            "east": [
+              128.40828892,
+              0
+            ],
+            "west": [
+              -128.40828892,
+              0
+            ],
+            "north east": [
+              128.40828892,
+              -13.44085679
+            ],
+            "north west": [
+              -128.40828892,
+              -13.44085679
+            ],
+            "south east": [
+              128.40828892,
+              13.44085679
+            ],
+            "south west": [
+              -128.40828892,
+              13.44085679
+            ],
+            "base": [
+              0,
+              9.34005479
+            ],
+            "mid": [
+              0,
+              6.76637609
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -128.20903611,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4,
+            "line": 25
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              96
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              129.00332752,
+              0
+            ],
+            "west": [
+              -129.00332752,
+              0
+            ],
+            "north east": [
+              129.00332752,
+              -7.9058132
+            ],
+            "north west": [
+              -129.00332752,
+              -7.9058132
+            ],
+            "south east": [
+              129.00332752,
+              7.9058132
+            ],
+            "south west": [
+              -129.00332752,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -128.80408468,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "decoration",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 0.45
+          }
+        },
+        {
+          "id": "decoration-art",
+          "kind": "tex",
+          "parent": "decoration",
+          "resourceId": "decoration-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "diagram",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              297
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 8,
+            "line": 39
+          }
+        },
+        {
+          "id": "triangle",
+          "kind": "group",
+          "parent": "diagram",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0.05235987755982989,
+            "scale": [
+              0.98,
+              0.98
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 9,
+            "line": 40
+          }
+        },
+        {
+          "id": "f",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 10,
+            "line": 42
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -150.0112179300001 -100 C -45.470106831866744 -82.66666666666666 59.07100426626661 -65.33333333333331 163.61211536439998 -47.99999999999997",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -150.0112179300001,
+              -100
+            ],
+            "c1": [
+              -45.470106831866744,
+              -82.66666666666666
+            ],
+            "c2": [
+              59.07100426626661,
+              -65.33333333333331
+            ],
+            "end": [
+              163.61211536439998,
+              -47.99999999999997
+            ]
+          }
+        },
+        {
+          "id": "g",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 11,
+            "line": 43
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M 163.61211536439998 -9.13210460759997 C 115.1895372210268 20.332947370235797 66.76695907765362 49.79799934807156 18.34438093428046 79.26305132590733",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              163.61211536439998,
+              -9.13210460759997
+            ],
+            "c1": [
+              115.1895372210268,
+              20.332947370235797
+            ],
+            "c2": [
+              66.76695907765362,
+              49.79799934807156
+            ],
+            "end": [
+              18.34438093428046,
+              79.26305132590733
+            ]
+          }
+        },
+        {
+          "id": "composition",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 12,
+            "line": 44
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -150.0112179300001 -64.01120797 C -139.7837718621526 -10.07440708433101 -120.23512701446175 40.24089503609635 -91.36528338692753 86.9346983912821",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -150.0112179300001,
+              -64.01120797
+            ],
+            "c1": [
+              -139.7837718621526,
+              -10.07440708433101
+            ],
+            "c2": [
+              -120.23512701446175,
+              40.24089503609635
+            ],
+            "end": [
+              -91.36528338692753,
+              86.9346983912821
+            ]
+          }
+        },
+        {
+          "id": "X",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13,
+            "line": 46
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -205,
+              -100
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "X-art",
+          "kind": "tex",
+          "parent": "X",
+          "resourceId": "X-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13
+          }
+        },
+        {
+          "id": "Y",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15,
+            "line": 47
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              223,
+              -48
+            ],
+            "scale": [
+              1.08,
+              1.08
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Y-art",
+          "kind": "tex",
+          "parent": "Y",
+          "resourceId": "Y-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15
+          }
+        },
+        {
+          "id": "Z",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17,
+            "line": 48
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -34,
+              119
+            ],
+            "rotate": -0.06981317007977318
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Z-art",
+          "kind": "tex",
+          "parent": "Z",
+          "resourceId": "Z-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "f-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 19,
+            "line": 50
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "f-label-art",
+          "x": 3.352572055535859,
+          "y": -89.72611082414593,
+          "scale": 2,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "g-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 21,
+            "line": 51
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "g-label-art",
+          "x": 97.93959331351354,
+          "y": 59.24508446074058,
+          "scale": 2,
+          "style": {
+            "fill": "#F3CB84"
+          }
+        },
+        {
+          "id": "composition-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 23,
+            "line": 52
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "composition-label-art",
+          "x": -178.18649128987647,
+          "y": 30.571630835797095,
+          "scale": 1.85,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25,
+            "line": 56
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              513
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              136.00408468,
+              0
+            ],
+            "west": [
+              -136.00408468,
+              0
+            ],
+            "north east": [
+              136.00408468,
+              -9.58025405
+            ],
+            "north west": [
+              -136.00408468,
+              -9.58025405
+            ],
+            "south east": [
+              136.00408468,
+              9.58025405
+            ],
+            "south west": [
+              -136.00408468,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -135.80483188,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25
+          }
+        }
+      ]
+    },
+    {
+      "time": 9,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2,
+            "line": 24
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              58
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -13.44085679
+            ],
+            "south": [
+              0,
+              13.44085679
+            ],
+            "east": [
+              128.40828892,
+              0
+            ],
+            "west": [
+              -128.40828892,
+              0
+            ],
+            "north east": [
+              128.40828892,
+              -13.44085679
+            ],
+            "north west": [
+              -128.40828892,
+              -13.44085679
+            ],
+            "south east": [
+              128.40828892,
+              13.44085679
+            ],
+            "south west": [
+              -128.40828892,
+              13.44085679
+            ],
+            "base": [
+              0,
+              9.34005479
+            ],
+            "mid": [
+              0,
+              6.76637609
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -128.20903611,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4,
+            "line": 25
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              96
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              129.00332752,
+              0
+            ],
+            "west": [
+              -129.00332752,
+              0
+            ],
+            "north east": [
+              129.00332752,
+              -7.9058132
+            ],
+            "north west": [
+              -129.00332752,
+              -7.9058132
+            ],
+            "south east": [
+              129.00332752,
+              7.9058132
+            ],
+            "south west": [
+              -129.00332752,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -128.80408468,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "decoration",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 0.7250000000000001
+          }
+        },
+        {
+          "id": "decoration-art",
+          "kind": "tex",
+          "parent": "decoration",
+          "resourceId": "decoration-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "diagram",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              297
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 8,
+            "line": 39
+          }
+        },
+        {
+          "id": "triangle",
+          "kind": "group",
+          "parent": "diagram",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0.026179938779914945,
+            "scale": [
+              0.99,
+              0.99
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 9,
+            "line": 40
+          }
+        },
+        {
+          "id": "f",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 10,
+            "line": 42
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -166.51121792999993 -89.49999999999997 C -53.236923070933244 -80.8333333333333 60.03737178813344 -72.16666666666664 173.3116666472001 -63.49999999999997",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -166.51121792999993,
+              -89.49999999999997
+            ],
+            "c1": [
+              -53.236923070933244,
+              -80.8333333333333
+            ],
+            "c2": [
+              60.03737178813344,
+              -72.16666666666664
+            ],
+            "end": [
+              173.3116666472001,
+              -63.49999999999997
+            ]
+          }
+        },
+        {
+          "id": "g",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 11,
+            "line": 43
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M 173.3116666472001 -26.071656288799964 C 127.77420898511079 8.490245991197895 82.2367513230215 43.052148271195755 36.699293660932206 77.6140505511936",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              173.3116666472001,
+              -26.071656288799964
+            ],
+            "c1": [
+              127.77420898511079,
+              8.490245991197895
+            ],
+            "c2": [
+              82.2367513230215,
+              43.052148271195755
+            ],
+            "end": [
+              36.699293660932206,
+              77.6140505511936
+            ]
+          }
+        },
+        {
+          "id": "composition",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 12,
+            "line": 44
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -166.51121792999993 -53.511207969999965 C -143.63704397126713 -2.836917314663763 -112.53706303409648 42.15088940475176 -73.21127511848806 81.45221218824662",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -166.51121792999993,
+              -53.511207969999965
+            ],
+            "c1": [
+              -143.63704397126713,
+              -2.836917314663763
+            ],
+            "c2": [
+              -112.53706303409648,
+              42.15088940475176
+            ],
+            "end": [
+              -73.21127511848806,
+              81.45221218824662
+            ]
+          }
+        },
+        {
+          "id": "X",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13,
+            "line": 46
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -221.5,
+              -89.5
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "X-art",
+          "kind": "tex",
+          "parent": "X",
+          "resourceId": "X-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13
+          }
+        },
+        {
+          "id": "Y",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15,
+            "line": 47
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              230.5,
+              -63.5
+            ],
+            "scale": [
+              1.04,
+              1.04
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Y-art",
+          "kind": "tex",
+          "parent": "Y",
+          "resourceId": "Y-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15
+          }
+        },
+        {
+          "id": "Z",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17,
+            "line": 48
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -17,
+              115.5
+            ],
+            "rotate": -0.03490658503988659
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Z-art",
+          "kind": "tex",
+          "parent": "Z",
+          "resourceId": "Z-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "f-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 19,
+            "line": 50
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "f-label-art",
+          "x": -1.9678868898709512,
+          "y": -92.45830494557188,
+          "scale": 2,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "g-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 21,
+            "line": 51
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "g-label-art",
+          "x": 114.08539923517765,
+          "y": 48.50783236727366,
+          "scale": 2,
+          "style": {
+            "fill": "#F3CB84"
+          }
+        },
+        {
+          "id": "composition-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 23,
+            "line": 52
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "composition-label-art",
+          "x": -173.2517679003857,
+          "y": 40.82408212432587,
+          "scale": 1.85,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25,
+            "line": 56
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              513
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              136.00408468,
+              0
+            ],
+            "west": [
+              -136.00408468,
+              0
+            ],
+            "north east": [
+              136.00408468,
+              -9.58025405
+            ],
+            "north west": [
+              -136.00408468,
+              -9.58025405
+            ],
+            "south east": [
+              136.00408468,
+              9.58025405
+            ],
+            "south west": [
+              -136.00408468,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -135.80483188,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25
+          }
+        }
+      ]
+    },
+    {
+      "time": 12,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2,
+            "line": 24
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              58
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -13.44085679
+            ],
+            "south": [
+              0,
+              13.44085679
+            ],
+            "east": [
+              128.40828892,
+              0
+            ],
+            "west": [
+              -128.40828892,
+              0
+            ],
+            "north east": [
+              128.40828892,
+              -13.44085679
+            ],
+            "north west": [
+              -128.40828892,
+              -13.44085679
+            ],
+            "south east": [
+              128.40828892,
+              13.44085679
+            ],
+            "south west": [
+              -128.40828892,
+              13.44085679
+            ],
+            "base": [
+              0,
+              9.34005479
+            ],
+            "mid": [
+              0,
+              6.76637609
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -128.20903611,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4,
+            "line": 25
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              96
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              129.00332752,
+              0
+            ],
+            "west": [
+              -129.00332752,
+              0
+            ],
+            "north east": [
+              129.00332752,
+              -7.9058132
+            ],
+            "north west": [
+              -129.00332752,
+              -7.9058132
+            ],
+            "south east": [
+              129.00332752,
+              7.9058132
+            ],
+            "south west": [
+              -129.00332752,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -128.80408468,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "decoration",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          }
+        },
+        {
+          "id": "decoration-art",
+          "kind": "tex",
+          "parent": "decoration",
+          "resourceId": "decoration-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "diagram",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              297
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 8,
+            "line": 39
+          }
+        },
+        {
+          "id": "triangle",
+          "kind": "group",
+          "parent": "diagram",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 9,
+            "line": 40
+          }
+        },
+        {
+          "id": "f",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 10,
+            "line": 42
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -183.01121793 -79 C -61.00373931 -79 61.003739309999986 -79 183.01121793 -79",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -183.01121793,
+              -79
+            ],
+            "c1": [
+              -61.00373931,
+              -79
+            ],
+            "c2": [
+              61.003739309999986,
+              -79
+            ],
+            "end": [
+              183.01121793,
+              -79
+            ]
+          }
+        },
+        {
+          "id": "g",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 11,
+            "line": 43
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M 183.01121793 -43.01120797 C 140.33707264333333 -3.3370693233333313 97.66292735666667 36.33706932333334 54.98878207 76.01120797",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              183.01121793,
+              -43.01120797
+            ],
+            "c1": [
+              140.33707264333333,
+              -3.3370693233333313
+            ],
+            "c2": [
+              97.66292735666667,
+              36.33706932333334
+            ],
+            "end": [
+              54.98878207,
+              76.01120797
+            ]
+          }
+        },
+        {
+          "id": "composition",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 12,
+            "line": 44
+          },
+          "parent": "triangle",
+          "kind": "path",
+          "d": "M -183.01121793 -43.01120797 C -147.14601951009172 3.9867440662650866 -104.47187422342506 43.66088271293176 -54.98878207 76.01120797",
+          "arrowStart": false,
+          "arrowEnd": true,
+          "arrowSize": 7,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 1.79327522,
+            "opacity": 1,
+            "lineCap": "round"
+          },
+          "resolvedPath": {
+            "start": [
+              -183.01121793,
+              -43.01120797
+            ],
+            "c1": [
+              -147.14601951009172,
+              3.9867440662650866
+            ],
+            "c2": [
+              -104.47187422342506,
+              43.66088271293176
+            ],
+            "end": [
+              -54.98878207,
+              76.01120797
+            ]
+          }
+        },
+        {
+          "id": "X",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13,
+            "line": 46
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              -238,
+              -79
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "X-art",
+          "kind": "tex",
+          "parent": "X",
+          "resourceId": "X-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 13
+          }
+        },
+        {
+          "id": "Y",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15,
+            "line": 47
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              238,
+              -79
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Y-art",
+          "kind": "tex",
+          "parent": "Y",
+          "resourceId": "Y-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 15
+          }
+        },
+        {
+          "id": "Z",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17,
+            "line": 48
+          },
+          "parent": "triangle",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              112
+            ],
+            "rotate": 0
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -35.98879203
+            ],
+            "south": [
+              0,
+              35.98879203
+            ],
+            "east": [
+              54.98878207,
+              0
+            ],
+            "west": [
+              -54.98878207,
+              0
+            ],
+            "north east": [
+              54.98878207,
+              -35.98879203
+            ],
+            "north west": [
+              -54.98878207,
+              -35.98879203
+            ],
+            "south east": [
+              54.98878207,
+              35.98879203
+            ],
+            "south west": [
+              -54.98878207,
+              35.98879203
+            ],
+            "base": [
+              0,
+              9.53092902
+            ],
+            "mid": [
+              0,
+              6.95725031
+            ]
+          }
+        },
+        {
+          "id": "Z-art",
+          "kind": "tex",
+          "parent": "Z",
+          "resourceId": "Z-art",
+          "x": -52.54794521,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "f-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 19,
+            "line": 50
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "f-label-art",
+          "x": -7.046435870000003,
+          "y": -95.02241594,
+          "scale": 2,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "g-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 21,
+            "line": 51
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "g-label-art",
+          "x": 129.98811560689597,
+          "y": 37.63230806399605,
+          "scale": 2,
+          "style": {
+            "fill": "#F3CB84"
+          }
+        },
+        {
+          "id": "composition-label",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 23,
+            "line": 52
+          },
+          "parent": "triangle",
+          "kind": "tex",
+          "resourceId": "composition-label-art",
+          "x": -167.07729595734395,
+          "y": 49.49356546649407,
+          "scale": 1.85,
+          "style": {
+            "fill": "#71DFC2"
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25,
+            "line": 56
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              513
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              136.00408468,
+              0
+            ],
+            "west": [
+              -136.00408468,
+              0
+            ],
+            "north east": [
+              136.00408468,
+              -9.58025405
+            ],
+            "north west": [
+              -136.00408468,
+              -9.58025405
+            ],
+            "south east": [
+              136.00408468,
+              9.58025405
+            ],
+            "south west": [
+              -136.00408468,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -135.80483188,
+          "y": 0,
+          "source": {
+            "file": "commutative.tex",
+            "declaration": 25
+          }
+        }
+      ]
+    }
+  ]
+}

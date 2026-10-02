@@ -1,0 +1,4366 @@
+{
+  "manifest": {
+    "contract": "texloom-runtime/1",
+    "sceneVersion": "0.3",
+    "title": "A path that stays alive",
+    "duration": 12,
+    "viewport": {
+      "width": 960,
+      "height": 540
+    },
+    "features": [
+      "paint.current-color",
+      "paint.opacity",
+      "path.2d",
+      "primitive.2d",
+      "tex.outlines",
+      "transform.affine.2d"
+    ]
+  },
+  "frames": [
+    {
+      "time": 0,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              310
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -174.99797758,
+                      -144.99832628
+                    ],
+                    "c2": [
+                      149.9982665,
+                      144.99832628
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 0,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 0
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -306.35799036894184,
+          "y1": 95.33895006567576,
+          "x2": -244.39604658367645,
+          "y2": 2.039874387769885,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -305.36600708706465,
+          "y1": 28.77307315288749,
+          "x2": -245.3880298655537,
+          "y2": 68.60575130055815,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": -275.37701847630916,
+          "y": 48.68941222672282,
+          "r": 5.5,
+          "progress": 0.03,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    },
+    {
+      "time": 1,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              310
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528 C -228.72843378693176 -42.42199416468994 -116.20204046847277 -19.01039271573167 -1.6273114031355718 1.3827262686050759",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -174.99797758,
+                      -144.99832628
+                    ],
+                    "c2": [
+                      149.9982665,
+                      144.99832628
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 0.5,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 0
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -306.35799036894184,
+          "y1": 95.33895006567576,
+          "x2": -244.39604658367645,
+          "y2": 2.039874387769885,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -305.36600708706465,
+          "y1": 28.77307315288749,
+          "x2": -245.3880298655537,
+          "y2": 68.60575130055815,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": -275.37701847630916,
+          "y": 48.68941222672282,
+          "r": 5.5,
+          "progress": 0.03,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    },
+    {
+      "time": 2,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              310
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528 C -174.99797758 -144.99832628 149.9982665 144.99832628 284.99670237 -64.9992528",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -174.99797758,
+                      -144.99832628
+                    ],
+                    "c2": [
+                      149.9982665,
+                      144.99832628
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 1,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -306.35799036894184,
+          "y1": 95.33895006567576,
+          "x2": -244.39604658367645,
+          "y2": 2.039874387769885,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -305.36600708706465,
+          "y1": 28.77307315288749,
+          "x2": -245.3880298655537,
+          "y2": 68.60575130055815,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": -275.37701847630916,
+          "y": 48.68941222672282,
+          "r": 5.5,
+          "progress": 0.03,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    },
+    {
+      "time": 6,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              490,
+              315
+            ],
+            "rotate": -0.08726646259971647,
+            "scale": [
+              1.04,
+              1.04
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528 C -120 -35 100 -65 284.99670237 -64.9992528",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -120,
+                      -35
+                    ],
+                    "c2": [
+                      100,
+                      -65
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 1,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -61.7435471642774,
+          "y1": -26.44332262088767,
+          "x2": 43.77855740798259,
+          "y2": -47.95421713356882,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": -15.896710971509265,
+          "y1": -71.11658920402613,
+          "x2": -2.068278784785548,
+          "y2": -3.2809505504303615,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": -8.98249487814735,
+          "y": -37.19876987722819,
+          "r": 5.5,
+          "progress": 0.5,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    },
+    {
+      "time": 10,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              310
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528 C -175 -145 150 145 284.99670237 -64.9992528",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -175,
+                      -145
+                    ],
+                    "c2": [
+                      150,
+                      145
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 1,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": 239.4910019113795,
+          "y1": -5.471660501930842,
+          "x2": 308.57972662355814,
+          "y2": -93.62350743462298,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": 245.70084203910346,
+          "y1": -71.75467405433437,
+          "x2": 302.3698864958342,
+          "y2": -27.340493882219448,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": 274.0353642674688,
+          "y": -49.54758396827691,
+          "r": 5.5,
+          "progress": 0.97,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    },
+    {
+      "time": 12,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "heading",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2,
+            "line": 18
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              52
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -16.05601993
+            ],
+            "south": [
+              0,
+              16.05601993
+            ],
+            "east": [
+              144.44566874,
+              0
+            ],
+            "west": [
+              -144.44566874,
+              0
+            ],
+            "north east": [
+              144.44566874,
+              -16.05601993
+            ],
+            "north west": [
+              -144.44566874,
+              -16.05601993
+            ],
+            "south east": [
+              144.44566874,
+              16.05601993
+            ],
+            "south west": [
+              -144.44566874,
+              16.05601993
+            ],
+            "base": [
+              0,
+              6.72488169
+            ],
+            "mid": [
+              0,
+              4.15121295
+            ]
+          }
+        },
+        {
+          "id": "heading-art",
+          "kind": "tex",
+          "parent": "heading",
+          "resourceId": "heading-art",
+          "x": -144.24641594,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 2
+          }
+        },
+        {
+          "id": "intro",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4,
+            "line": 19
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              88
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              162.58587298,
+              0
+            ],
+            "west": [
+              -162.58587298,
+              0
+            ],
+            "north east": [
+              162.58587298,
+              -8.97125778
+            ],
+            "north west": [
+              -162.58587298,
+              -8.97125778
+            ],
+            "south east": [
+              162.58587298,
+              8.97125778
+            ],
+            "south west": [
+              -162.58587298,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "intro-art",
+          "kind": "tex",
+          "parent": "intro",
+          "resourceId": "intro-art",
+          "x": -162.38662017,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 4
+          }
+        },
+        {
+          "id": "formula",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6,
+            "line": 20
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              133
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -26.47714072
+            ],
+            "south": [
+              0,
+              26.47714072
+            ],
+            "east": [
+              179.41222416,
+              0
+            ],
+            "west": [
+              -179.41222416,
+              0
+            ],
+            "north east": [
+              179.41222416,
+              -26.47714072
+            ],
+            "north west": [
+              -179.41222416,
+              -26.47714072
+            ],
+            "south east": [
+              179.41222416,
+              26.47714072
+            ],
+            "south west": [
+              -179.41222416,
+              26.47714072
+            ],
+            "base": [
+              0,
+              4.65972603
+            ],
+            "mid": [
+              0,
+              2.08604732
+            ]
+          }
+        },
+        {
+          "id": "formula-art",
+          "kind": "tex",
+          "parent": "formula",
+          "resourceId": "formula-art",
+          "x": -179.21298132,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 6
+          }
+        },
+        {
+          "id": "rules",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8,
+            "line": 21
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "scale": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": "rules-art",
+          "kind": "tex",
+          "parent": "rules",
+          "resourceId": "rules-art",
+          "x": 54.67438107,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 8
+          }
+        },
+        {
+          "id": "geometry-stage",
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              310
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 10,
+            "line": 23
+          }
+        },
+        {
+          "id": "curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 11,
+            "line": 26,
+            "referenceResourceId": "curve-art",
+            "geometryProducer": "pgf-soft-path-v1"
+          },
+          "parent": "geometry-stage",
+          "kind": "path",
+          "d": "M -284.99670237 64.9992528 C -175 -145 150 145 284.99670237 -64.9992528",
+          "geometry": {
+            "contours": [
+              {
+                "id": "contour-0",
+                "start": [
+                  -284.99670237,
+                  64.9992528
+                ],
+                "segments": [
+                  {
+                    "kind": "cubic",
+                    "id": "segment-0",
+                    "c1": [
+                      -175,
+                      -145
+                    ],
+                    "c2": [
+                      150,
+                      145
+                    ],
+                    "to": [
+                      284.99670237,
+                      -64.9992528
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "transform": {
+            "translate": [
+              0,
+              0
+            ]
+          },
+          "reveal": 1,
+          "revealMode": "length",
+          "pathTolerance": 0.05,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "none",
+            "strokeWidth": 3,
+            "lineCap": "round",
+            "lineJoin": "miter",
+            "fillRule": "nonzero",
+            "miterLimit": 10,
+            "fillOpacity": 1,
+            "strokeOpacity": 1
+          }
+        },
+        {
+          "id": "markers",
+          "kind": "group",
+          "parent": "geometry-stage",
+          "transform": {
+            "translate": [
+              0,
+              0
+            ],
+            "rotate": 0,
+            "scale": [
+              1,
+              1
+            ]
+          },
+          "style": {
+            "opacity": 1
+          },
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 13,
+            "line": 27
+          }
+        },
+        {
+          "id": "T",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 14,
+            "line": 29
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": 239.4910019113795,
+          "y1": -5.471660501930842,
+          "x2": 308.57972662355814,
+          "y2": -93.62350743462298,
+          "style": {
+            "stroke": "#F3CB84",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "N",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 15,
+            "line": 30
+          },
+          "parent": "markers",
+          "kind": "line",
+          "x1": 245.70084203910346,
+          "y1": -71.75467405433437,
+          "x2": 302.3698864958342,
+          "y2": -27.340493882219448,
+          "style": {
+            "stroke": "#EE8D82",
+            "fill": "none",
+            "strokeWidth": 1.99999004,
+            "lineCap": "round"
+          }
+        },
+        {
+          "id": "P",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 16,
+            "line": 31
+          },
+          "parent": "markers",
+          "kind": "point",
+          "x": 274.0353642674688,
+          "y": -49.54758396827691,
+          "r": 5.5,
+          "progress": 0.97,
+          "style": {
+            "stroke": "#71DFC2",
+            "fill": "#E5F1EF",
+            "strokeWidth": 1.99999004
+          }
+        },
+        {
+          "id": "legend-curve",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17,
+            "line": 35
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              284,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              27.46109091,
+              0
+            ],
+            "west": [
+              -27.46109091,
+              0
+            ],
+            "north east": [
+              27.46109091,
+              -7.9058132
+            ],
+            "north west": [
+              -27.46109091,
+              -7.9058132
+            ],
+            "south east": [
+              27.46109091,
+              7.9058132
+            ],
+            "south west": [
+              -27.46109091,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-curve-art",
+          "kind": "tex",
+          "parent": "legend-curve",
+          "resourceId": "legend-curve-art",
+          "x": -27.26183811,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 17
+          }
+        },
+        {
+          "id": "legend-tangent",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19,
+            "line": 36
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -8.97125778
+            ],
+            "south": [
+              0,
+              8.97125778
+            ],
+            "east": [
+              22.39111333,
+              0
+            ],
+            "west": [
+              -22.39111333,
+              0
+            ],
+            "north east": [
+              22.39111333,
+              -8.97125778
+            ],
+            "north west": [
+              -22.39111333,
+              -8.97125778
+            ],
+            "south east": [
+              22.39111333,
+              8.97125778
+            ],
+            "south west": [
+              -22.39111333,
+              8.97125778
+            ],
+            "base": [
+              0,
+              2.73957659
+            ],
+            "mid": [
+              0,
+              0.16589788
+            ]
+          }
+        },
+        {
+          "id": "legend-tangent-art",
+          "kind": "tex",
+          "parent": "legend-tangent",
+          "resourceId": "legend-tangent-art",
+          "x": -22.19187049,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 19
+          }
+        },
+        {
+          "id": "legend-normal",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21,
+            "line": 37
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              675,
+              432
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -7.9058132
+            ],
+            "south": [
+              0,
+              7.9058132
+            ],
+            "east": [
+              20.29167621,
+              0
+            ],
+            "west": [
+              -20.29167621,
+              0
+            ],
+            "north east": [
+              20.29167621,
+              -7.9058132
+            ],
+            "north west": [
+              -20.29167621,
+              -7.9058132
+            ],
+            "south east": [
+              20.29167621,
+              7.9058132
+            ],
+            "south west": [
+              -20.29167621,
+              7.9058132
+            ],
+            "base": [
+              0,
+              3.80500125
+            ],
+            "mid": [
+              0,
+              1.2313325
+            ]
+          }
+        },
+        {
+          "id": "legend-normal-art",
+          "kind": "tex",
+          "parent": "legend-normal",
+          "resourceId": "legend-normal-art",
+          "x": -20.09242341,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 21
+          }
+        },
+        {
+          "id": "footer",
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23,
+            "line": 38
+          },
+          "kind": "group",
+          "transform": {
+            "translate": [
+              480,
+              505
+            ]
+          },
+          "anchors": {
+            "center": [
+              0,
+              0
+            ],
+            "north": [
+              0,
+              -9.58025405
+            ],
+            "south": [
+              0,
+              9.58025405
+            ],
+            "east": [
+              177.07745953,
+              0
+            ],
+            "west": [
+              -177.07745953,
+              0
+            ],
+            "north east": [
+              177.07745953,
+              -9.58025405
+            ],
+            "north west": [
+              -177.07745953,
+              -9.58025405
+            ],
+            "south east": [
+              177.07745953,
+              9.58025405
+            ],
+            "south west": [
+              -177.07745953,
+              9.58025405
+            ],
+            "base": [
+              0,
+              2.73972603
+            ],
+            "mid": [
+              0,
+              0.16604732
+            ]
+          }
+        },
+        {
+          "id": "footer-art",
+          "kind": "tex",
+          "parent": "footer",
+          "resourceId": "footer-art",
+          "x": -176.87820672,
+          "y": 0,
+          "source": {
+            "file": "living-paths.tex",
+            "declaration": 23
+          }
+        }
+      ]
+    }
+  ]
+}

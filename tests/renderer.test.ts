@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import type {Bundle} from '../src/index.ts';
 import {evaluate} from '../src/index.ts';
 import {renderSvg,fieldColor} from '../src/render-svg.ts';
@@ -34,7 +35,10 @@ test('camera stays centered and dimensions are renderer output options',()=>{
   assert.doesNotMatch(svg,/fill="#091c27"/);
 });
 test('actual compiled scene preserves baseline resources and random seek SVG identity',()=>{
-  const b=JSON.parse(readFileSync(new URL('../build/demo/bundle.json',import.meta.url),'utf8'));
+  const input=process.env.TEXLOOM_REFERENCE_ROOT
+    ? resolve(process.env.TEXLOOM_REFERENCE_ROOT,'orbit/bundle.json')
+    : new URL('./fixtures/ports/reference/orbit/bundle.json',import.meta.url);
+  const b=JSON.parse(readFileSync(input,'utf8'));
   const at4=renderSvg(evaluate(b,4));
   renderSvg(evaluate(b,11));renderSvg(evaluate(b,0));
   assert.equal(renderSvg(evaluate(b,4)),at4);

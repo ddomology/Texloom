@@ -1,0 +1,1734 @@
+{
+  "manifest": {
+    "contract": "texloom-runtime/1",
+    "sceneVersion": "0.1",
+    "title": "Geometry in motion",
+    "duration": 12,
+    "viewport": {
+      "width": 960,
+      "height": 540
+    },
+    "features": [
+      "paint.clip",
+      "paint.current-color",
+      "paint.dash",
+      "paint.opacity",
+      "path.2d",
+      "primitive.2d",
+      "tex.outlines",
+      "transform.affine.2d"
+    ]
+  },
+  "frames": [
+    {
+      "time": 0,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "title-node",
+          "kind": "tex",
+          "resourceId": "title",
+          "x": 55,
+          "y": 76,
+          "scale": 2.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 12,
+            "line": 31
+          }
+        },
+        {
+          "id": "subtitle-node",
+          "kind": "tex",
+          "resourceId": "subtitle",
+          "x": 57,
+          "y": 110,
+          "scale": 1.22,
+          "style": {
+            "opacity": 0.65
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 13,
+            "line": 32
+          }
+        },
+        {
+          "id": "caption-node",
+          "kind": "tex",
+          "resourceId": "caption",
+          "x": 57,
+          "y": 170,
+          "scale": 0.88,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 14,
+            "line": 33
+          }
+        },
+        {
+          "id": "equation-node",
+          "kind": "tex",
+          "resourceId": "equation",
+          "x": 57,
+          "y": 208,
+          "scale": 1.55,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 15,
+            "line": 34
+          }
+        },
+        {
+          "id": "footer-node",
+          "kind": "tex",
+          "resourceId": "footer",
+          "x": 57,
+          "y": 506,
+          "scale": 0.72,
+          "style": {
+            "opacity": 0.48
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 16,
+            "line": 35
+          }
+        },
+        {
+          "id": "rule",
+          "kind": "line",
+          "x1": 55,
+          "y1": 133,
+          "x2": 905,
+          "y2": 133,
+          "style": {
+            "stroke": "#35505d",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 17,
+            "line": 36
+          }
+        },
+        {
+          "id": "x-axis",
+          "kind": "line",
+          "x1": 122,
+          "y1": 340,
+          "x2": 630,
+          "y2": 340,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 18,
+            "line": 37
+          }
+        },
+        {
+          "id": "y-axis",
+          "kind": "line",
+          "x1": 375,
+          "y1": 225,
+          "x2": 375,
+          "y2": 460,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 19,
+            "line": 38
+          }
+        },
+        {
+          "id": "orbit",
+          "kind": "ellipse",
+          "cx": 375,
+          "cy": 340,
+          "rx": 120,
+          "ry": 120,
+          "style": {
+            "fill": "#6de2bd",
+            "fillOpacity": 0.05,
+            "stroke": "#6de2bd",
+            "strokeWidth": 2.5
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 20,
+            "line": 39
+          }
+        },
+        {
+          "id": "tangent",
+          "kind": "line",
+          "x1": 444.39654393592207,
+          "y1": 228.91278340983763,
+          "x2": 503.68400364240074,
+          "y2": 315.57302297535387,
+          "style": {
+            "stroke": "#f3ca7d",
+            "strokeWidth": 1.8,
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 21,
+            "line": 40
+          }
+        },
+        {
+          "id": "moving-point",
+          "kind": "point",
+          "x": 474.0402737891614,
+          "y": 272.24290319259575,
+          "r": 5,
+          "phase": -0.6,
+          "style": {
+            "fill": "#f3ca7d",
+            "stroke": "#091c27",
+            "strokeWidth": 2
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 22,
+            "line": 41
+          }
+        },
+        {
+          "id": "moving-label",
+          "kind": "tex",
+          "resourceId": "point-label",
+          "x": 486.0402737891614,
+          "y": 258.24290319259575,
+          "scale": 1.45,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 23,
+            "line": 42
+          }
+        },
+        {
+          "id": "inset-head",
+          "kind": "tex",
+          "resourceId": "inset-title",
+          "x": 683,
+          "y": 235,
+          "scale": 0.83,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 24,
+            "line": 43
+          }
+        },
+        {
+          "id": "inset-border",
+          "kind": "path",
+          "d": "M 656 259 H 905 V 419 H 656 Z",
+          "style": {
+            "fill": "#102a36",
+            "stroke": "#294751",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 25,
+            "line": 44
+          }
+        },
+        {
+          "id": "tikz-node",
+          "kind": "tex",
+          "resourceId": "inset",
+          "x": 694,
+          "y": 388,
+          "scale": 1.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 26,
+            "line": 45
+          }
+        },
+        {
+          "id": "tangent-formula",
+          "kind": "tex",
+          "resourceId": "tangent-label",
+          "x": 660,
+          "y": 448,
+          "scale": 0.95,
+          "style": {
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 27,
+            "line": 46
+          }
+        },
+        {
+          "id": "swatches",
+          "kind": "group",
+          "style": {
+            "opacity": 0.25
+          },
+          "clip": {
+            "d": "M 827 474 H 906 V 510 H 827 Z"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 28,
+            "line": 49
+          }
+        },
+        {
+          "id": "swatch-a",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 847,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#6de2bd"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 29,
+            "line": 50
+          }
+        },
+        {
+          "id": "swatch-b",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 882,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 30,
+            "line": 51
+          }
+        },
+        {
+          "id": "origin",
+          "kind": "point",
+          "x": 375,
+          "y": 340,
+          "r": 2.5,
+          "style": {
+            "fill": "gray"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 41,
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "time": 4,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 7,
+        "y": 3,
+        "zoom": 1.025
+      },
+      "nodes": [
+        {
+          "id": "title-node",
+          "kind": "tex",
+          "resourceId": "title",
+          "x": 55,
+          "y": 76,
+          "scale": 2.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 12,
+            "line": 31
+          }
+        },
+        {
+          "id": "subtitle-node",
+          "kind": "tex",
+          "resourceId": "subtitle",
+          "x": 57,
+          "y": 110,
+          "scale": 1.22,
+          "style": {
+            "opacity": 0.65
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 13,
+            "line": 32
+          }
+        },
+        {
+          "id": "caption-node",
+          "kind": "tex",
+          "resourceId": "caption",
+          "x": 57,
+          "y": 170,
+          "scale": 0.88,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 14,
+            "line": 33
+          }
+        },
+        {
+          "id": "equation-node",
+          "kind": "tex",
+          "resourceId": "equation",
+          "x": 57,
+          "y": 208,
+          "scale": 1.55,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 15,
+            "line": 34
+          }
+        },
+        {
+          "id": "footer-node",
+          "kind": "tex",
+          "resourceId": "footer",
+          "x": 57,
+          "y": 506,
+          "scale": 0.72,
+          "style": {
+            "opacity": 0.48
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 16,
+            "line": 35
+          }
+        },
+        {
+          "id": "rule",
+          "kind": "line",
+          "x1": 55,
+          "y1": 133,
+          "x2": 905,
+          "y2": 133,
+          "style": {
+            "stroke": "#35505d",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 17,
+            "line": 36
+          }
+        },
+        {
+          "id": "x-axis",
+          "kind": "line",
+          "x1": 122,
+          "y1": 340,
+          "x2": 630,
+          "y2": 340,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 18,
+            "line": 37
+          }
+        },
+        {
+          "id": "y-axis",
+          "kind": "line",
+          "x1": 375,
+          "y1": 225,
+          "x2": 375,
+          "y2": 460,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 19,
+            "line": 38
+          }
+        },
+        {
+          "id": "orbit",
+          "kind": "ellipse",
+          "cx": 375,
+          "cy": 340,
+          "rx": 185,
+          "ry": 66,
+          "style": {
+            "fill": "#6de2bd",
+            "fillOpacity": 0.05,
+            "stroke": "#6de2bd",
+            "strokeWidth": 2.5
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 20,
+            "line": 39
+          }
+        },
+        {
+          "id": "tangent",
+          "kind": "line",
+          "x1": 166.06856845689748,
+          "y1": 342.79310492152143,
+          "x2": 250.31629415896424,
+          "y2": 280.12476591345995,
+          "style": {
+            "stroke": "#f3ca7d",
+            "strokeWidth": 1.8,
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 21,
+            "line": 40
+          }
+        },
+        {
+          "id": "moving-point",
+          "kind": "point",
+          "x": 208.19243130793086,
+          "y": 311.4589354174907,
+          "r": 5,
+          "phase": 3.5887902047863327,
+          "style": {
+            "fill": "#f3ca7d",
+            "stroke": "#091c27",
+            "strokeWidth": 2
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 22,
+            "line": 41
+          }
+        },
+        {
+          "id": "moving-label",
+          "kind": "tex",
+          "resourceId": "point-label",
+          "x": 220.19243130793086,
+          "y": 297.4589354174907,
+          "scale": 1.45,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 23,
+            "line": 42
+          }
+        },
+        {
+          "id": "inset-head",
+          "kind": "tex",
+          "resourceId": "inset-title",
+          "x": 683,
+          "y": 235,
+          "scale": 0.83,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 24,
+            "line": 43
+          }
+        },
+        {
+          "id": "inset-border",
+          "kind": "path",
+          "d": "M 656 259 H 905 V 419 H 656 Z",
+          "style": {
+            "fill": "#102a36",
+            "stroke": "#294751",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 25,
+            "line": 44
+          }
+        },
+        {
+          "id": "tikz-node",
+          "kind": "tex",
+          "resourceId": "inset",
+          "x": 694,
+          "y": 388,
+          "scale": 1.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 26,
+            "line": 45
+          }
+        },
+        {
+          "id": "tangent-formula",
+          "kind": "tex",
+          "resourceId": "tangent-label",
+          "x": 660,
+          "y": 448,
+          "scale": 0.95,
+          "style": {
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 27,
+            "line": 46
+          }
+        },
+        {
+          "id": "swatches",
+          "kind": "group",
+          "style": {
+            "opacity": 0.6944444444444444
+          },
+          "clip": {
+            "d": "M 827 474 H 906 V 510 H 827 Z"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 28,
+            "line": 49
+          }
+        },
+        {
+          "id": "swatch-a",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 847,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#6de2bd"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 29,
+            "line": 50
+          }
+        },
+        {
+          "id": "swatch-b",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 882,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 30,
+            "line": 51
+          }
+        },
+        {
+          "id": "origin",
+          "kind": "point",
+          "x": 375,
+          "y": 340,
+          "r": 2.5,
+          "style": {
+            "fill": "gray"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 41,
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "time": 6,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 2,
+        "y": 1,
+        "zoom": 1.0175
+      },
+      "nodes": [
+        {
+          "id": "title-node",
+          "kind": "tex",
+          "resourceId": "title",
+          "x": 55,
+          "y": 76,
+          "scale": 2.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 12,
+            "line": 31
+          }
+        },
+        {
+          "id": "subtitle-node",
+          "kind": "tex",
+          "resourceId": "subtitle",
+          "x": 57,
+          "y": 110,
+          "scale": 1.22,
+          "style": {
+            "opacity": 0.65
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 13,
+            "line": 32
+          }
+        },
+        {
+          "id": "caption-node",
+          "kind": "tex",
+          "resourceId": "caption",
+          "x": 57,
+          "y": 170,
+          "scale": 0.88,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 14,
+            "line": 33
+          }
+        },
+        {
+          "id": "equation-node",
+          "kind": "tex",
+          "resourceId": "equation",
+          "x": 57,
+          "y": 208,
+          "scale": 1.55,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 15,
+            "line": 34
+          }
+        },
+        {
+          "id": "footer-node",
+          "kind": "tex",
+          "resourceId": "footer",
+          "x": 57,
+          "y": 506,
+          "scale": 0.72,
+          "style": {
+            "opacity": 0.48
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 16,
+            "line": 35
+          }
+        },
+        {
+          "id": "rule",
+          "kind": "line",
+          "x1": 55,
+          "y1": 133,
+          "x2": 905,
+          "y2": 133,
+          "style": {
+            "stroke": "#35505d",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 17,
+            "line": 36
+          }
+        },
+        {
+          "id": "x-axis",
+          "kind": "line",
+          "x1": 122,
+          "y1": 340,
+          "x2": 630,
+          "y2": 340,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 18,
+            "line": 37
+          }
+        },
+        {
+          "id": "y-axis",
+          "kind": "line",
+          "x1": 375,
+          "y1": 225,
+          "x2": 375,
+          "y2": 460,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 19,
+            "line": 38
+          }
+        },
+        {
+          "id": "orbit",
+          "kind": "ellipse",
+          "cx": 375,
+          "cy": 340,
+          "rx": 167.5,
+          "ry": 90,
+          "style": {
+            "fill": "#6de2bd",
+            "fillOpacity": 0.05,
+            "stroke": "#6de2bd",
+            "strokeWidth": 2.5
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 20,
+            "line": 39
+          }
+        },
+        {
+          "id": "tangent",
+          "kind": "line",
+          "x1": 471.9554762953182,
+          "y1": 256.7548539835461,
+          "x2": 554.5319546994077,
+          "y2": 321.60950080533473,
+          "style": {
+            "stroke": "#f3ca7d",
+            "strokeWidth": 1.8,
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 21,
+            "line": 40
+          }
+        },
+        {
+          "id": "moving-point",
+          "kind": "point",
+          "x": 513.2437154973629,
+          "y": 289.18217739444043,
+          "r": 5,
+          "phase": 5.6831853071795,
+          "style": {
+            "fill": "#f3ca7d",
+            "stroke": "#091c27",
+            "strokeWidth": 2
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 22,
+            "line": 41
+          }
+        },
+        {
+          "id": "moving-label",
+          "kind": "tex",
+          "resourceId": "point-label",
+          "x": 525.2437154973629,
+          "y": 275.18217739444043,
+          "scale": 1.45,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 23,
+            "line": 42
+          }
+        },
+        {
+          "id": "inset-head",
+          "kind": "tex",
+          "resourceId": "inset-title",
+          "x": 683,
+          "y": 235,
+          "scale": 0.83,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 24,
+            "line": 43
+          }
+        },
+        {
+          "id": "inset-border",
+          "kind": "path",
+          "d": "M 656 259 H 905 V 419 H 656 Z",
+          "style": {
+            "fill": "#102a36",
+            "stroke": "#294751",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 25,
+            "line": 44
+          }
+        },
+        {
+          "id": "tikz-node",
+          "kind": "tex",
+          "resourceId": "inset",
+          "x": 694,
+          "y": 388,
+          "scale": 1.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 26,
+            "line": 45
+          }
+        },
+        {
+          "id": "tangent-formula",
+          "kind": "tex",
+          "resourceId": "tangent-label",
+          "x": 660,
+          "y": 448,
+          "scale": 0.95,
+          "style": {
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 27,
+            "line": 46
+          }
+        },
+        {
+          "id": "swatches",
+          "kind": "group",
+          "style": {
+            "opacity": 0.85
+          },
+          "clip": {
+            "d": "M 827 474 H 906 V 510 H 827 Z"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 28,
+            "line": 49
+          }
+        },
+        {
+          "id": "swatch-a",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 847,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#6de2bd"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 29,
+            "line": 50
+          }
+        },
+        {
+          "id": "swatch-b",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 882,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 30,
+            "line": 51
+          }
+        },
+        {
+          "id": "origin",
+          "kind": "point",
+          "x": 375,
+          "y": 340,
+          "r": 2.5,
+          "style": {
+            "fill": "gray"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 41,
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "time": 8,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": -3,
+        "y": -1,
+        "zoom": 1.01
+      },
+      "nodes": [
+        {
+          "id": "title-node",
+          "kind": "tex",
+          "resourceId": "title",
+          "x": 55,
+          "y": 76,
+          "scale": 2.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 12,
+            "line": 31
+          }
+        },
+        {
+          "id": "subtitle-node",
+          "kind": "tex",
+          "resourceId": "subtitle",
+          "x": 57,
+          "y": 110,
+          "scale": 1.22,
+          "style": {
+            "opacity": 0.65
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 13,
+            "line": 32
+          }
+        },
+        {
+          "id": "caption-node",
+          "kind": "tex",
+          "resourceId": "caption",
+          "x": 57,
+          "y": 170,
+          "scale": 0.88,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 14,
+            "line": 33
+          }
+        },
+        {
+          "id": "equation-node",
+          "kind": "tex",
+          "resourceId": "equation",
+          "x": 57,
+          "y": 208,
+          "scale": 1.55,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 15,
+            "line": 34
+          }
+        },
+        {
+          "id": "footer-node",
+          "kind": "tex",
+          "resourceId": "footer",
+          "x": 57,
+          "y": 506,
+          "scale": 0.72,
+          "style": {
+            "opacity": 0.48
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 16,
+            "line": 35
+          }
+        },
+        {
+          "id": "rule",
+          "kind": "line",
+          "x1": 55,
+          "y1": 133,
+          "x2": 905,
+          "y2": 133,
+          "style": {
+            "stroke": "#35505d",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 17,
+            "line": 36
+          }
+        },
+        {
+          "id": "x-axis",
+          "kind": "line",
+          "x1": 122,
+          "y1": 340,
+          "x2": 630,
+          "y2": 340,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 18,
+            "line": 37
+          }
+        },
+        {
+          "id": "y-axis",
+          "kind": "line",
+          "x1": 375,
+          "y1": 225,
+          "x2": 375,
+          "y2": 460,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 19,
+            "line": 38
+          }
+        },
+        {
+          "id": "orbit",
+          "kind": "ellipse",
+          "cx": 375,
+          "cy": 340,
+          "rx": 150,
+          "ry": 114,
+          "style": {
+            "fill": "#6de2bd",
+            "fillOpacity": 0.05,
+            "stroke": "#6de2bd",
+            "strokeWidth": 2.5
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 20,
+            "line": 39
+          }
+        },
+        {
+          "id": "tangent",
+          "kind": "line",
+          "x1": 438.86041432415556,
+          "y1": 450.61824630648636,
+          "x2": 334.03766124416126,
+          "y2": 456.7166425489874,
+          "style": {
+            "stroke": "#f3ca7d",
+            "strokeWidth": 1.8,
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 21,
+            "line": 40
+          }
+        },
+        {
+          "id": "moving-point",
+          "kind": "point",
+          "x": 386.4490377841584,
+          "y": 453.6674444277369,
+          "r": 5,
+          "phase": 7.777580409572666,
+          "style": {
+            "fill": "#f3ca7d",
+            "stroke": "#091c27",
+            "strokeWidth": 2
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 22,
+            "line": 41
+          }
+        },
+        {
+          "id": "moving-label",
+          "kind": "tex",
+          "resourceId": "point-label",
+          "x": 398.4490377841584,
+          "y": 439.6674444277369,
+          "scale": 1.45,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 23,
+            "line": 42
+          }
+        },
+        {
+          "id": "inset-head",
+          "kind": "tex",
+          "resourceId": "inset-title",
+          "x": 683,
+          "y": 235,
+          "scale": 0.83,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 24,
+            "line": 43
+          }
+        },
+        {
+          "id": "inset-border",
+          "kind": "path",
+          "d": "M 656 259 H 905 V 419 H 656 Z",
+          "style": {
+            "fill": "#102a36",
+            "stroke": "#294751",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 25,
+            "line": 44
+          }
+        },
+        {
+          "id": "tikz-node",
+          "kind": "tex",
+          "resourceId": "inset",
+          "x": 694,
+          "y": 388,
+          "scale": 1.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 26,
+            "line": 45
+          }
+        },
+        {
+          "id": "tangent-formula",
+          "kind": "tex",
+          "resourceId": "tangent-label",
+          "x": 660,
+          "y": 448,
+          "scale": 0.95,
+          "style": {
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 27,
+            "line": 46
+          }
+        },
+        {
+          "id": "swatches",
+          "kind": "group",
+          "style": {
+            "opacity": 0.6944444444444444
+          },
+          "clip": {
+            "d": "M 827 474 H 906 V 510 H 827 Z"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 28,
+            "line": 49
+          }
+        },
+        {
+          "id": "swatch-a",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 847,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#6de2bd"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 29,
+            "line": 50
+          }
+        },
+        {
+          "id": "swatch-b",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 882,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 30,
+            "line": 51
+          }
+        },
+        {
+          "id": "origin",
+          "kind": "point",
+          "x": 375,
+          "y": 340,
+          "r": 2.5,
+          "style": {
+            "fill": "gray"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 41,
+            "line": 66
+          }
+        }
+      ]
+    },
+    {
+      "time": 12,
+      "viewport": {
+        "width": 960,
+        "height": 540
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "nodes": [
+        {
+          "id": "title-node",
+          "kind": "tex",
+          "resourceId": "title",
+          "x": 55,
+          "y": 76,
+          "scale": 2.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 12,
+            "line": 31
+          }
+        },
+        {
+          "id": "subtitle-node",
+          "kind": "tex",
+          "resourceId": "subtitle",
+          "x": 57,
+          "y": 110,
+          "scale": 1.22,
+          "style": {
+            "opacity": 0.65
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 13,
+            "line": 32
+          }
+        },
+        {
+          "id": "caption-node",
+          "kind": "tex",
+          "resourceId": "caption",
+          "x": 57,
+          "y": 170,
+          "scale": 0.88,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 14,
+            "line": 33
+          }
+        },
+        {
+          "id": "equation-node",
+          "kind": "tex",
+          "resourceId": "equation",
+          "x": 57,
+          "y": 208,
+          "scale": 1.55,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 15,
+            "line": 34
+          }
+        },
+        {
+          "id": "footer-node",
+          "kind": "tex",
+          "resourceId": "footer",
+          "x": 57,
+          "y": 506,
+          "scale": 0.72,
+          "style": {
+            "opacity": 0.48
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 16,
+            "line": 35
+          }
+        },
+        {
+          "id": "rule",
+          "kind": "line",
+          "x1": 55,
+          "y1": 133,
+          "x2": 905,
+          "y2": 133,
+          "style": {
+            "stroke": "#35505d",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 17,
+            "line": 36
+          }
+        },
+        {
+          "id": "x-axis",
+          "kind": "line",
+          "x1": 122,
+          "y1": 340,
+          "x2": 630,
+          "y2": 340,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 18,
+            "line": 37
+          }
+        },
+        {
+          "id": "y-axis",
+          "kind": "line",
+          "x1": 375,
+          "y1": 225,
+          "x2": 375,
+          "y2": 460,
+          "style": {
+            "stroke": "#34515c",
+            "strokeWidth": 1,
+            "dash": [
+              3,
+              6
+            ]
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 19,
+            "line": 38
+          }
+        },
+        {
+          "id": "orbit",
+          "kind": "ellipse",
+          "cx": 375,
+          "cy": 340,
+          "rx": 120,
+          "ry": 120,
+          "style": {
+            "fill": "#6de2bd",
+            "fillOpacity": 0.05,
+            "stroke": "#6de2bd",
+            "strokeWidth": 2.5
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 20,
+            "line": 39
+          }
+        },
+        {
+          "id": "tangent",
+          "kind": "line",
+          "x1": 444.3965439359029,
+          "y1": 228.9127834098257,
+          "x2": 503.6840036423966,
+          "y2": 315.5730229753317,
+          "style": {
+            "stroke": "#f3ca7d",
+            "strokeWidth": 1.8,
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 21,
+            "line": 40
+          }
+        },
+        {
+          "id": "moving-point",
+          "kind": "point",
+          "x": 474.04027378914975,
+          "y": 272.2429031925787,
+          "r": 5,
+          "phase": 11.966370614359,
+          "style": {
+            "fill": "#f3ca7d",
+            "stroke": "#091c27",
+            "strokeWidth": 2
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 22,
+            "line": 41
+          }
+        },
+        {
+          "id": "moving-label",
+          "kind": "tex",
+          "resourceId": "point-label",
+          "x": 486.04027378914975,
+          "y": 258.2429031925787,
+          "scale": 1.45,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 23,
+            "line": 42
+          }
+        },
+        {
+          "id": "inset-head",
+          "kind": "tex",
+          "resourceId": "inset-title",
+          "x": 683,
+          "y": 235,
+          "scale": 0.83,
+          "style": {
+            "opacity": 0.6
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 24,
+            "line": 43
+          }
+        },
+        {
+          "id": "inset-border",
+          "kind": "path",
+          "d": "M 656 259 H 905 V 419 H 656 Z",
+          "style": {
+            "fill": "#102a36",
+            "stroke": "#294751",
+            "strokeWidth": 1
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 25,
+            "line": 44
+          }
+        },
+        {
+          "id": "tikz-node",
+          "kind": "tex",
+          "resourceId": "inset",
+          "x": 694,
+          "y": 388,
+          "scale": 1.8,
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 26,
+            "line": 45
+          }
+        },
+        {
+          "id": "tangent-formula",
+          "kind": "tex",
+          "resourceId": "tangent-label",
+          "x": 660,
+          "y": 448,
+          "scale": 0.95,
+          "style": {
+            "opacity": 0.8
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 27,
+            "line": 46
+          }
+        },
+        {
+          "id": "swatches",
+          "kind": "group",
+          "style": {
+            "opacity": 0.25
+          },
+          "clip": {
+            "d": "M 827 474 H 906 V 510 H 827 Z"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 28,
+            "line": 49
+          }
+        },
+        {
+          "id": "swatch-a",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 847,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#6de2bd"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 29,
+            "line": 50
+          }
+        },
+        {
+          "id": "swatch-b",
+          "kind": "ellipse",
+          "parent": "swatches",
+          "cx": 882,
+          "cy": 493,
+          "rx": 29,
+          "ry": 20,
+          "style": {
+            "fill": "#f3ca7d"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 30,
+            "line": 51
+          }
+        },
+        {
+          "id": "origin",
+          "kind": "point",
+          "x": 375,
+          "y": 340,
+          "r": 2.5,
+          "style": {
+            "fill": "gray"
+          },
+          "source": {
+            "file": "orbit.tex",
+            "declaration": 41,
+            "line": 66
+          }
+        }
+      ]
+    }
+  ]
+}

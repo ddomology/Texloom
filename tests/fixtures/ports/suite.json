@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "texloom-v03",
+  "baselineRevision": "8b9f85690d362c0c68efebc9c4a39648dd492e9e",
+  "numericTolerance": {"absolute": 0.0000001, "relative": 0.0000000001},
+  "rasterTolerance": {"meanChannelDifference": 0.15, "changedFraction": 0.015, "maximumChannelDifference": 64},
+  "consumerTolerance": {"meanChannelDifference": 0.01, "changedFraction": 0.01, "maximumChannelDifference": 16},
+  "fixtures": [
+    {"id": "orbit", "source": "examples/orbit.tex", "inputs": ["examples/orbit.tex"], "times": [0, 4, 6, 8, 12]},
+    {"id": "commutative", "source": "examples/commutative.tex", "inputs": ["examples/commutative.tex"], "times": [0, 3, 6, 9, 12]},
+    {"id": "living-paths", "source": "examples/living-paths.tex", "inputs": ["examples/living-paths.tex"], "times": [0, 1, 2, 6, 10, 12]},
+    {"id": "scalar-field", "source": "examples/field.tex", "inputs": ["examples/field.tex", "examples/data/wave-grid.json"], "times": [0, 0.35, 1.25, 3, 6]}
+  ]
+}

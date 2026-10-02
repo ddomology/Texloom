@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "suiteSha256": "ba510adfed7df60ab90d913ce13b554e73c38b3bd6e8735d4d76272fe2d54ba8",
+  "baselineRevision": "8b9f85690d362c0c68efebc9c4a39648dd492e9e",
+  "recordedAt": "2026-10-02T09:58:01.539710+00:00",
+  "reason": "Initial v0.3 baseline: 21 reviewed frames, same-toolchain exact rebuilds, explicit upstream contracts; runtime/compiler unchanged from 8b9f856; JSON bytes normalized to LF for Windows/Linux checkout parity (semantic JSON unchanged)",
+  "specHashes": {
+    "docs/ports/v03-baseline.json": "8a142640fb5612d1c923bec689ec981974b81fa5f800888863a40a4b906c8d40"
+  },
+  "inputHashes": {
+    "orbit": {
+      "examples/orbit.tex": "c0f68098ac985b1338f38caaf588b8525fd0aae3b0fd5240bb5e994d7dc9ee34"
+    },
+    "commutative": {
+      "examples/commutative.tex": "4d7019199836bfda23859dc9515c6efd29d37bf36a9987214545fe7b64b980ee"
+    },
+    "living-paths": {
+      "examples/living-paths.tex": "21d329e84c47d89be2fc49136678e534eabee3e91f83ed3f0ca80edafe268ac1"
+    },
+    "scalar-field": {
+      "examples/field.tex": "67315487b4c53a0655669377e6a25e6cbec2274202c2b8b1423f34b7090f819f",
+      "examples/data/wave-grid.json": "4f6059adcec34f69c86e6a316dd3ec135ee3a553efef23fca625b5983c8d2746"
+    }
+  },
+  "artifacts": {
+    "orbit/bundle.json": "71764e3d4c26e42467b91f80665c31a7247bbec37a0a6af25e1b1f72ce5e7ee3",
+    "orbit/observations.json": "e3ed64b28b37aa8887bcbe60a08f3b3c80a75063ff016116246898dc8001c500",
+    "orbit/frame-0.svg": "fdd09203f5c6d374ec1eddca683f8f4641c5e65d148b924f175fe752da0c8055",
+    "orbit/frame-0.png": "59942769c1ff7f11b12aaf63170b05820468c14606e2796721b320619ca254af",
+    "orbit/frame-1.svg": "4f646ebf3f985276caa6d65f58b35b56bb10ee15772814be75e7974112bcd3b7",
+    "orbit/frame-1.png": "1ea4850271739031ef2b0f5a0401e92763df82522ee8235b69c99268519ee3c7",
+    "orbit/frame-2.svg": "fc2228a67a6dcc509f75866d6c4745fbe0bd8760177c7fc6c6fbf677d6b54534",
+    "orbit/frame-2.png": "0619c5233bfa2d473f85fd2c9679b22808e7a036fe5679474751ffdaa3de6f2b",
+    "orbit/frame-3.svg": "d026681877c299586e98d06ea8aa80f380e941261b6ad2b21006046b673a6ea7",
+    "orbit/frame-3.png": "a9b4a732b731faa8c981386956114501c034efebffc2d33285d608d7eb26dcc7",
+    "orbit/frame-4.svg": "1a3b5edc23ed5cea923f1dd1f795682c08be3501dcf32c26c750d530d4f65e70",
+    "orbit/frame-4.png": "59942769c1ff7f11b12aaf63170b05820468c14606e2796721b320619ca254af",
+    "commutative/bundle.json": "bff53858b6b6f6d2fa2119ddf0c4b4aab2de914f8f3e18c40fbeeda8e99409a9",
+    "commutative/observations.json": "ae298fd845617b8b3ed033c741a5a2dae01176d9f3bf6c2179c9946ff4f74cc7",
+    "commutative/frame-0.svg": "dcd6765c418198796f73b2dbf9fa8ac291226ba42331cdb2f5cfe71ffa3cacee",
+    "commutative/frame-0.png": "ab07d394a922c9b1d1df65ce0d296a1654c4937f986166892678a8ce2fa7e105",
+    "commutative/frame-1.svg": "3d57d6ea49ee0c6cb6ea3b163f46d3ca52e1631a1ae7feee64b8b442dd2d8bba",
+    "commutative/frame-1.png": "b9adebdd963c6e293c56fa0589fc06703671d772efd4f3c8dd47a98be89cf05a",
+    "commutative/frame-2.svg": "a6562e7fa192bc747b325b0855375560aaebae57154e697268747a5f32c73729",
+    "commutative/frame-2.png": "e808948a15688790d70e05b94fb993b9bf816972fe1ab9601eb6d4fedfa586be",
+    "commutative/frame-3.svg": "23a158f5da552ce52c0e14e6fc2914329eeccf14f397e52f711e6a624a7caffb",
+    "commutative/frame-3.png": "b9adebdd963c6e293c56fa0589fc06703671d772efd4f3c8dd47a98be89cf05a",
+    "commutative/frame-4.svg": "06afc4bf0e5e22925a0289baa1f60ac6b72a8b336be58a0fbb38d4db5a51e04d",
+    "commutative/frame-4.png": "ab07d394a922c9b1d1df65ce0d296a1654c4937f986166892678a8ce2fa7e105",
+    "living-paths/bundle.json": "ba683743cfb99c3c0d0a50063ecbe1e5e82153a83ee7132a23738d8ca0617393",
+    "living-paths/observations.json": "634bd63c54352d0267d6304f57e7963414995183c837b4d23e1af5bef8a1bb74",
+    "living-paths/frame-0.svg": "76b5c263f5c0bc8fce76d74500983c6729f88e2e22ecc1d66579f8c5bdc64f54",
+    "living-paths/frame-0.png": "8baad0bef0eea6f047e082ee32317dbfc1c786e1c86cd9b5b211f445e964466c",
+    "living-paths/frame-1.svg": "421725eccf9151da28f54715c760ad67833db0110a0a2fd7c4c0bb04d9b12baf",
+    "living-paths/frame-1.png": "5c8208ecc1b08a0ad70fbda3619869f07f91add3d96fd44e8063ef3dd95ceffb",
+    "living-paths/frame-2.svg": "837a5ce28ecf9c1a1e5a7e87088f982bb5392df7cc669d1f97486298777a531b",
+    "living-paths/frame-2.png": "5d4d3faf83fa1dd18d8788abe606274613f4833005d891e56177448b503e4367",
+    "living-paths/frame-3.svg": "83e3a7d3ef60460ceeba8675f206270cac951a4d0cbf550aa818ad7f8e520bb0",
+    "living-paths/frame-3.png": "c06ea72984f1e06e18ed3a69f3d9e444ddf0bb8d12e7ecb710ff2b04b9d5c281",
+    "living-paths/frame-4.svg": "9507da9d76f0903335afca5b81c5838b08eb239f7bd1086af9b1e98c7eca1720",
+    "living-paths/frame-4.png": "09c219e271f88e606bf1aad6bad8fffd0d840e8ed7c226971c4d125902b1a947",
+    "living-paths/frame-5.svg": "97489baf0cc7d0bc642b50be8ce197cdce9754a4d11a9414b78012ea1ef2a00a",
+    "living-paths/frame-5.png": "09c219e271f88e606bf1aad6bad8fffd0d840e8ed7c226971c4d125902b1a947",
+    "scalar-field/bundle.json": "a08e2f166bff62ed1db7c5a30b00226c5b26e1b9bfe9cb9c75b48d7c5494b7c1",
+    "scalar-field/observations.json": "26ea2b95a3a38df2fb24a0eb7494043672ad05cb288613cce773d0ae8e43ed37",
+    "scalar-field/frame-0.svg": "eaff5a8495195c8d8d1c9918078cf5f675fcc596143aefa242ea76a284619d68",
+    "scalar-field/frame-0.png": "0fc0e445de5f26b57f972d025791f1f68d05a8d158c719b02a28792fce6e29df",
+    "scalar-field/frame-1.svg": "ae15b7eb82ec10d4b597ac34ed3e767959ff1daef69ec3f328f883f7ea9528f2",
+    "scalar-field/frame-1.png": "d2c07068711676439e4d950afeec18a3a10b28cb109adcacdc0f682c651c085a",
+    "scalar-field/frame-2.svg": "4b6e268956ee7401bac6df8e88d89486aeeaad693ff28ec0f49024a706c56def",
+    "scalar-field/frame-2.png": "29ce59863514b4780e365df9e7cab1869db2727b85af600d6656dfd71223077e",
+    "scalar-field/frame-3.svg": "533a547fff837062b4c335fa924e00a1882a9e047419c57217ab2fe3590fdcdd",
+    "scalar-field/frame-3.png": "9adc8b7a27a3b9f861b640c213fa3e85e448c29c4cd3a1c303bca859ec2c46e9",
+    "scalar-field/frame-4.svg": "ec9b4cd3280a24682abd4485f5ff32678905f43175673c55a768c8f37d47355c",
+    "scalar-field/frame-4.png": "8e81d8d7ae8fefb677b792bdce7b3f88bc9044ac32094c5ae2ec5e5547164c82",
+    "toolchain.json": "d091e540097e6e26837d6f82efed727e80c886cc478d6e381f293417b54cb8f0"
+  }
+}

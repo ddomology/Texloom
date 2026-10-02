@@ -1,0 +1,83 @@
+name: Port regression
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: port-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime:
+    name: Frozen-bundle runtime and raster regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-port.txt
+      - name: Install locked Node dependencies
+        run: npm ci
+      - name: Install pinned verification packages
+        run: python -m pip install -r requirements-port.txt
+      - name: Install Chromium and Linux browser dependencies
+        run: python -m playwright install --with-deps chromium
+      - name: Verify committed bundles with the current runtime
+        run: python tools/verify-port.py --runtime-only
+      - name: Upload runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: port-regression-runtime
+          path: build/port-verification/
+          if-no-files-found: warn
+          retention-days: 14
+
+  full:
+    name: TeX compilation and full regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-port.txt
+      - name: Install TeX and vector conversion tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended lmodern dvisvgm
+      - name: Install locked Node dependencies
+        run: npm ci
+      - name: Install pinned verification packages
+        run: python -m pip install -r requirements-port.txt
+      - name: Install Chromium and Linux browser dependencies
+        run: python -m playwright install --with-deps chromium
+      - name: Verify full source rebuilds and tests
+        run: python tools/verify-port.py
+      - name: Upload compiler and regression evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: port-regression-full
+          path: build/port-verification/
+          if-no-files-found: warn
+          retention-days: 14

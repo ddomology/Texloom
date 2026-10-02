@@ -176,28 +176,48 @@ one-off alternative; treat its returned shared resources as immutable.
 
 ## Verification
 
-Compile the demo first, then run:
+The [PR 01 port-regression gate](docs/ports/README.md) checks all four registered
+scenes from a clean Texloom checkout. It does not need a sibling Chalkspace
+checkout, prebuilt demo directories, or FFmpeg. Use the pinned verification
+packages so browser/raster changes are visible:
 
 ```sh
-npm run check
-npm test
-python -m unittest discover -s tests -p compiler_test.py -v
-python -m unittest discover -s tests -p tikz_compiler_test.py -v
-python -m unittest discover -s tests -p path_compiler_test.py -v
-npm run snapshot -- build/demo/bundle.json build/demo/snapshot.svg 6
-npx tsx tools/resource-snapshots.ts build/demo/bundle.json build/demo/qa/resources
-python tools/qa_player.py build/demo
-python tools/qa_anchors.py build/v02
-node tools/build-dual-demo.mjs build/v03/bundle.json build/v03/dual.html ../Chalkspace
-python tools/qa_dual.py build/v03/dual.html
-python tools/qa_paths.py build/v03/dual.html build/v03/bundle.json
+npm ci
+python -m pip install -r requirements-port.txt
+python -m playwright install chromium
+python tools/verify-port.py
 ```
 
-QA checks actual browser controls, downloads, mobile overflow, reversed seeking,
-SVG/preview pixel parity, and resource parity against dvisvgm. Small bounded
-antialias differences are allowed for original rectangle rules lowered to paths.
-Tests also cover source macro execution, parameter-character serialization,
-zero-height boxes, phantom width, stale build invalidation and invalid IR.
+Full verification needs `latex`, `dvisvgm`, and `kpsewhich` on `PATH`, with PGF,
+AMS math and Latin Modern installed. On Ubuntu, use the package/browser setup in
+[the port guide](docs/ports/README.md#setup). The command compiles each source
+twice, compares semantic bundles and sampled frames with committed references,
+checks reverse seeking, compares historical PNGs and SVG/Canvas raster output,
+then runs the TypeScript typecheck, all TypeScript tests and all Python
+`*_test.py` tests. A failure leaves the committed references unchanged.
+
+| Command | Evidence it checks |
+| --- | --- |
+| `python tools/verify-port.py` | Full source compilation, runtime, raster and test gate. |
+| `python tools/verify-port.py --runtime-only` | Current runtime/renderers against committed compiler output; no TeX compilation or compiler tests. |
+| `python tools/verify-port.py --spec-only` | PortSpec metadata, registered inputs and fixture references only. |
+
+`build/port-verification/latest.json` points to the run's `report.json`; the same
+run directory contains toolchain records, logs and frame artifacts. Full runs
+also build a `player.html` for each completed fixture. Open these files to inspect
+a difference before considering an explicit `--record --reason "..."` update.
+Reference recording requires a full build and passing tests; it is never an
+automatic response to a regression.
+
+[GitHub Actions](.github/workflows/port-regression.yml) defines separate Linux
+runtime-only and full compile jobs, with evidence uploaded even after a failed
+verification step. Toolchain drift is reported; it does not relax comparison
+tolerances. See the port guide for baseline review and artifact details.
+
+The separate interactive QA scripts (`qa_player.py`, `qa_anchors.py`,
+`qa_dual.py`, `qa_paths.py`) remain useful for focused browser-control,
+responsive-layout and integration checks. Their coverage is not implied by
+passing the PR 01 regression command.
 
 TeX compilation is intended for trusted local source files. Disabling shell
 escape is not an OS sandbox for arbitrary uploaded TeX.
