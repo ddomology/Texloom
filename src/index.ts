@@ -43,3 +43,5 @@ export * from './geometry/boxes.js';
 export {layoutOperatorDefinitions,executeLayoutOperation} from './operations/layout.js';
 export * from './geometry/data-space.js';
 export {axesOperatorDefinitions,executeAxesOperation} from './operations/axes.js';
+export * from './geometry/adaptive-sampling.js';
+export {validatePlotProgram,preparePlotProgram,type PlotProgram,type PlotOperation,type PlotMode,type PlotEvaluation,type PreparedPlotProgram} from './operations/plot.js';

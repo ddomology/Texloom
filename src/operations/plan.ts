@@ -18,6 +18,7 @@ import {isShapeOperator,type ShapeEvaluation} from './shapes.js';
 import type {AnchorEvaluation} from './anchors.js';
 import {isCurveOperator,type CurveEvaluation} from './curves.js';
 import {isIntersectionOperator,type IntersectionEvaluation} from './intersections.js';
+import {preparePlotProgram,type PlotEvaluation} from './plot.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -25,9 +26,9 @@ interface StepBase {
 }
 type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
-  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number});
+  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number} | {kind:'plot';index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;plots?:PlotEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
@@ -51,7 +52,7 @@ function diagnosticAt(error: unknown, step: Step): never {
     ? error.diagnostics : [{severity:'error',code:'OPERATION_EXECUTION',message:error instanceof Error ? error.message : String(error)}];
   const prefix = step.kind === 'operation' ? `$.operations[${JSON.stringify(step.operation.id)}]` : undefined;
   const located = diagnostics.map(d => ({...d,
-    path:prefix && d.path?.startsWith(prefix) ? step.path + d.path.slice(prefix.length) : d.path?.startsWith('$.operationGraph.') || d.path?.startsWith('$.fields.') || d.path?.startsWith('$.deformations.') ? d.path : step.kind === 'expression' ? step.path + '.expression' : step.path,
+    path:prefix && d.path?.startsWith(prefix) ? step.path + d.path.slice(prefix.length) : d.path?.startsWith('$.operationGraph.') || d.path?.startsWith('$.fields.') || d.path?.startsWith('$.deformations.') || d.path?.startsWith('$.plots.') ? d.path : step.kind === 'expression' ? step.path + '.expression' : step.path,
     ...(d.sourceSpan ? {} : step.sourceSpan ? {sourceSpan:structuredClone(step.sourceSpan)} : {})}));
   if (error instanceof BundleValidationError) throw new BundleValidationError(located);
   throw new OperationValidationError(located);
@@ -95,6 +96,10 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   for(const [index,prepared] of (deformations?.operations??[]).entries())
     steps.push({id:`deformation:${index}`,path:prepared.path,sourceSpan:prepared.operation.sourceSpan,kind:'deformation',index,
       dependencies:[],reads:[...prepared.reads],writes:[...prepared.writes]});
+  const plots=bundle.plots?preparePlotProgram(bundle.plots,bundle):undefined;
+  for(const [index,prepared] of (plots?.operations??[]).entries())
+    steps.push({id:`plot:${index}`,path:prepared.path,sourceSpan:prepared.operation.sourceSpan,kind:'plot',index,
+      dependencies:prepared.dependencies.map(operationID),reads:[...prepared.reads],writes:[...prepared.writes]});
   // Canonical property ownership catches whole-vs-component writers and joins
   // track, legacy and authored binding ownership without concatenating node IDs.
   const writers = bundle.tracks.map((track,index) => ({id:`track:${index}`,path:`$.tracks[${index}]`,
@@ -145,11 +150,12 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     const parameters = expressions.resolveParameters(overrides);
     let fieldResult:FieldEvaluation|undefined;
     const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
+    const plotResults:Record<string,PlotEvaluation[string]>=Object.create(null);
     const shapes:ShapeEvaluation={definitions:Object.create(null),approximations:Object.create(null)};
     const anchors:AnchorEvaluation=Object.create(null);
     const curves:CurveEvaluation={operations:Object.create(null),samples:Object.create(null)};
     const intersections:IntersectionEvaluation={sets:Object.create(null),selections:Object.create(null)};
-    if(metadata){delete metadata.deformations;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
+    if(metadata){delete metadata.deformations;delete metadata.plots;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -164,6 +170,9 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
         } else if (step.kind === 'deformation') {
           const prepared=deformations!.operations[step.index];
           deformationResults[prepared.operation.id]=prepared.apply(frameNodes,time,parameters);
+        } else if (step.kind === 'plot') {
+          const prepared=plots!.operations[step.index];
+          plotResults[prepared.operation.id]=prepared.apply(frameNodes,time,parameters,values,anchors);
         } else if (step.kind === 'fields') {
           fieldResult = fields!.sample(frameNodes,time,parameters);
           fields!.apply(fieldResult,frameNodes,camera);
@@ -175,6 +184,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
       } catch (error) {diagnosticAt(error,step);}
     }
     if(metadata&&deformations)metadata.deformations=freezeSnapshot(deformationResults);
+    if(metadata&&plots)metadata.plots=freezeSnapshot(plotResults);
     if(metadata&&hasShapes)metadata.shapes=structuredClone(shapes);
     if(metadata&&Object.keys(anchors).length)metadata.anchors=structuredClone(anchors);
     if(metadata&&hasCurves)metadata.curves=structuredClone(curves);

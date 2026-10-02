@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\usepackage{texloom-axes}
+\usepackage{texloom-plots}
+\usepackage{texloom-curves}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{33}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  caption/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{16}{21}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={From a formula to a moving curve}]
+\loomnode[heading] (heading) at (480,45) {From a formula to a moving curve};
+\loomnode[small] (intro) at (480,81) {Change the function. Follow its geometry. Preserve the gaps.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,111)--(905,111) (55,455)--(905,455);};
+\loomnode[label,text=mint] (left-heading) at (297,138) {01 / FUNCTION + AREA + TANGENT};
+\loomnode[label,text=gold] (loop-heading) at (757,138) {02 / PARAMETRIC LOOP};
+\loomnode[label,text=coral] (pole-heading) at (757,304) {03 / AN EXPLICIT DOMAIN HOLE};
+\loomparameter[unit=1,min=0.6,max=1.4]{amplitude}{1}
+\loomparameter[unit=1,min=0.6,max=2.5]{frequency}{1.4}
+
+\loomgeometry[draw=rule,line width=.6bp] (main-grid) {(0,0)--(1,0)};
+\loomgeometry[draw=muted,line width=.8bp] (main-x) {(0,0)--(1,0)};
+\loomgeometry[draw=muted,line width=.8bp] (main-y) {(0,0)--(1,0)};
+\loomaxes{main}|{"origin":[78,172],"width":438,"height":230,"xMin":-3.2,"xMax":3.2,"yMin":-2,"yMax":2,"xStep":1,"yStep":1,"xAxis":"main-x","yAxis":"main-y","grid":"main-grid"}|
+\loomaxisticks{main}|{"idPrefix":"main-x-label","axis":"x","values":[-3,-2,-1,1,2,3],"precision":0,"anchor":"base","offset":[0,17],"scale":0.8,"style":{"fill":"#91ACB5"}}|
+\loomaxisticks{main}|{"idPrefix":"main-y-label","axis":"y","values":[-2,-1,1,2],"precision":0,"anchor":"base east","offset":[-9,3],"scale":0.8,"style":{"fill":"#91ACB5"}}|
+\loomgeometry[fill=mint,draw=none,opacity=.12] (area) {(0,0)--(1,0)--(1,1)--cycle};
+\loomplot{area}|{"axes":"main","mode":"area","lower":"0","upper":"amplitude*(1+0.12*sin(pi*time/6s))*sin(frequency*x)","domains":[[-3,3]],"tolerance":0.25,"initialSegments":24}|
+\loomgeometry[draw=mint,line width=2.4bp] (wave) {(0,0)--(1,0)};
+\loomplot{wave}|{"axes":"main","mode":"function","expression":"amplitude*(1+0.12*sin(pi*time/6s))*sin(frequency*x)","domains":[[-3,3]],"tolerance":0.25,"initialSegments":24}|
+% These consumers read the generated path; no duplicate formula or derivative.
+\TLNode{probe}{point}{"x":0,"y":0,"r":5,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1.2}}
+\TLNode{tip}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":2}}
+\TLRelation{lineBetween}{"target":"tangent","a":"probe","b":"tip"}
+\loomcurvesample[id=probe-on-plot,mode=length,tangent=tip,distance=42,tolerance=0.01]{probe}|{"path":"wave","parameter":"0.5+0.42*sin(pi*time/6s)"}|
+\loomnode[formula,text=mint] (wave-formula) at (297,430) {$f(x)=A\sin(\omega x)$};
+
+\loomgeometry[draw=rule,line width=.65bp] (loop-x) {(0,0)--(1,0)};
+\loomgeometry[draw=rule,line width=.65bp] (loop-y) {(0,0)--(1,0)};
+\loomaxes{loop-space}|{"origin":[646,165],"width":220,"height":102,"xMin":-1.4,"xMax":1.4,"yMin":-1,"yMax":1,"xAxis":"loop-x","yAxis":"loop-y"}|
+\loomgeometry[draw=gold,line width=2bp] (loop) {(0,0)--(1,0)};
+\loomplot{loop}|{"axes":"loop-space","mode":"parametric","xExpression":"cos(u)","yExpression":"0.72*sin(2*u+0.35*sin(pi*time/6s))","domains":[[0,6.283185307179586]],"tolerance":0.2,"initialSegments":24}|
+\loomnode[caption] (loop-formula) at (757,281) {$(\cos u,\;0.72\sin(2u+\phi))$};
+
+\loomgeometry[draw=rule,line width=.65bp] (hole-x) {(0,0)--(1,0)};
+\loomgeometry[draw=rule,line width=.65bp] (hole-y) {(0,0)--(1,0)};
+\loomaxes{hole-space}|{"origin":[646,325],"width":220,"height":100,"xMin":-2.2,"xMax":2.2,"yMin":-3,"yMax":3,"xAxis":"hole-x","yAxis":"hole-y"}|
+\loomgeometry[draw=coral,line width=2bp] (reciprocal) {(0,0)--(1,0)};
+\loomplot{reciprocal}|{"axes":"hole-space","mode":"function","expression":"1/x","domains":[[-2,-0.35],[0.35,2]],"tolerance":0.2}|
+\loomnode[caption] (hole-formula) at (757,441) {$1/x\quad\text{with }|x|<0.35\text{ excluded}$};
+\loomnode[small] (explanation) at (480,480) {One evaluated path drives the stroke, moving point and local tangent.};
+\loomnode[caption] (footer) at (480,516) {TEXLOOM / ADAPTIVE PLOTS / SHARED GEOMETRY FOR WEB AND VIDEO};
+\end{loomscene}
+\end{document}
