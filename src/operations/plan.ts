@@ -103,11 +103,11 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   // Canonical property ownership catches whole-vs-component writers and joins
   // track, legacy and authored binding ownership without concatenating node IDs.
   const writers = bundle.tracks.map((track,index) => ({id:`track:${index}`,path:`$.tracks[${index}]`,
-    writes:[{node:track.target,property:track.property}],sourceSpan:undefined as DeepReadonly<SourceSpan>|undefined}));
+    writes:[{node:track.target,property:track.property}],sourceSpan:track.sourceSpan as DeepReadonly<SourceSpan>|undefined}));
   for (const step of steps) {
     for (const previous of writers) if (step.writes.some(a => previous.writes.some(b => propertiesOverlap(a,b))))
       throw new OperationValidationError([{severity:'error',code:'OPERATION_WRITER_CONFLICT',message:'Multiple execution steps write overlapping properties.',
-        path:step.path,...(step.sourceSpan ? {sourceSpan:structuredClone(step.sourceSpan)} : {}),related:[{message:'Earlier writer.',path:previous.path}]}]);
+        path:step.path,...(step.sourceSpan ? {sourceSpan:structuredClone(step.sourceSpan)} : {}),related:[{message:'Earlier writer.',path:previous.path,...(previous.sourceSpan?{sourceSpan:structuredClone(previous.sourceSpan)}:{})}]}]);
     writers.push({id:step.id,path:step.path,writes:step.writes,sourceSpan:step.sourceSpan});
   }
   // A consumer waits for every writer of a property it reads, including all

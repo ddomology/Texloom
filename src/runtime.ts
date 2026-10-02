@@ -2,6 +2,9 @@ import {createEvaluator} from './evaluate.js';
 import type {Bundle, EvaluatedFrame} from './schema.js';
 import type {ExpressionValue} from './fields/ast.js';
 import {requireCapabilities, sceneFeatures, type CapabilityProfile, type RenderFeature} from './capabilities.js';
+import type {TimelineMetadata} from './timeline/ast.js';
+import type {DeepReadonly,SourceSpan} from './ir/operations.js';
+import {freezeSnapshot} from './operations/values.js';
 
 export interface SceneManifest {
   readonly contract: 'texloom-runtime/1';
@@ -10,6 +13,8 @@ export interface SceneManifest {
   readonly duration: number;
   readonly viewport: Readonly<Bundle['viewport']>;
   readonly features: readonly RenderFeature[];
+  /** Source-time schedule and cues are immutable data; sampling fires no events. */
+  readonly timeline?: DeepReadonly<TimelineMetadata>;
 }
 export interface SceneRuntime {
   readonly manifest: SceneManifest;
@@ -26,6 +31,7 @@ export function prepareScene(bundle: Bundle): SceneRuntime {
     title: bundle.title, duration: bundle.duration,
     viewport: Object.freeze({...bundle.viewport}),
     features: Object.freeze(sceneFeatures(bundle)),
+    ...(bundle.timeline ? {timeline:freezeSnapshot(bundle.timeline)} : {}),
   });
   return Object.freeze({manifest, sample,
     require(profile: CapabilityProfile) {requireCapabilities(manifest.features, profile);},
@@ -53,7 +59,16 @@ export interface ClipSample {
 }
 export interface SceneClip {
   readonly timing: Readonly<Required<ClipTiming>>;
+  /** Inclusive source endpoints preserve terminal markers, independently of
+   * the half-open active frame interval. Hosts decide which cues to dispatch. */
+  readonly cues: readonly ClipCue[];
   sample(hostSeconds: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample;
+}
+export interface ClipCue {
+  readonly name:string;
+  readonly sourceTime:number;
+  readonly hostTime:number;
+  readonly sourceSpan?:DeepReadonly<SourceSpan>;
 }
 
 /** Half-open active interval [start,start+duration); no independent wall clock. */
@@ -65,11 +80,18 @@ export function bindSceneClip(runtime: SceneRuntime, input: ClipTiming): SceneCl
   if (![timing.start, sourceStart, rate, duration].every(Number.isFinite) || timing.start < 0 || sourceStart < 0 ||
       sourceStart > runtime.manifest.duration || rate <= 0 || duration < 0 ||
       !Number.isFinite(sourceStart + duration * rate) || sourceStart + duration * rate > runtime.manifest.duration + 1e-9 ||
+      duration > 0 && sourceStart + duration * rate <= sourceStart ||
+      !Number.isFinite(timing.start + duration) || duration > 0 && timing.start + duration <= timing.start ||
       !['hidden', 'hold'].includes(timing.before) || !['hidden', 'hold'].includes(timing.after)) {
     throw new Error('CLIP_TIMING: finite nonnegative timing must stay inside the source duration; rate must be positive.');
   }
   Object.freeze(timing);
-  return Object.freeze({timing, sample(hostTime: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample {
+  const sourceEnd=Math.min(runtime.manifest.duration,sourceStart+duration*rate);
+  const cues:readonly ClipCue[]=freezeSnapshot((runtime.manifest.timeline?.cues??[])
+    .filter(cue=>cue.time>=sourceStart&&cue.time<=sourceEnd)
+    .map(cue=>({name:cue.name,sourceTime:cue.time,hostTime:timing.start+(cue.time-sourceStart)/rate,
+      ...(cue.sourceSpan?{sourceSpan:cue.sourceSpan}:{})})));
+  return Object.freeze({timing,cues, sample(hostTime: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample {
     if (!Number.isFinite(hostTime)) throw new Error('CLIP_TIME: expected finite absolute host seconds.');
     const phase = hostTime < timing.start ? 'before' : hostTime >= timing.start + duration ? 'after' : 'active';
     const visible = phase === 'active' || (phase === 'before' ? timing.before : timing.after) === 'hold';

@@ -33,6 +33,7 @@ from decoration_capture import lower_decorations
 from layout_capture import lower_layouts
 from axes_capture import prepare_axes_records, lower_axes
 from plot_capture import lower_plots
+from animation_capture import lower_animation
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -174,7 +175,7 @@ def compile_scene(source,out):
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file','animation-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     lower_expressions(records,bundle,execution,out)
     lower_fields(records,bundle,execution,out)
@@ -190,6 +191,7 @@ def compile_scene(source,out):
     lower_layouts(records,bundle,execution,out)
     lower_axes(records,bundle,execution,out)
     lower_plots(records,bundle,execution,out)
+    lower_animation(records,bundle,execution,out)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
     targets=[(t['target'],t['property']) for t in bundle['tracks']]

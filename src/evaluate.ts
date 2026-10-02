@@ -6,6 +6,7 @@ import {withPathContext} from './operations/builtins/legacy.js';
 import type {ExpressionValue} from './fields/ast.js';
 import {createArrowGeometry,ARROW_DEFAULTS,type ArrowGeometryResult} from './geometry/arrowheads.js';
 import {OperationValidationError} from './ir/operations.js';
+import {evaluateTrack} from './timeline/track.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -19,11 +20,6 @@ function interval(times: readonly number[], time: number): [number, number, numb
 }
 function mix(a: TrackValue, b: TrackValue, t: number): TrackValue {
   return typeof a === 'number' ? a + ((b as number) - a) * t : a.map((v, i) => v + ((b as number[])[i] - v) * t);
-}
-function trackValue(track: Track, time: number): TrackValue {
-  const [a, b, raw] = interval(track.keys.map(key => key[0]), time);
-  const t = track.interpolation === 'step' ? 0 : track.interpolation === 'smooth' ? raw * raw * (3 - 2 * raw) : raw;
-  return mix(track.keys[a][1], track.keys[b][1], t);
 }
 function setValue(target: Node | Camera, property: string, value: TrackValue): void {
   if(property.startsWith('geometry.')) {
@@ -48,7 +44,7 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
     .filter(b=>b.property.startsWith('arrows.')).map(b=>b.target));
   for(const node of nodes)if(node.kind==='path'&&(node.arrows!==undefined||arrowWriters.has(node.id)))
     node.arrows={...ARROW_DEFAULTS,...node.arrows};
-  for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
+  for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, evaluateTrack(track, clamped));
   const metadata:ExecutionMetadata={};
   const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters, metadata);
   for(const node of nodes) if(node.kind==='path'&&node.geometry) {

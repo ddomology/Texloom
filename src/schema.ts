@@ -10,6 +10,8 @@ import type {FieldProgram, FieldEvaluation} from './fields/types.js';
 import {validateFieldProgramInContext} from './fields/program-fields.js';
 import {validateDeformationProgramInContext, type DeformationProgram, type DeformationEvaluation} from './operations/deform.js';
 import {validatePlotProgramInContext, type PlotProgram, type PlotEvaluation} from './operations/plot.js';
+import {validateTimelineMetadata,type TimelineMetadata,type Easing} from './timeline/ast.js';
+import {trackHasSingularScale} from './timeline/track.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -39,7 +41,11 @@ export interface VectorResource { kind: 'vector'; items: PaintItem[]; metrics: {
 export interface ScalarFieldResource { kind: 'scalar-field'; columns: number; rows: number; times: number[]; samples: number[][]; range: [number, number]; interpolation: 'linear' | 'step'; provenance?: Record<string, unknown> }
 export type Resource = VectorResource | ScalarFieldResource;
 export type TrackValue = number | number[];
-export interface Track { target: string; property: string; keys: [number, TrackValue][]; interpolation?: 'linear' | 'smooth' | 'step' }
+export interface Track { target: string; property: string; keys: [number, TrackValue][]; interpolation?: Easing;
+  /** Outgoing interval easing; omitted entries are not allowed. */
+  segmentEasings?:Easing[];
+  /** Incoming limit at each key; null uses its ordinary value. Index zero is null. */
+  leftValues?:(TrackValue|null)[];sourceSpan?:SourceSpan }
 export type Relation = (
   | { type: 'pointOnEllipse'; target: string; source: string }
   | { type: 'tangent'; target: string; source: string; point: string; length: number }
@@ -61,6 +67,7 @@ export interface Bundle {
   fields?: FieldProgram;
   deformations?: DeformationProgram;
   plots?: PlotProgram;
+  timeline?: TimelineMetadata;
 }
 export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
 
@@ -340,7 +347,21 @@ export function validateBundle(input: unknown): Diagnostic[] {
     write(t.target, t.property, path);
     if (typeof t.property === 'string' && t.property.startsWith('transform.')) transformTargets.add(t.target);
     if (t.interpolation !== undefined) choice(t.interpolation, ['linear', 'smooth', 'step'], `${path}.interpolation`);
+    if(t.sourceSpan!==undefined)errors.push(...validateSourceSpan(t.sourceSpan,path+'.sourceSpan'));
     if (!Array.isArray(t.keys) || !t.keys.length) { error('TRACK_KEYS', 'At least one keyframe is required.', `${path}.keys`); return; }
+    if(t.segmentEasings!==undefined){
+      if(b.version!=='0.3')error('TRACK_VERSION','Segment easing requires Bundle 0.3.',path+'.segmentEasings');
+      if(!Array.isArray(t.segmentEasings)||t.segmentEasings.length!==t.keys.length-1)error('TRACK_EASINGS','Expected one easing per outgoing key interval.',path+'.segmentEasings');
+      else t.segmentEasings.forEach((e:unknown,j:number)=>choice(e,['linear','smooth','step'],`${path}.segmentEasings[${j}]`));
+    }
+    if(t.leftValues!==undefined){
+      if(b.version!=='0.3')error('TRACK_VERSION','Incoming key values require Bundle 0.3.',path+'.leftValues');
+      if(!Array.isArray(t.leftValues)||t.leftValues.length!==t.keys.length||t.leftValues[0]!==null)error('TRACK_LEFT_VALUES','Expected one incoming value/null per key; the first entry must be null.',path+'.leftValues');
+      else t.leftValues.forEach((value:unknown,j:number)=>{
+        if(value===null)return;
+        if(spec?.size)tuple(value,spec.size,`${path}.leftValues[${j}]`);else if(spec)number(value,`${path}.leftValues[${j}]`,spec);
+      });
+    }
     let previous = -Infinity;
     t.keys.forEach((key: unknown, j: number) => {
       const kp = `${path}.keys[${j}]`;
@@ -463,10 +484,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
   }
   if (Array.isArray(b.tracks)) b.tracks.forEach((t: any, i: number) => {
     if (!object(t) || !inverseChain.has(t.target) || t.property !== 'transform.scale' || !Array.isArray(t.keys)) return;
-    const scales = t.keys.filter((key: unknown) => Array.isArray(key) && Array.isArray(key[1]) && key[1].length === 2 && key[1].every(finite)).map((key: any) => key[1] as number[]);
-    for (let j = 0; j < scales.length; j++) for (let axis = 0; axis < 2; axis++) {
-      if (scales[j][axis] === 0 || (j > 0 && t.interpolation !== 'step' && Math.sign(scales[j-1][axis]) !== Math.sign(scales[j][axis]))) error('SINGULAR_TRANSFORM', 'Scale animation makes an inverse coordinate space singular.', `$.tracks[${i}].keys`);
-    }
+    if(!errors.some(d=>d.severity==='error')&&trackHasSingularScale(t as Track))error('SINGULAR_TRANSFORM', 'Scale animation makes an inverse coordinate space singular.', `$.tracks[${i}].keys`);
   });
   if (b.document !== undefined && (!object(b.document) || !Array.isArray(b.document.blocks))) error('DOCUMENT', 'document.blocks must be an array.', '$.document');
   if (b.diagnostics !== undefined) {
@@ -484,6 +502,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.fields !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateFieldProgramInContext(b.fields,b as Bundle));
   if (b.deformations !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateDeformationProgramInContext(b.deformations,b as Bundle));
   if (b.plots !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePlotProgramInContext(b.plots,b as Bundle));
+  if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
+    if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');
+    else errors.push(...validateTimelineMetadata(b.timeline,b.duration));
+  }
   return errors;
 }
 
