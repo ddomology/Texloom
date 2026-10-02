@@ -10,6 +10,7 @@ import {isIntersectionOperator,executeIntersectionOperation,type IntersectionEva
 import {isConnectorOperator,executeConnectorOperation} from '../connectors.js';
 import {isPathLabelOperator,executePathLabelOperation} from '../path-labels.js';
 import {isArrowOperator,executeArrowOperation} from '../arrows.js';
+import {isDecorationOperator,executeDecorationOperation} from '../decorations.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -164,6 +165,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
   if(isArrowOperator(name,version))return;
+  if(isDecorationOperator(name,version))return;
   if(isConnectorOperator(name,version)||isPathLabelOperator(name,version))return;
   if(isIntersectionOperator(name,version))return;
   if(isCurveOperator(name,version))return;
@@ -177,6 +179,8 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
 export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation,intersections?:IntersectionEvaluation): Record<string, LiteralValue> {
   const arrows=executeArrowOperation(operation,inputs);
+  const decorations=executeDecorationOperation(operation,inputs);
+  if(decorations)return decorations;
   if(arrows)return arrows;
   const connector=executeConnectorOperation(operation,inputs);
   if(connector)return connector;

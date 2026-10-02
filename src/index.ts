@@ -36,3 +36,6 @@ export {connectorOperatorDefinitions,executeConnectorOperation} from './operatio
 export {pathLabelOperatorDefinitions,executePathLabelOperation} from './operations/path-labels.js';
 export * from './geometry/arrowheads.js';
 export {arrowOperatorDefinitions,executeArrowOperation} from './operations/arrows.js';
+export * from './geometry/path-frame.js';
+export * from './geometry/decorations.js';
+export {decorationOperatorDefinitions,executeDecorationOperation} from './operations/decorations.js';

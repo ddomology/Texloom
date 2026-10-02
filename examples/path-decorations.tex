@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\usepackage{texloom-decorations}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{33}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{11}{15}\selectfont},
+  caption/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{15}{20}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Follow the curve}]
+\loomnode[heading] (heading) at (480,44) {Follow the curve};
+\loomnode[small] (intro) at (480,78) {Distance sets the rhythm. The local frame sets the direction.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,103)--(905,103) (55,335)--(905,335) (55,488)--(905,488);};
+\loomnode[label] (main-label) at (232,125) {01 / ONE MOVING PATH, THREE DECORATIONS};
+\loomnode[caption] (main-description) at (724,125) {Source curve remains available for every other consumer.};
+
+\loomparameter[unit=bp,min=22,max=60]{spacing}{36}
+\loomparameter[unit=bp,min=0,max=40]{amplitude}{22}
+% Stored source geometry is never changed by the decoration operations.
+\begin{loomgroup}[opacity=0]{templates}
+\loomgeometry[draw=rule] (authored-curve)
+  {(80,224) .. controls (290,133) and (670,315) .. (880,224)};
+\loomgeometry[draw=coral] (diamond-template) {(-4,0)--(0,-4)--(4,0)--(0,4)--cycle};
+\end{loomgroup}
+\loomgeometry[draw=muted,opacity=.6,line width=1.2bp] (source-curve)
+  {(80,224) .. controls (290,133) and (670,315) .. (880,224)};
+\loomdeform[mode=controlDeform]{live-curve}{authored-curve}{source-curve}{
+  position + vec2(0bp,amplitude*sin(2*pi*dot(position,vec2(1,0))/800bp - pi*time/6s))
+}
+\loomgeometry[draw=mint,line width=1.6bp,line cap=round] (ticks) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.8bp,line cap=round,line join=round] (marks) {(0,0)--(1,0)};
+\loomgeometry[draw=coral,fill=coral,line width=.7bp] (symbols) {(0,0)--(1,0)};
+\loomdecorate[mode=ticks,size=12,start-margin=10,end-margin=10]{ticks}{
+  {"path":"source-curve","spacing":"spacing"}
+}
+\loomdecorate[mode=marks,size=7,offset=-22,start-margin=10,end-margin=10]{marks}{
+  {"path":"source-curve","spacing":"2*spacing"}
+}
+\loomdecorate[mode=symbols,offset=24,symbol-scale=.8,start-margin=10,end-margin=10]{symbols}{
+  {"path":"source-curve","symbol":"diamond-template","spacing":"2*spacing","phase":"spacing"}
+}
+\loomnode[caption,text=mint] (ticks-key) at (202,311) {NORMAL TICKS};
+\loomnode[caption,text=gold] (marks-key) at (460,311) {TANGENT MARKS};
+\loomnode[caption,text=coral] (symbols-key) at (731,311) {LOCAL SYMBOL COPIES};
+
+\loomnode[label] (snake-label) at (276,357) {02 / SINUSOIDAL NORMAL DISPLACEMENT};
+\loomnode[label] (brace-label) at (766,357) {03 / ENDPOINT BRACE};
+\loomgeometry[draw=muted,opacity=.5,line width=1bp] (wave-source) {(80,411)--(571,411)};
+\loomgeometry[draw=mint,line width=2.3bp,line cap=round,line join=round] (snake) {(0,0)--(1,0)};
+\loomdecorate[mode=snake,resolution=24]{snake}{
+  {"path":"wave-source","spacing":"2*spacing","amplitude":"amplitude/2","phase":"-time/1s*12bp"}
+}
+\loomnode[formula] (snake-equation) at (326,461) {$q(s)=\gamma(s)+A\sin\!\left(2\pi(s-\phi)/\lambda\right)n(s)$};
+\loomgeometry[draw=muted,opacity=.5,line width=1bp] (brace-source) {(650,411)--(887,411)};
+\loomgeometry[draw=gold,line width=2bp,line cap=round,line join=round] (brace) {(0,0)--(1,0)};
+\loombrace[amplitude=17,offset=10]{brace}{
+  {"from":[650,411],"to":[887,411],"aspect":"0.5+0.15*sin(pi*time/6s)"}
+}
+\loomnode[caption] (brace-caption) at (769,466) {An independent construction from two endpoints.};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / SHARED ARC-LENGTH FRAMES / DETERMINISTIC GEOMETRY};
+\end{loomscene}
+\end{document}
