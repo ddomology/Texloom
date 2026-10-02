@@ -1,5 +1,6 @@
 import {createEvaluator} from './evaluate.js';
 import type {Bundle, EvaluatedFrame} from './schema.js';
+import type {ExpressionValue} from './fields/ast.js';
 import {requireCapabilities, sceneFeatures, type CapabilityProfile, type RenderFeature} from './capabilities.js';
 
 export interface SceneManifest {
@@ -13,7 +14,7 @@ export interface SceneManifest {
 export interface SceneRuntime {
   readonly manifest: SceneManifest;
   /** Sample absolute source seconds. Every call is independent of prior calls. */
-  sample(seconds: number): EvaluatedFrame;
+  sample(seconds: number, parameters?:Readonly<Record<string,ExpressionValue>>): EvaluatedFrame;
   require(profile: CapabilityProfile): void;
 }
 
@@ -52,7 +53,7 @@ export interface ClipSample {
 }
 export interface SceneClip {
   readonly timing: Readonly<Required<ClipTiming>>;
-  sample(hostSeconds: number): ClipSample;
+  sample(hostSeconds: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample;
 }
 
 /** Half-open active interval [start,start+duration); no independent wall clock. */
@@ -68,11 +69,11 @@ export function bindSceneClip(runtime: SceneRuntime, input: ClipTiming): SceneCl
     throw new Error('CLIP_TIMING: finite nonnegative timing must stay inside the source duration; rate must be positive.');
   }
   Object.freeze(timing);
-  return Object.freeze({timing, sample(hostTime: number): ClipSample {
+  return Object.freeze({timing, sample(hostTime: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample {
     if (!Number.isFinite(hostTime)) throw new Error('CLIP_TIME: expected finite absolute host seconds.');
     const phase = hostTime < timing.start ? 'before' : hostTime >= timing.start + duration ? 'after' : 'active';
     const visible = phase === 'active' || (phase === 'before' ? timing.before : timing.after) === 'hold';
     const sourceTime = Math.min(runtime.manifest.duration, sourceStart + Math.max(0, Math.min(duration, hostTime - timing.start)) * rate);
-    return {hostTime, sourceTime, phase, visible, frame: visible ? runtime.sample(sourceTime) : null};
+    return {hostTime, sourceTime, phase, visible, frame: visible ? runtime.sample(sourceTime,parameters) : null};
   }});
 }

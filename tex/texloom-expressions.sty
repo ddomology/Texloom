@@ -1,0 +1,56 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-expressions}[2026/10/02 Texloom typed expression capture]
+\RequirePackage{texloom}
+\RequirePackage{xparse}
+\newwrite\TLEfile
+\newcount\TLEserial
+\TLEserial=0
+\ExplSyntaxOn
+% Generate CR after tokenization; a literal ^^M in a definition would already
+% be interpreted as an input line ending by TeX's mouth.
+\cs_new:Npn \TLEnewline { \char_generate:nn {13} {12} }
+\ExplSyntaxOff
+
+% Generated filenames are the only strings inserted into declaration JSON.
+% User text lives in separate files. In particular, expression text is scanned
+% verbatim and never expanded as TeX or interpolated into a JSON string.
+\def\TLEstart#1{%
+  \global\advance\TLEserial by 1
+  \edef\TLEbase{\jobname.tl-expression-\the\TLEserial}%
+  \immediate\write\TLrecords{\string{"type":"expression-file","kind":"#1","file":"\TLEbase"\string}}}
+\long\def\TLEwrite#1#2{%
+  \immediate\openout\TLEfile=\TLEbase.#1.txt
+  % Older xparse returns literal CR tokens; newer versions use \obeyedline.
+  % Serialize both as newlines while preserving literal character text ^^M.
+  % User backslashes are character tokens, so user macros remain unexpanded.
+  \begingroup\newlinechar=13\let\obeyedline\TLEnewline
+  \immediate\write\TLEfile{#2}%
+  \endgroup
+  \immediate\closeout\TLEfile}
+\long\def\TLEmetadata#1#2{%
+  \immediate\openout\TLEfile=\TLEbase.#1.txt
+  \begingroup\newlinechar=13
+  \immediate\write\TLEfile{\detokenize{#2}}%
+  \endgroup
+  \immediate\closeout\TLEfile}
+
+% Defaults are JSON literals: 0, true, or [12,24]. Options are a deliberately
+% small comma-separated key=value list checked by the Python capture layer.
+\NewDocumentCommand\loomparameter{O{} m +v}{%
+  \TLEstart{parameter}%
+  \TLEmetadata{name}{#2}%
+  \TLEmetadata{options}{#1}%
+  \TLEwrite{default}{#3}}
+
+% The final braced argument is verbatim. Write ^, &&, %, #, quotes and backslash
+% literally, without TeX escaping. Unsupported expression characters/macros
+% reach the expression parser as text and receive a located diagnostic.
+% Verbatim commands must appear directly in source, not inside another macro's
+% already-scanned argument. Balanced braces or an alternate delimiter may be
+% used: \loomexpr{B}{position}|vec2(240bp,180bp)|.
+\NewDocumentCommand\loomexpr{m m +v}{%
+  \TLEstart{binding}%
+  \TLEmetadata{target}{#1}%
+  \TLEmetadata{property}{#2}%
+  \TLEwrite{body}{#3}}
+\endinput

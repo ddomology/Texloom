@@ -147,6 +147,14 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
   const inverseBindings = new Map<string, {path:string; span?:SourceSpan}>();
   bundle.tracks.forEach((t, i) => writers.push({target:t.target,slots:[t.property],path:`$.tracks[${i}]`}));
   bundle.relations.forEach((r, i) => writers.push({target:r.target,slots:relationOutputs(r),path:`$.relations[${i}]`}));
+  // Standalone graph validation checked expressions in the graph-free base
+  // above. Include their writers here. During full bundle validation the later
+  // expression pass owns these cross-program conflicts, avoiding duplicates
+  // and avoiding reads from an expression program that is not yet validated.
+  if (!validatedContext) bundle.expressions?.bindings.forEach((binding, i) => writers.push({
+    target:binding.target, slots:bindingProperties(binding,nodes).map(access => access.property),
+    path:`$.expressions.bindings[${i}]`, ...(binding.sourceSpan ? {span:binding.sourceSpan} : {}),
+  }));
   graph.bindings.forEach((raw: unknown, i: number) => {
     const path = `$.operationGraph.bindings[${i}]`;
     if (!object(raw)) {error('OPERATION_BINDING', 'Expected an output binding.', path); return;}

@@ -91,6 +91,32 @@ The lower-level v0.1 JSON command interface remains documented in `tex/README.md
 Existing arbitrary LaTeX documents do not automatically become animated object
 graphs. Explicit wrappers preserve the identities and intent needed at runtime.
 
+### Typed expressions and parameters (PR 04)
+
+Explicit expressions can bind properties to scene time and typed parameters:
+
+```tex
+\usepackage{texloom-expressions}
+% Inside an existing scene containing point B:
+\loomparameter[type=scalar,unit=rad,min=-6.283185307179586,max=6.283185307179586]{a}{0}
+\loomexpr{B}{position}{vec2(370bp,320bp - 95bp*sin(a + 1rad*time/1s))}
+```
+
+The expression body is captured verbatim and checked by the shared runtime.
+Write operators such as `^` and `&&` literally. TeX math macros are not expanded;
+these commands must occur directly in source, outside another macro's scanned
+argument. Typed defaults, units and bounds are serialized through sidecar files,
+and source spans identify the actual archived expression text.
+
+```sh
+python tools/build.py examples/parameter-sine.tex --out build/parameter-sine --video
+```
+
+The standalone player provides parameter controls. Core sampling accepts
+`createEvaluator(bundle)(time, {a: Math.PI / 2})` without retaining overrides
+between calls. See [expressions and parameters](docs/expressions.md) for syntax,
+unit conventions, browser API behavior and limits.
+
 ## Architecture
 
 ```text
@@ -201,8 +227,9 @@ node tools/build-player.mjs tests/fixtures/operations/sample-curve.json build/op
 
 The sample shares one curve operation's position and tangent across a dot and
 direction line and now renders through the normal player and SVG/Canvas paths.
-Its literal inputs are static: graph time sockets and expression inputs belong
-to PR 04. Existing tracks remain available for motion and can drive legacy
+Its literal inputs are static. The separate PR 04 expression program supplies
+typed time/parameter bindings; authored graph sockets remain literal/output
+references. Existing tracks remain available for motion and can drive legacy
 consumers of graph-written sources. Existing TeX examples remain unchanged;
 there is no executable plugin loader or temporal output cache.
 

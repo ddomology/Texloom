@@ -7,3 +7,7 @@ export * from './runtime.js';
 export * from './ir/operations.js';
 export * from './operations/registry.js';
 export {validateOperationGraph, prepareOperationGraph} from './operations/validate.js';
+export * from './fields/ast.js';
+export {parseExpression} from './fields/parser.js';
+export {compileExpression, evaluateExpression} from './fields/scalar.js';
+export {validateExpressionProgram, prepareExpressionProgram} from './fields/program.js';

@@ -3,6 +3,8 @@ import {validatePathGeometry, parseGeometryProperty, geometryPointSlot} from './
 import type {Diagnostic, OperationGraph, SourceSpan} from './ir/operations.js';
 import {validateOperationGraphInContext} from './operations/validate.js';
 import {validateSourceSpan} from './operations/values.js';
+import type {ExpressionProgram} from './fields/ast.js';
+import {validateExpressionProgramInContext} from './fields/program.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -47,6 +49,7 @@ export interface Bundle {
   document?: { blocks: unknown[] }; provenance?: Record<string, unknown>; diagnostics?: Diagnostic[];
   /** Typed declarations validated at preparation and executed by the shared plan. */
   operationGraph?: OperationGraph;
+  expressions?: ExpressionProgram;
 }
 export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource> }
 
@@ -434,6 +437,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
     if (b.version !== '0.3') error('OPERATION_BUNDLE_VERSION', 'Operation graphs require bundle version 0.3.', '$.operationGraph');
     if (!errors.some(d => d.severity === 'error')) errors.push(...validateOperationGraphInContext(b.operationGraph, b as Bundle));
   }
+  if (b.expressions !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateExpressionProgramInContext(b.expressions,b as Bundle));
   return errors;
 }
 

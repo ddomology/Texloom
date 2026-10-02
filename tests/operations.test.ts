@@ -24,6 +24,34 @@ const bundle = (): Bundle => copy(fixture);
 const graph = (): OperationGraph => copy(fixture.operationGraph);
 const output = (operation: string, socket = 'position'): InputRef => ({kind: 'output', ref: {operation, socket}});
 const scalar = (value: number): InputRef => ({kind: 'literal', value: {type: 'scalar', value}});
+
+test('standalone graph validation includes expression aliases in property ownership', () => {
+  for (const [target, property, expression] of [
+    ['dot', 'x', '2bp'], ['dot', 'position', 'vec2(2bp,3bp)'], ['tangent', 'x1', '2bp'],
+  ]) {
+    const b = bundle();
+    b.expressions = {version: 1, parameters: {}, bindings: [{target, property, expression, sourceSpan: copy(span)}]};
+    const standalone = validateOperationGraph(b.operationGraph, b);
+    const conflicts = standalone.filter(d => d.code === 'OPERATION_WRITER_CONFLICT');
+    assert.equal(conflicts.length, 1);
+    assert.equal(conflicts[0].related?.[0].path, '$.expressions.bindings[0]');
+    assert.deepEqual(conflicts[0].related?.[0].sourceSpan, span);
+    assert.throws(() => prepareOperationGraph(b.operationGraph, b), OperationValidationError);
+    const integrated = validateBundle(b).filter(d => /WRITER_CONFLICT/.test(d.code));
+    assert.equal(integrated.length, 1, 'full bundle validation reports the overlap once');
+  }
+});
+
+test('independent expression writers remain valid in standalone graph preparation', () => {
+  const b = bundle();
+  b.expressions = {version: 1, parameters: {}, bindings: [{target: 'dot', property: 'r', expression: '2bp'}]};
+  b.diagnostics = [{severity: 'warning', code: 'SOURCE_WARNING', message: 'One warning.'}];
+  const diagnostics = validateOperationGraph(b.operationGraph, b);
+  assert.equal(diagnostics.filter(d => d.severity === 'error').length, 0);
+  assert.equal(diagnostics.filter(d => d.code === 'SOURCE_WARNING').length, 1);
+  assert.doesNotThrow(() => prepareOperationGraph(b.operationGraph, b));
+  assert.equal(validateBundle(b).filter(d => d.code === 'SOURCE_WARNING').length, 1);
+});
 function invalid(value: unknown, b = bundle(), pattern?: RegExp): Diagnostic[] {
   const diagnostics = validateOperationGraph(value, b);
   assert.ok(diagnostics.some(d => d.severity === 'error'), 'invalid graph must produce an error');

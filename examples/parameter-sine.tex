@@ -1,0 +1,62 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-expressions}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  formula/.style={text=ink,font=\fontsize{19}{24}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={A parameter becomes motion}]
+\loomnode[heading] (heading) at (480,52) {A parameter becomes motion};
+\loomnode[small] (intro) at (480,88) {Explicit expressions. Typed units. One shared evaluation.};
+\loomnode[formula] (formula) at (480,135)
+  {$B(a,t)=\bigl(2,\sin(a+\omega t)\bigr),\qquad\omega=1\,\mathrm{rad}/\mathrm{s}$};
+
+\loompath (axes) {
+  \draw[rule,line width=.65bp] (55,166)--(905,166) (55,467)--(905,467);
+  \draw[rule!60,line width=.5bp] (85,225)--(550,225) (85,415)--(550,415)
+    (275,197)--(275,433) (465,197)--(465,433);
+  \draw[muted,->,line width=.9bp] (85,320)--(557,320);
+  \draw[muted,->,line width=.9bp] (180,435)--(180,191);
+  \draw[mint!35,line width=1.1bp,dashed] (370,225)--(370,415);
+  \foreach \xx/\label in {180/0,275/1,370/2,465/3}{
+    \draw[muted,line width=.75bp] (\xx,317)--(\xx,323);
+    \node[text=muted,font=\small,anchor=north] at (\xx,327) {$\label$};
+  }
+  \foreach \yy/\label in {225/1,415/-1}{
+    \draw[muted,line width=.75bp] (177,\yy)--(183,\yy);
+    \node[text=muted,font=\small,anchor=east] at (169,\yy) {$\label$};
+  }
+  \node[text=ink,anchor=west] at (566,320) {$x$};
+  \node[text=ink,anchor=south] at (180,188) {$y$};
+  \draw[rule,line width=.7bp] (610,206)--(610,435);
+};
+
+% x=2 is fixed; the y-coordinate is sin(a+omega*t). Scene +y points down.
+% The expression body is verbatim: write ^, && or backslash literally; do not
+% insert TeX math macros or escape expression operators with TeX commands.
+\loomparameter[type=scalar,unit=rad,min=-6.283185307179586,max=6.283185307179586]{a}{0}
+\TLNode{vertical-guide}{line}{"x1":370,"y1":320,"x2":370,"y2":320,"style":{"stroke":"#F3CB84","strokeWidth":1.7,"opacity":0.75}}
+\TLNode{B}{point}{"x":370,"y":320,"r":6,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":1.7}}
+\TLMath{point-label}{B(a,t)}
+\TLNode{B-label}{tex}{"resourceId":"point-label","x":394,"y":308,"scale":1.25,"style":{"fill":"#71DFC2"}}
+\loomexpr{B}{position}{vec2(370bp,320bp - 95bp*sin(a + 1rad*time/1s))}
+\loomexpr{vertical-guide}{y2}{320bp - 95bp*sin(a + 1rad*time/1s)}
+\loomexpr{B-label}{position}{vec2(394bp,308bp - 95bp*sin(a + 1rad*time/1s))}
+
+\loomnode[small,text=mint] (card-title) at (755,226) {PARAMETER + TIME};
+\loomnode[formula] (phase) at (755,274) {$\theta=a+\omega t$};
+\loomnode[small] (card-description) at (755,314) {Change the phase. Scrub any time.};
+\loomnode[formula] (bounds) at (755,362) {$-1\leq\sin\theta\leq1$};
+\loomnode[small] (card-caption) at (755,405) {Coordinates keep their units.};
+\loomnode[small] (footer) at (480,505) {TEXLOOM / TEX DECLARATIONS TO TYPED EXPRESSIONS TO SHARED FRAMES};
+\end{loomscene}
+\end{document}

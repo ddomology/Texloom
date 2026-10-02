@@ -3,6 +3,7 @@ import {geometryPointSlot} from './path-contract.js';
 import {pathGeometryData, revealGeometry, type PathPoint} from './path-geometry.js';
 import {prepareExecutionPlan, type ExecutionPlan} from './operations/plan.js';
 import {withPathContext} from './operations/builtins/legacy.js';
+import type {ExpressionValue} from './fields/ast.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -36,13 +37,13 @@ function sampleField(resource: ScalarFieldResource, time: number): number[] {
   const [a, b, t] = interval(resource.times, time);
   return mix(resource.samples[a], resource.samples[b], resource.interpolation === 'step' ? 0 : t) as number[];
 }
-function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan): EvaluatedFrame {
+function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, parameters?:Readonly<Record<string,ExpressionValue>>): EvaluatedFrame {
   if (!Number.isFinite(time)) throw new RangeError('Evaluation time must be finite.');
   const clamped = Math.max(0, Math.min(bundle.duration, time));
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
   const byId = new Map(nodes.map(n => [n.id, n]));
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
-  plan.execute(byId, bundle.resources, camera);
+  plan.execute(byId, bundle.resources, camera, clamped, parameters);
   for(const node of nodes) if(node.kind==='path'&&node.geometry) {
     // Full editable geometry survives reveal: dependent points keep sampling the
     // mathematical curve, while both renderers receive the same visible prefix.
@@ -55,8 +56,8 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan): Ev
 }
 
 /** Convenience evaluation at an absolute time. Treat returned resources as immutable. */
-export function evaluate(bundle: Bundle, time: number): EvaluatedFrame {
-  return createEvaluator(bundle)(time);
+export function evaluate(bundle: Bundle, time: number, parameters?:Readonly<Record<string,ExpressionValue>>): EvaluatedFrame {
+  return createEvaluator(bundle)(time,parameters);
 }
 function freezeDeep(value: any): void {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -64,9 +65,9 @@ function freezeDeep(value: any): void {
   }
 }
 /** Validate and snapshot once for playback/export; seeking has no playback-history state. */
-export function createEvaluator(bundle: Bundle): (time: number) => EvaluatedFrame {
+export function createEvaluator(bundle: Bundle): (time: number, parameters?:Readonly<Record<string,ExpressionValue>>) => EvaluatedFrame {
   const plan = prepareExecutionPlan(bundle);
   const snapshot = structuredClone(bundle);
   freezeDeep(snapshot);
-  return time => evaluatePrepared(snapshot, time, plan);
+  return (time,parameters) => evaluatePrepared(snapshot, time, plan, parameters);
 }
