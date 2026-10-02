@@ -1,0 +1,23 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-axes}[2026/10/03 Texloom Cartesian coordinate capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLAxesSerial
+\TLAxesSerial=0
+\def\TLAxesStart#1{%
+  \ifnum\TLAxesSerial=0
+    \immediate\write\TLrecords{\string{"type":"anchor-profile","version":1\string}}%
+  \fi
+  \global\advance\TLAxesSerial by 1
+  \edef\TLEbase{\jobname.tl-axes-\the\TLAxesSerial}%
+  \immediate\write\TLrecords{\string{"type":"axes-file","kind":"#1","file":"\TLEbase"\string}}}
+% JSON is captured verbatim, never expanded as TeX. Merely loading this package
+% has no scene/resource/anchor-profile effect.
+\NewDocumentCommand\loomaxes{m +v}{%
+  \TLAxesStart{axes}\TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\NewDocumentCommand\loomdatapoint{m +v}{%
+  \TLAxesStart{point}\TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\NewDocumentCommand\loomaxislabel{m +v}{%
+  \TLAxesStart{label}\TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\NewDocumentCommand\loomaxisticks{m +v}{%
+  \TLAxesStart{ticks}\TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\endinput

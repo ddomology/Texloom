@@ -9,6 +9,7 @@ import {pathLabelOperatorDefinitions} from './path-labels.js';
 import {arrowOperatorDefinitions} from './arrows.js';
 import {decorationOperatorDefinitions} from './decorations.js';
 import {layoutOperatorDefinitions} from './layout.js';
+import {axesOperatorDefinitions} from './axes.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -114,6 +115,7 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
   ...arrowOperatorDefinitions,
   ...decorationOperatorDefinitions,
   ...layoutOperatorDefinitions,
+  ...axesOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

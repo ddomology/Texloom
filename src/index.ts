@@ -41,3 +41,5 @@ export * from './geometry/decorations.js';
 export {decorationOperatorDefinitions,executeDecorationOperation} from './operations/decorations.js';
 export * from './geometry/boxes.js';
 export {layoutOperatorDefinitions,executeLayoutOperation} from './operations/layout.js';
+export * from './geometry/data-space.js';
+export {axesOperatorDefinitions,executeAxesOperation} from './operations/axes.js';
