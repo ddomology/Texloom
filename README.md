@@ -176,6 +176,25 @@ one-off alternative; treat its returned shared resources as immutable.
 
 ## Verification
 
+### Typed operation preparation (PR 02)
+
+An optional versioned `operationGraph` on Bundle 0.3 declares typed sockets,
+shared outputs, explicit coordinate spaces and property bindings. The immutable
+registry and `prepareOperationGraph` check defaults, references, cycles and
+writer conflicts against existing tracks/relations. See the
+[operation contract](docs/operations-contract.md) for the API and PR 03 handoff.
+
+```sh
+node tools/validate-bundle.mjs tests/fixtures/operations/sample-curve.json --prepare-operations
+```
+
+The sample shares one curve operation's position and tangent across a dot and
+direction line. This release validates and prepares the graph; execution is the
+next step. Existing evaluators explicitly reject nonempty operation graphs so a
+prepared graph cannot silently render as a static scene.
+
+### Historical rendering and compiler regression
+
 The [PR 01 port-regression gate](docs/ports/README.md) checks all four registered
 scenes from a clean Texloom checkout. It does not need a sibling Chalkspace
 checkout, prebuilt demo directories, or FFmpeg. Use the pinned verification

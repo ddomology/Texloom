@@ -1,0 +1,45 @@
+{
+  "version": "0.3",
+  "title": "A sampled curve and shared tangent (validation fixture)",
+  "duration": 2,
+  "units": "bp",
+  "viewport": {"width": 160, "height": 100},
+  "camera": {"x": 0, "y": 0, "zoom": 1},
+  "resources": {},
+  "nodes": [
+    {"id": "curve", "kind": "path", "d": "M10 70C40 0 100 0 140 70", "geometry": {"contours": [{"id": "c", "start": [10, 70], "segments": [{"id": "s", "kind": "cubic", "c1": [40, 0], "c2": [100, 0], "to": [140, 70]}]}]}},
+    {"id": "dot", "kind": "point", "x": 0, "y": 0, "r": 3},
+    {"id": "tangent", "kind": "line", "x1": 0, "y1": 0, "x2": 0, "y2": 0}
+  ],
+  "tracks": [],
+  "relations": [],
+  "operationGraph": {
+    "version": 1,
+    "operations": [
+      {
+        "id": "tip", "operator": "offsetPoint", "version": 1,
+        "spaces": {"space": {"kind": "scene"}},
+        "inputs": {
+          "origin": {"kind": "output", "ref": {"operation": "sample", "socket": "position"}},
+          "direction": {"kind": "output", "ref": {"operation": "sample", "socket": "tangent"}},
+          "distance": {"kind": "literal", "value": {"type": "scalar", "value": 25}}
+        },
+        "sourceSpan": {"file": "sample-curve.tex", "start": {"line": 9, "column": 1}, "end": {"line": 9, "column": 35}}
+      },
+      {
+        "id": "sample", "operator": "sampleCurve", "version": 1,
+        "spaces": {"curve": {"kind": "scene"}},
+        "inputs": {
+          "curve": {"kind": "literal", "value": {"type": "path2d", "space": {"kind": "scene"}, "value": {"contours": [{"id": "c", "start": [10, 70], "segments": [{"id": "s", "kind": "cubic", "c1": [40, 0], "c2": [100, 0], "to": [140, 70]}]}]}}},
+          "parameter": {"kind": "literal", "value": {"type": "scalar", "value": 0.5}}
+        },
+        "sourceSpan": {"file": "sample-curve.tex", "start": {"line": 8, "column": 1}, "end": {"line": 8, "column": 40}}
+      }
+    ],
+    "bindings": [
+      {"target": "dot", "property": "position", "value": {"operation": "sample", "socket": "position"}},
+      {"target": "tangent", "property": "start", "value": {"operation": "sample", "socket": "position"}},
+      {"target": "tangent", "property": "end", "value": {"operation": "tip", "socket": "position"}}
+    ]
+  }
+}

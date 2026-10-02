@@ -1,7 +1,9 @@
 import type {PathGeometry} from './path-geometry.js';
 import {validatePathGeometry, parseGeometryProperty, geometryPointSlot} from './path-contract.js';
+import type {Diagnostic, OperationGraph} from './ir/operations.js';
+import {validateOperationGraphInContext} from './operations/validate.js';
+export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
-export interface Diagnostic { severity: 'error' | 'warning'; code: string; message: string; path?: string }
 export interface Style {
   fill?: string; stroke?: string; strokeWidth?: number; opacity?: number; dash?: number[];
   fillOpacity?: number; strokeOpacity?: number; miterLimit?: number;
@@ -41,6 +43,8 @@ export interface Bundle {
   version: '0.1' | '0.2' | '0.3'; title: string; duration: number; units: 'bp'; viewport: { width: number; height: number };
   nodes: Node[]; resources: Record<string, Resource>; tracks: Track[]; relations: Relation[]; camera: Camera;
   document?: { blocks: unknown[] }; provenance?: Record<string, unknown>; diagnostics?: Diagnostic[];
+  /** Validated metadata in PR 02; executable graph lowering follows separately. */
+  operationGraph?: OperationGraph;
 }
 export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource> }
 
@@ -413,6 +417,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
       if (!object(d) || !['error', 'warning'].includes(d.severity) || !nonempty(d.code) || !nonempty(d.message)) error('DIAGNOSTIC_SHAPE', 'Expected severity, code and message.', `$.diagnostics[${i}]`);
       else errors.push(d as Diagnostic);
     });
+  }
+  if (b.operationGraph !== undefined) {
+    if (b.version !== '0.3') error('OPERATION_BUNDLE_VERSION', 'Operation graphs require bundle version 0.3.', '$.operationGraph');
+    if (!errors.some(d => d.severity === 'error')) errors.push(...validateOperationGraphInContext(b.operationGraph, b as Bundle));
   }
   return errors;
 }
