@@ -1,0 +1,10 @@
+node_modules/
+build/
+.venv/
+__pycache__/
+*.pyc
+*.log
+*.aux
+*.fls
+*.fdb_latexmk
+*.synctex.gz

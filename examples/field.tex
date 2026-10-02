@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{texloom}
+\begin{document}
+\TLScene{A field in time}{960}{540}{6}
+\TLCamera{0}{0}{1}
+\TLText{title}{\sffamily\bfseries A field in time}
+\TLText{subtitle}{\sffamily External samples. The same scene engine.}
+\TLText{caption}{\sffamily ANALYTICAL STANDING WAVE / UNIT SQUARE}
+\TLText{minimum}{\sffamily -1}
+\TLText{zero}{\sffamily 0}
+\TLText{maximum}{\sffamily +1}
+\TLText{footer}{\sffamily Sampled data, linear interpolation. No numerical solver in the player.}
+\TLMath{equation}{u(x,y,t)=\sin(\pi x)\sin(\pi y)\cos(\sqrt{2}\,\pi t)}
+\TLMath{pde}{\frac{\partial^2 u}{\partial t^2}=\Delta u}
+\TLFieldFile{wave}{data/wave-grid.json}
+\TLNode{title}{tex}{"resourceId":"title","x":55,"y":76,"scale":2.8}
+\TLNode{subtitle}{tex}{"resourceId":"subtitle","x":57,"y":111,"scale":1.2,"style":{"opacity":0.65}}
+\TLNode{rule}{line}{"x1":55,"y1":132,"x2":905,"y2":132,"style":{"stroke":"#35505d","strokeWidth":1}}
+\TLNode{caption}{tex}{"resourceId":"caption","x":57,"y":168,"scale":0.86,"style":{"opacity":0.55}}
+\TLNode{equation}{tex}{"resourceId":"equation","x":57,"y":207,"scale":1.34}
+\TLNode{pde}{tex}{"resourceId":"pde","x":746,"y":195,"scale":1.4,"style":{"fill":"#f3ca7d"}}
+\TLNode{boundary}{path}{"d":"M 54 241 H 906 V 472 H 54 Z","style":{"fill":"none","stroke":"#526875","strokeWidth":1}}
+\TLNode{field}{field}{"resourceId":"wave","x":56,"y":243,"width":848,"height":227}
+\TLNode{footer}{tex}{"resourceId":"footer","x":57,"y":511,"scale":0.9,"style":{"opacity":0.6}}
+\end{document}

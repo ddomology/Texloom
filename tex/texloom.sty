@@ -1,0 +1,22 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom}[2026/10/02 Texloom declarative scene frontend]
+% Commands execute through TeX. JSON is the intentionally small v0.1 property
+% syntax; math and TikZ bodies remain genuine TeX and may use TLSetup macros.
+\newwrite\TLrecords
+\newwrite\TLasset
+\immediate\openout\TLrecords=\jobname.tl.jsonl
+\newcommand\TLScene[4]{\immediate\write\TLrecords{\string{"type":"scene","title":"\detokenize{#1}","width":#2,"height":#3,"duration":#4\string}}}
+\newcommand\TLCamera[3]{\immediate\write\TLrecords{\string{"type":"camera","value":\string{"x":#1,"y":#2,"zoom":#3\string}\string}}}
+\newcommand\TLNode[3]{\immediate\write\TLrecords{\string{"type":"node","line":\the\inputlineno,"value":\string{"id":"#1","kind":"#2",\detokenize{#3}\string}\string}}}
+\newcommand\TLTrack[4]{\immediate\write\TLrecords{\string{"type":"track","value":\string{"target":"#1","property":"#2","interpolation":"#3","keys":\detokenize{#4}\string}\string}}}
+\newcommand\TLRelation[2]{\immediate\write\TLrecords{\string{"type":"relation","value":\string{"type":"#1",\detokenize{#2}\string}\string}}}
+\newcommand\TLDocument[1]{\immediate\write\TLrecords{\string{"type":"document","value":\detokenize{#1}\string}}}
+\newcommand\TLSetup[1]{\immediate\openout\TLasset=\jobname.tl-setup.tex\immediate\write\TLasset{\detokenize{#1}}\immediate\closeout\TLasset}
+\newcommand\TLWriteAsset[3]{\immediate\openout\TLasset=\jobname.tl-#1.tex\immediate\write\TLasset{\detokenize{#3}}\immediate\closeout\TLasset\immediate\write\TLrecords{\string{"type":"resource","id":"#1","kind":"#2","file":"\jobname.tl-#1.tex"\string}}}
+\newcommand\TLMath[2]{\TLWriteAsset{#1}{math}{#2}}
+\newcommand\TLText[2]{\TLWriteAsset{#1}{text}{#2}}
+\newcommand\TLTikZ[2]{\TLWriteAsset{#1}{tikz}{#2}}
+\newcommand\TLFieldFile[2]{\immediate\write\TLrecords{\string{"type":"field-file","id":"#1","file":"\detokenize{#2}"\string}}}
+% Scene-only documents naturally have no typeset body. Ship an empty box so
+% DVI provenance exists without asking authors to add a meaningless null.
+\AtEndDocument{\null\immediate\closeout\TLrecords}

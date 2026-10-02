@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage{texloom}
+% JSON property arguments are deliberately small and explicit in v0.1.
+% Math resources are genuine TeX, not text rendered with browser fonts.
+\begin{document}
+\TLScene{Geometry in motion}{960}{540}{12}
+\TLCamera{0}{0}{1}
+\TLSetup{\newcommand{\R}{\mathbb{R}}}
+\TLText{title}{\sffamily\bfseries Geometry in motion}
+\TLText{subtitle}{\sffamily One TeX source. One scene. Every frame.}
+\TLText{caption}{\sffamily PARAMETRIC CURVE}
+\TLText{inset-title}{\sffamily COMPILED TIKZ}
+\TLText{footer}{\sffamily TEXLOOM / OBJECTS, RELATIONS, TIME}
+\TLMath{equation}{\gamma_t(s)=\bigl(a(t)\cos s,\,b(t)\sin s\bigr)\in\R^2}
+\TLMath{point-label}{\gamma_t(s)}
+\TLMath{tangent-label}{\hat v=\frac{\partial_s\gamma_t(s)}{\lVert\partial_s\gamma_t(s)\rVert}\in T_{\gamma_t(s)}\R^2}
+\TLTikZ{inset}{\begin{tikzpicture}[x=1cm,y=1cm,>=Stealth]
+  \definecolor{mint}{HTML}{6DE2BD}\definecolor{gold}{HTML}{F3CA7D}\definecolor{muted}{HTML}{8EA6B0}
+  \begin{scope}\clip (-1.65,-1.05) rectangle (1.65,1.1);
+  \fill[mint,fill opacity=.12] (-.45,0) circle (.8);
+  \fill[gold,fill opacity=.12] (.45,0) circle (.8);
+  \draw[muted,thin,->] (-1.6,0)--(1.65,0);
+  \draw[muted,thin,->] (0,-1)--(0,1.08);
+  \draw[mint,thick] (0,0) ellipse (1.3 and .65);
+  \draw[gold,thick,->] (.7,.55)--(1.15,.24);
+  \node[text=mint,above] at (-.8,.45) {$\gamma$};
+  \node[text=gold,right] at (1.15,.24) {$v$};
+  \end{scope}
+\end{tikzpicture}}
+
+\TLNode{title-node}{tex}{"resourceId":"title","x":55,"y":76,"scale":2.8}
+\TLNode{subtitle-node}{tex}{"resourceId":"subtitle","x":57,"y":110,"scale":1.22,"style":{"opacity":0.65}}
+\TLNode{caption-node}{tex}{"resourceId":"caption","x":57,"y":170,"scale":0.88,"style":{"opacity":0.6}}
+\TLNode{equation-node}{tex}{"resourceId":"equation","x":57,"y":208,"scale":1.55}
+\TLNode{footer-node}{tex}{"resourceId":"footer","x":57,"y":506,"scale":0.72,"style":{"opacity":0.48}}
+\TLNode{rule}{line}{"x1":55,"y1":133,"x2":905,"y2":133,"style":{"stroke":"#35505d","strokeWidth":1}}
+\TLNode{x-axis}{line}{"x1":122,"y1":340,"x2":630,"y2":340,"style":{"stroke":"#34515c","strokeWidth":1,"dash":[3,6]}}
+\TLNode{y-axis}{line}{"x1":375,"y1":225,"x2":375,"y2":460,"style":{"stroke":"#34515c","strokeWidth":1,"dash":[3,6]}}
+\TLNode{orbit}{ellipse}{"cx":375,"cy":340,"rx":120,"ry":120,"style":{"fill":"#6de2bd","fillOpacity":0.05,"stroke":"#6de2bd","strokeWidth":2.5}}
+\TLNode{tangent}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#f3ca7d","strokeWidth":1.8,"opacity":0.8}}
+\TLNode{moving-point}{point}{"x":505,"y":340,"r":5,"phase":0,"style":{"fill":"#f3ca7d","stroke":"#091c27","strokeWidth":2}}
+\TLNode{moving-label}{tex}{"resourceId":"point-label","x":517,"y":325,"scale":1.45,"style":{"fill":"#f3ca7d"}}
+\TLNode{inset-head}{tex}{"resourceId":"inset-title","x":683,"y":235,"scale":0.83,"style":{"opacity":0.6}}
+\TLNode{inset-border}{path}{"d":"M 656 259 H 905 V 419 H 656 Z","style":{"fill":"#102a36","stroke":"#294751","strokeWidth":1}}
+\TLNode{tikz-node}{tex}{"resourceId":"inset","x":694,"y":388,"scale":1.8}
+\TLNode{tangent-formula}{tex}{"resourceId":"tangent-label","x":660,"y":448,"scale":0.95,"style":{"opacity":0.8}}
+
+% Nested clipping and group alpha are distinct from per-path alpha.
+\TLNode{swatches}{group}{"style":{"opacity":0.55},"clip":{"d":"M 827 474 H 906 V 510 H 827 Z"}}
+\TLNode{swatch-a}{ellipse}{"parent":"swatches","cx":847,"cy":493,"rx":29,"ry":20,"style":{"fill":"#6de2bd"}}
+\TLNode{swatch-b}{ellipse}{"parent":"swatches","cx":882,"cy":493,"rx":29,"ry":20,"style":{"fill":"#f3ca7d"}}
+
+\TLTrack{orbit}{rx}{smooth}{[[0,120],[4,185],[8,150],[12,120]]}
+\TLTrack{orbit}{ry}{smooth}{[[0,120],[4,66],[8,114],[12,120]]}
+\TLTrack{moving-point}{phase}{linear}{[[0,-0.6],[12,11.966370614359]]}
+\TLTrack{swatches}{style.opacity}{smooth}{[[0,0.25],[6,0.85],[12,0.25]]}
+\TLTrack{$camera}{zoom}{smooth}{[[0,1],[4,1.025],[8,1.01],[12,1]]}
+\TLTrack{$camera}{x}{smooth}{[[0,0],[4,7],[8,-3],[12,0]]}
+\TLTrack{$camera}{y}{smooth}{[[0,0],[4,3],[8,-1],[12,0]]}
+\TLRelation{pointOnEllipse}{"target":"moving-point","source":"orbit"}
+\TLRelation{tangent}{"target":"tangent","source":"orbit","point":"moving-point","length":105}
+\TLRelation{attach}{"target":"moving-label","source":"moving-point","offset":[12,-14]}
+
+% This macro really executes in TeX, expanding into a scene declaration.
+\newcommand{\SceneOrigin}{\TLNode{origin}{point}{"x":375,"y":340,"r":2.5,"style":{"fill":"gray"}}}
+\SceneOrigin
+\null
+\end{document}

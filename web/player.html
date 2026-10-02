@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="An executable mathematical scene authored in TeX. A shared intermediate representation powers deterministic SVG, web animation and video.">
+  <title>__TITLE__ · Texloom</title>
+  <style>__STYLE__</style>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="#main" aria-label="Texloom scene player">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 27C7 14 14 5 23 7S34 22 27 30 8 32 10 20 28 8 31 20"/><path d="M8 31 31 8"/></svg>
+      <span>texloom<span class="brand-dot">.</span></span>
+    </a>
+    <div class="edition"><span class="status-dot"></span> SCENE LAB <span class="edition-version" id="edition-version">/ Texloom</span></div>
+    <button class="text-button" id="download-bundle" type="button">Download IR <span aria-hidden="true">↗</span></button>
+  </header>
+
+  <main id="main">
+    <section class="intro" aria-labelledby="scene-title">
+      <div class="eyebrow">FROM SYMBOLS TO MOTION</div>
+      <div class="intro-row"><h1 id="scene-title">__TITLE__</h1><div class="scene-badge">TeX → objects → motion</div></div>
+      <p class="lede">One source. A shared scene. Explore the same mathematical objects at any moment in time.</p>
+    </section>
+
+    <div class="workspace">
+      <section class="viewer" aria-label="Animation player">
+        <div class="viewer-heading"><span><span class="live-dot"></span> LIVE SCENE</span><span id="viewport-label">…</span></div>
+        <div id="stage" aria-label="Mathematical animation frame"></div>
+        <div class="transport">
+          <div class="transport-top">
+            <button id="play" class="play-button" type="button" aria-label="Play animation" aria-pressed="false"><span id="play-icon" aria-hidden="true">▶</span></button>
+            <button id="restart" class="icon-button" type="button" aria-label="Restart animation" title="Restart">↺</button>
+            <span class="clock"><output id="current-time">0.00</output><span> / </span><span id="duration">0.00 s</span></span>
+            <label class="speed-label"><span class="sr-only">Playback speed</span><select id="speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+            <button id="download-svg" class="export-button" type="button">Export frame <span>SVG ↗</span></button>
+          </div>
+          <label class="sr-only" for="timeline">Scene time in seconds</label>
+          <input id="timeline" type="range" min="0" max="1" step="0.001" value="0">
+          <div class="timeline-labels"><span>00:00</span><span>SCRUB TO EXPLORE</span><span id="timeline-end">00:00</span></div>
+        </div>
+      </section>
+
+      <aside class="inspector" aria-label="Scene inspector">
+        <div class="inspector-heading"><div><div class="eyebrow">UNDER THE SURFACE</div><h2>Scene objects</h2></div><span class="ir-tag">IR</span></div>
+        <dl class="metrics"><div><dt>Objects</dt><dd id="object-count">—</dd></div><div><dt>Tracks</dt><dd id="track-count">—</dd></div><div><dt>Relations</dt><dd id="relation-count">—</dd></div></dl>
+        <div id="object-list" class="object-list" role="list" aria-label="Select a scene object"></div>
+        <div class="object-detail"><div class="detail-heading"><span id="selected-name">Select an object</span><span id="selected-kind"></span></div><pre id="object-data" tabindex="0"></pre></div>
+        <details class="diagnostics"><summary>Compiler notes <span id="diagnostic-count">0</span></summary><div id="diagnostics"></div></details>
+      </aside>
+    </div>
+
+    <section class="architecture" aria-label="How this scene works">
+      <div><span class="step-number">01</span><h3>Authored in TeX</h3><p>Mathematics, geometry and animation share one source document.</p></div>
+      <div><span class="step-number">02</span><h3>Compiled to objects</h3><p>Typeset paths, relationships and time tracks form a portable scene.</p></div>
+      <div><span class="step-number">03</span><h3>Evaluated at time <i>t</i></h3><p>The same evaluator drives the preview, still frames and video export.</p></div>
+    </section>
+  </main>
+
+  <footer><span>TEXLOOM <span class="footer-divider">/</span> MATHEMATICS IN MOTION</span><span>Space to play · ← → to step</span></footer>
+  <div id="error" role="alert" hidden></div>
+  <script id="scene-data" type="application/json">__BUNDLE__</script>
+  <script>__SCRIPT__</script>
+</body>
+</html>

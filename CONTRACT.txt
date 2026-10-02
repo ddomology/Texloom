@@ -1,0 +1,63 @@
+Texloom v0.1 shared implementation contract (2026-10-02)
+
+Root: work/Texloom. New local project; do not modify Lemniro or Chalkspace.
+TypeScript core and evaluator; Python compiler/export tools; real TeX execution.
+The canonical bundle is JSON objects, never SVG strings as the scene representation.
+
+Bundle:
+{version:'0.1', title:string, duration:number, viewport:{width:number,height:number},
+ units:'bp', nodes:Node[], tracks:Track[], relations:Relation[],
+ resources:Record<string,Resource>, camera:{x:number,y:number,zoom:number,rotation?:number},
+ document?:{blocks:any[]}, provenance?:object, diagnostics?:Diagnostic[]}
+Coordinates: x right, y down, angle radians, time seconds, scene dimensions bp.
+viewport is logical design dimensions; renderer can rasterize to any output resolution.
+Node base: {id,kind,parent?:id, transform?:{translate?:[x,y],rotate?:number,scale?:[sx,sy]},
+ style?:{fill?:string,stroke?:string,strokeWidth?:number,opacity?:number,dash?:number[],
+ lineCap?:'butt'|'round'|'square',lineJoin?:'miter'|'round'|'bevel',fillRule?:'nonzero'|'evenodd'},
+ clip?:{d:string,fillRule?:'nonzero'|'evenodd'}, visible?:boolean, source?:object}
+Node kinds / direct scalar fields:
+ group: no geometry
+ path: d:string
+ ellipse: cx,cy,rx,ry
+ point: x,y,r,phase?:number (radians for pointOnEllipse)
+ line: x1,y1,x2,y2
+ tex: resourceId,x,y,scale?:number (uniform glyph scale; x/y is TeX baseline origin)
+ field: resourceId,x,y,width,height (scalar time-samples on a rectangular grid)
+Resource variants:
+ vector: {kind:'vector', items:PaintItem[], metrics:{width,height,depth}, inkBounds:[x,y,w,h],
+          sourceTex?:string, glyphs?:any[], capabilities?:string[]}
+ PaintItem: {kind:'path'|'group', d?:string, transform?:[a,b,c,d,e,f], style?:Node.style,
+             clip?:{d:string,transform?:[a,b,c,d,e,f],fillRule?:...}, children?:PaintItem[]}
+ vector path coordinates normalized relative to TeX baseline origin in bp; +y down.
+ group PaintItems preserve group opacity, clips, paint order. No raw SVG payload.
+ scalar-field: {kind:'scalar-field', columns,rows,times:number[],samples:number[][],
+               range:[min,max], interpolation:'linear'|'step', provenance?:object}
+Track: {target:string ('$camera' allowed),property:string,keys:[number,number|number[]][],
+ interpolation?:'linear'|'smooth'|'step'}
+Examples properties: rx,ry,phase,x,y,zoom,rotation,transform.rotate,style.opacity.
+No multiple tracks writing the same property in v0.1; reject with diagnostic.
+Relations:
+ {type:'pointOnEllipse',target,source} target point.phase -> point.x/y on source ellipse
+ {type:'tangent',target,source,point,length} target line to tangent of source ellipse at point.phase
+ {type:'attach',target,source,offset:[x,y]} target tex.x/y follows source point
+ {type:'lineBetween',target,a,b} target line endpoints follow points
+v0.1 relations require participants in the same parent coordinate space; diagnose otherwise.
+Return frame: {time,viewport,camera,nodes,resources}; evaluate is pure and order-independent.
+Nodes retain hierarchy. SVG renderer serializes evaluated frame, preserving groups/clips.
+Field sample interpolation can be evaluated by evaluator into node.values:number[].
+Renderer has no timeline math. No arbitrary functions/closures in bundles.
+
+Core exports from src/index.ts: validateBundle(bundle) -> diagnostics array;
+ assertBundle(bundle) throws if invalid; evaluate(bundle,time) -> EvaluatedFrame.
+Renderer src/render-svg.ts exports renderSvg(frame,options?) -> string.
+Options {background?:string,width?:number,height?:number}.
+Python compiler command: python tools/compile.py source.tex --out build/demo
+Output bundle.json plus source artifacts/diagnostics, actual DVI or PDF provenance.
+A TeX frontend exports declarative nodes/tracks/relations/asset source through engine execution.
+Compiler can use existing dvisvgm as internal transport then parse it to vector paint items.
+Unknown graphics emit explicit errors, never silently disappear.
+
+Work ownership: core agent src/schema.ts src/evaluate.ts src/index.ts tests/core.test.ts;
+compiler agent tools/compile.py tools/svg_import.py tex/ examples/ tests/compiler*;
+renderer agent src/render-svg.ts src/player.ts web/ tools/build-player.mjs tests/renderer*;
+root package.json tsconfig, integration scripts, adapters, export, docs, final QA.

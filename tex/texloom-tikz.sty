@@ -1,0 +1,86 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-tikz}[2026/10/02 Texloom named TikZ scene frontend]
+\RequirePackage{texloom}
+\RequirePackage{tikz}
+\RequirePackage{xparse}
+\RequirePackage{amsmath,amssymb,lmodern}
+\usetikzlibrary{arrows.meta,calc,shapes.geometric}
+\newwrite\TLMsetupfile
+\immediate\openout\TLMsetupfile=\jobname.tl-tikz-setup.tex
+\AtEndDocument{\immediate\closeout\TLMsetupfile}
+\newcommand\loomsetup[1]{#1\immediate\write\TLMsetupfile{\detokenize{#1}}}
+\newcommand\loomset[1]{\tikzset{#1}\immediate\write\TLMsetupfile{\string\tikzset{\detokenize{#1}}}}
+\def\TLMparent{}
+\def\TLMemit#1{\immediate\write\TLrecords{#1}}
+\def\TLMpair(#1,#2)\relax{\TLMnumber\TLMx{#1}\TLMnumber\TLMy{#2}}
+\def\TLMposition#1{\TLMpair#1\relax}
+\def\TLMnumber#1#2{\pgfmathparse{#2}\pgfmathfloatparsenumber{\pgfmathresult}\pgfmathfloattofixed{\pgfmathresult}\edef#1{\pgfmathresult}}
+\def\TLMhexcolor#1{\colorlet{TLMtemporarycolor}{#1}\convertcolorspec{named}{TLMtemporarycolor}{HTML}\TLMhex}
+
+\pgfkeys{/loom/scene/.is family,/loom/scene,
+ width/.code=\TLMnumber\TLMwidth{#1},height/.code=\TLMnumber\TLMheight{#1},
+ duration/.code=\TLMnumber\TLMduration{#1},title/.store in=\TLMtitle}
+\newenvironment{loomscene}[1][]{\pgfkeys{/loom/scene,width=960,height=540,duration=12,title=Texloom,#1}
+ \TLMemit{\string{"type":"scene","version":"0.2","title":"\TLMtitle","width":\TLMwidth,"height":\TLMheight,"duration":\TLMduration\string}}}{}
+
+% Each node executes through TikZ again in its own measured TeX asset. The
+% capture command is installed by the compiler, after the author's setup.
+\NewDocumentCommand\loomnode{O{} r() u{at} r() +m t;}{%
+ \TLMpair(#4)\relax
+ \TLMemit{\string{"type":"tikz-node","line":\the\inputlineno,"id":"#2","resourceId":"#2-art","x":\TLMx,"y":\TLMy,"parent":"\TLMparent"\string}}%
+ \TLWriteAsset{#2-art}{tikz-node}{\begin{tikzpicture}[baseline=0pt]\node[#1,anchor=center] (TLcaptured) at (0,0) {#5};\TLMCaptureNode{TLcaptured}\end{tikzpicture}}}
+
+\pgfkeys{/loom/group/.is family,/loom/group,
+ at/.code=\TLMposition{#1},rotate/.code=\TLMnumber\TLMrotate{#1},
+ scale/.code=\TLMnumber\TLMscale{#1},opacity/.code=\TLMnumber\TLMopacity{#1}}
+\newenvironment{loomgroup}[2][]{%
+ \pgfkeys{/loom/group,at={(0,0)},rotate=0,scale=1,opacity=1,#1}%
+ \TLMemit{\string{"type":"node","rotationUnit":"degrees","line":\the\inputlineno,"value":\string{"id":"#2","kind":"group","parent":"\TLMparent","transform":\string{"translate":[\TLMx,\TLMy],"rotate":\TLMrotate,"scale":[\TLMscale,\TLMscale]\string},"style":\string{"opacity":\TLMopacity\string}\string}\string}}%
+ \def\TLMparent{#2}}{}
+
+\pgfkeys{/loom/connect/.is family,/loom/connect,
+ draw/.store in=\TLMdraw,line width/.store in=\TLMlinewidth,
+ opacity/.code=\TLMnumber\TLMopacity{#1},bend/.code=\TLMnumber\TLMbend{#1},
+ arrow size/.code=\TLMnumber\TLMarrowsize{#1},
+ ->/.code=\def\TLMend{true},<-/.code=\def\TLMstart{true},
+ <->/.code={\def\TLMstart{true}\def\TLMend{true}},
+ -/.code={\def\TLMstart{false}\def\TLMend{false}},
+ thick/.style={line width=1.2pt},thin/.style={line width=.6pt}}
+\NewDocumentCommand\loomconnect{O{} r() r() u{to} r() t;}{%
+ \def\TLMstart{false}\def\TLMend{false}%
+ \pgfkeys{/loom/connect,draw=black,line width=1pt,opacity=1,bend=0,arrow size=7,#1}%
+ \TLMhexcolor{\TLMdraw}\TLMnumber\TLMlinewidthvalue{\TLMlinewidth}%
+ \TLMemit{\string{"type":"tikz-connect","line":\the\inputlineno,"id":"#2","parent":"\TLMparent","from":"#3","to":"#5","bend":\TLMbend,"hex":"\TLMhex","lineWidthPt":\TLMlinewidthvalue,"opacity":\TLMopacity,"arrowStart":\TLMstart,"arrowEnd":\TLMend,"arrowSize":\TLMarrowsize\string}}}
+
+\pgfkeys{/loom/label/.is family,/loom/label,
+ at/.code=\TLMnumber\TLMlabelpos{#1},offset/.code=\TLMnumber\TLMoffset{#1},
+ scale/.code=\TLMnumber\TLMscale{#1},text/.store in=\TLMtext,
+ rotate/.is choice,rotate/true/.code=\def\TLMlabelrotate{true},
+ rotate/false/.code=\def\TLMlabelrotate{false},rotate/.default=true}
+\NewDocumentCommand\loomlabel{O{} r() u{on} r() +m t;}{%
+ \pgfkeys{/loom/label,at=.5,offset=-14,scale=1,text=black,rotate=false,#1}%
+ \TLMhexcolor{\TLMtext}%
+ \TLMemit{\string{"type":"tikz-label","line":\the\inputlineno,"id":"#2","resourceId":"#2-art","parent":"\TLMparent","path":"#4","position":\TLMlabelpos,"offset":\TLMoffset,"scale":\TLMscale,"hex":"\TLMhex","rotate":\TLMlabelrotate\string}}%
+ \TLWriteAsset{#2-art}{text}{#5}}
+
+\pgfkeys{/loom/path/.is family,/loom/path,
+ at/.code=\TLMposition{#1},scale/.code=\TLMnumber\TLMscale{#1}}
+\NewDocumentCommand\loompath{O{} r() +m t;}{%
+ \pgfkeys{/loom/path,at={(0,0)},scale=1,#1}%
+ \TLMemit{\string{"type":"tikz-path","line":\the\inputlineno,"id":"#2","resourceId":"#2-art","parent":"\TLMparent","x":\TLMx,"y":\TLMy,"scale":\TLMscale\string}}%
+ \TLWriteAsset{#2-art}{tikz-path}{\begin{tikzpicture}[baseline=0pt,x=1bp,y=-1bp]#3\TLMCaptureOrigin\end{tikzpicture}}}
+
+\pgfkeys{/loom/animation/.is family,/loom/animation,
+ duration/.code=\TLMnumber\TLMaduration{#1},delay/.code=\TLMnumber\TLMadelay{#1},
+ easing/.is choice,easing/smooth/.code=\def\TLMeasing{smooth},
+ easing/linear/.code=\def\TLMeasing{linear},easing/step/.code=\def\TLMeasing{step}}
+\def\TLMtween#1#2{\TLMemit{\string{"type":"tikz-animation","target":"\TLMtarget","property":"#1","to":#2,"start":\TLMadelay,"duration":\TLMaduration,"easing":"\TLMeasing"\string}}}
+\pgfkeys{/loom/tween/.is family,/loom/tween,
+ move to/.code={\TLMposition{#1}\TLMtween{transform.translate}{[\TLMx,\TLMy]}},
+ rotate to/.code={\TLMnumber\TLMv{#1}\TLMtween{transform.rotate}{\TLMv}},
+ scale to/.code={\TLMnumber\TLMv{#1}\TLMtween{transform.scale}{[\TLMv,\TLMv]}},
+ opacity to/.code={\TLMnumber\TLMv{#1}\TLMtween{style.opacity}{\TLMv}}}
+\NewDocumentCommand\loomanimate{O{} r() +m t;}{%
+ \def\TLMtarget{#2}\pgfkeys{/loom/animation,duration=12,delay=0,easing=smooth,#1}%
+ \pgfkeys{/loom/tween,#3}}
+\endinput

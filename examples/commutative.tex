@@ -1,0 +1,70 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+
+% This setup is executed by LaTeX and retained for each measured TikZ asset.
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{panel}{HTML}{102D39}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  object/.style={rectangle,rounded corners=12pt,draw=mint,fill=panel,
+    line width=1.1pt,minimum width=104bp,minimum height=66bp,
+    inner sep=14pt,outer sep=3pt,text=ink,font=\fontsize{28}{32}\selectfont},
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont}
+}
+
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Relations that move}]
+
+\loomnode[heading] (heading) at (480,58) {Relations that move};
+\loomnode[small] (intro) at (480,96) {Real TikZ nodes. Measured anchors. A shared timeline.};
+
+% A genuine TikZ path resource: native Bezier curves, clipping, transparency.
+% Its internal artwork is preserved; this wrapper moves it as a single object.
+\loompath[at={(0,0)}] (decoration) {
+  \draw[rule,line width=.65bp] (55,127) -- (905,127);
+  \begin{scope}
+    \clip (55,473) rectangle (905,497);
+    \fill[mint,opacity=.05] (40,500) .. controls (240,434) and (650,551) .. (930,472) -- (930,530) -- (40,530) -- cycle;
+    \draw[mint,opacity=.32,line width=.8bp] (40,500) .. controls (240,434) and (650,551) .. (930,472);
+  \end{scope}
+};
+
+% Scene groups are explicit, so parent transforms survive into the IR.
+\begin{loomgroup}[at={(480,297)}]{diagram}
+\begin{loomgroup}{triangle}
+  % Connections resolve named anchors every frame, including parent transforms.
+  \loomconnect[draw=mint,line width=1.8pt,->] (f) (X.east) to (Y.west);
+  \loomconnect[draw=gold,line width=1.8pt,->] (g) (Y.south west) to (Z.north east);
+  \loomconnect[draw=mint,line width=1.8pt,->,bend=10] (composition) (X.south east) to (Z.north west);
+
+  \loomnode[object] (X) at (-238,-79) {$X$};
+  \loomnode[object,draw=gold] (Y) at (238,-79) {$Y$};
+  \loomnode[object] (Z) at (0,112) {$Z$};
+
+  \loomlabel[at=.5,offset=-22,scale=2,text=mint] (f-label) on (f) {$f$};
+  \loomlabel[at=.5,offset=-25,scale=2,text=gold] (g-label) on (g) {$g$};
+  \loomlabel[at=.5,offset=30,scale=1.85,text=mint] (composition-label) on (composition) {$g\circ f$};
+\end{loomgroup}
+\end{loomgroup}
+
+\loomnode[small] (footer) at (480,513) {TEXLOOM 0.2 / TIKZ + OBJECT RELATIONS + TIME};
+
+% Sequential tweens merge into one deterministic property track. No JSON.
+\loomanimate[duration=6] (X) {move to={(-205,-100)}};
+\loomanimate[delay=6,duration=6] (X) {move to={(-238,-79)}};
+\loomanimate[duration=6] (Y) {move to={(223,-48)},scale to=1.08};
+\loomanimate[delay=6,duration=6] (Y) {move to={(238,-79)},scale to=1};
+\loomanimate[duration=6] (Z) {move to={(-34,119)},rotate to=-4};
+\loomanimate[delay=6,duration=6] (Z) {move to={(0,112)},rotate to=0};
+\loomanimate[duration=6] (triangle) {rotate to=3,scale to=.98};
+\loomanimate[delay=6,duration=6] (triangle) {rotate to=0,scale to=1};
+\loomanimate[duration=6] (decoration) {opacity to=.45};
+\loomanimate[delay=6,duration=6] (decoration) {opacity to=1};
+\end{loomscene}
+\end{document}

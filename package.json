@@ -1,0 +1,27 @@
+{
+  "name": "texloom",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "TeX-authored scenes compiled to a portable typed IR and deterministic animation.",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./svg": "./src/render-svg.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "build:player": "node tools/build-player.mjs build/demo/bundle.json build/demo/player.html",
+    "snapshot": "tsx tools/snapshot.ts",
+    "inspect": "tsx tools/inspect.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

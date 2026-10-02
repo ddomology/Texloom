@@ -1,0 +1,10 @@
+import {readFile} from 'node:fs/promises';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {build} from 'esbuild';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const compiled=await build({entryPoints:[resolve(root,'src/index.ts')],bundle:true,platform:'node',format:'esm',write:false});
+const {validateBundle}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+const diagnostics=validateBundle(JSON.parse(await readFile(process.argv[2],'utf8')));
+console.log(JSON.stringify(diagnostics));
+if(diagnostics.some(d=>d.severity==='error'))process.exitCode=1;
