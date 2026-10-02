@@ -160,7 +160,9 @@ def _output(value) -> bool:
         isinstance(value[key], str) and value[key] for key in ('operation', 'socket'))
 
 
-def _point(value, space: dict, base: str, socket: str, output: Path, nodes: dict, depth=0) -> dict:
+def _point(value, space: dict, base: str, socket: str, output: Path, nodes: dict, depth=0,
+           expression_writer=None) -> dict:
+    writer = _expression if expression_writer is None else expression_writer
     if depth > 32:
         raise ConnectorCaptureDiagnostic('Connector anchor nesting exceeds 32 levels')
     if isinstance(value, str) and value:
@@ -172,7 +174,7 @@ def _point(value, space: dict, base: str, socket: str, output: Path, nodes: dict
     if isinstance(value, dict) and set(value) == {'expression'} and isinstance(value['expression'], str):
         text = value['expression']
         return {'kind': 'pointExpression', 'expression': text, 'space': space,
-                'sourceSpan': _expression(text, base, socket, output)}
+                'sourceSpan': writer(text, base, socket, output)}
     if isinstance(value, dict) and set(value) == {'anchor'}:
         anchor = value['anchor']
         if not isinstance(anchor, dict) or not {'source', 'query'} <= set(anchor) or set(anchor) - {'source', 'query', 'innerSep', 'outerSep'}:
@@ -199,7 +201,8 @@ def _point(value, space: dict, base: str, socket: str, output: Path, nodes: dict
         if isinstance(query, str) and query in NAMES:
             resolved = {'kind': 'named', 'name': query}
         elif isinstance(query, dict) and set(query) == {'towards'}:
-            resolved = {'kind': 'border', 'towards': _point(query['towards'], space, base, socket+'.towards', output, nodes, depth+1)}
+            resolved = {'kind': 'border', 'towards': _point(query['towards'], space, base, socket+'.towards', output, nodes, depth+1,
+                                                         expression_writer=writer)}
         else:
             raise ConnectorCaptureDiagnostic('Inline anchor query must be a known name or {"towards": point}')
         return {'kind': 'anchor', 'source': provider, 'query': resolved, 'space': space}

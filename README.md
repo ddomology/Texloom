@@ -368,6 +368,21 @@ python tools/build.py examples/arrowheads.tex --out build/arrowheads --video
 See [arrow authoring](docs/arrows.md) for the local-space contract, PGF comparison,
 legacy compatibility, and graph APIs.
 
+## Path decorations and braces (PR 15)
+
+`texloom-decorations` derives ticks, direction marks, repeated local symbols and
+sinusoidal snakes from editable paths. Shared arc-length frames provide explicit
+spacing, phase, margins, orientation and corner/cusp policies. Endpoint braces
+use the same ordinary path representation. Source paths remain available to
+labels and other computations, and derived geometry updates after its upstream
+writers on every seek. SVG, Canvas and Chalkspace consume the same output.
+
+The initial profile accepts one contour and bounded generation work. Snakes are
+resolution-controlled polylines; closed paths have an explicit open seam cut.
+This is a documented subset of decoration behavior, not a PGF state-machine
+interpreter. See the [authoring and API guide](docs/decorations.md) and
+[animated example](examples/path-decorations.tex).
+
 ## Core API
 
 ```ts

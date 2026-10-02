@@ -1,0 +1,20 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-decorations}[2026/10/03 Texloom explicit path decoration capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLDEserial
+\TLDEserial=0
+\def\TLDEstart#1{%
+  \global\advance\TLDEserial by 1
+  \edef\TLEbase{\jobname.tl-decoration-\the\TLDEserial}%
+  \immediate\write\TLrecords{\string{"type":"decoration-file","kind":"#1","file":"\TLEbase"\string}}}
+\NewDocumentCommand\loomdecorate{O{} m +v}{%
+  \TLDEstart{decorate}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\NewDocumentCommand\loombrace{O{} m +v}{%
+  \TLDEstart{brace}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput
