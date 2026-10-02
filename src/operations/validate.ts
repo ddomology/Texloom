@@ -6,6 +6,7 @@ import {OperationValidationError, type Diagnostic, type OperationGraph, type Ope
 import {defaultOperatorRegistry, type OperatorRegistry} from './registry.js';
 import {freezeSnapshot, validateJsonData, validateLiteralValue, validateSourceSpan, validateSpaceRef} from './values.js';
 import {bindingProperties, propertiesOverlap} from './properties.js';
+import {deformationWrites} from './deform.js';
 
 type Obj = Record<string, any>;
 type ResolvedType = {type: string; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
@@ -159,6 +160,10 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     target:target.target, slots:bindingProperties({target:target.target,property:binding.property},nodes).map(access => access.property),
     path:`$.fields.bindings[${i}]`, ...(binding.sourceSpan ? {span:binding.sourceSpan} : {}),
   })));
+  if (!validatedContext) bundle.deformations?.operations.forEach((operation,i) => writers.push({
+    target:operation.target,slots:deformationWrites(operation.target).map(access=>access.property),
+    path:`$.deformations.operations[${i}]`,...(operation.sourceSpan?{span:operation.sourceSpan}:{}),
+  }));
   graph.bindings.forEach((raw: unknown, i: number) => {
     const path = `$.operationGraph.bindings[${i}]`;
     if (!object(raw)) {error('OPERATION_BINDING', 'Expected an output binding.', path); return;}

@@ -142,6 +142,31 @@ versus original positions, typed attributes, target-space conversion and ramps.
 python tools/build.py examples/curve-fields.tex --out build/curve-fields --video
 ```
 
+### Editable curve deformation (PR 06)
+
+Typed position expressions can now write actual curve geometry. `controlDeform`
+maps the existing controls and retains their topology. `pointwiseDeform` maps the
+whole curve, preserving recognized affine maps exactly in real arithmetic and
+using a bounded adaptive polyline for supported nonlinear expressions.
+
+```tex
+\usepackage{texloom-geometry}
+\loomdeform[mode=pointwiseDeform,tolerance=0.35]{wave}{source}{target}{
+  position + vec2(0bp,30bp*sin(2*pi*1rad*parameter - 1rad*time/1s))
+}
+```
+
+Source and target are editable path IDs with corresponding local coordinates.
+Existing point/tangent/normal consumers follow the evaluated output. Bounds are
+local geometric errors per stage; exhausted budgets produce diagnostics. Every
+sample is fresh, so in-place deformation does not accumulate across playback.
+The [deformation guide](docs/deformations.md) covers mode semantics, units,
+provenance, single-writer dependencies and adaptive topology limitations.
+
+```sh
+python tools/build.py examples/curve-deformations.tex --out build/curve-deformations --video
+```
+
 ## Architecture
 
 ```text

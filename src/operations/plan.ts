@@ -12,6 +12,7 @@ import type {ExpressionValue} from '../fields/ast.js';
 import {prepareExpressionProgram, evaluateExpressionBinding, type PreparedExpressionBinding} from '../fields/program.js';
 import {prepareFieldProgram, type PreparedFieldProgram} from '../fields/program-fields.js';
 import type {FieldEvaluation} from '../fields/types.js';
+import {prepareDeformationProgram, type DeformationEvaluation} from './deform.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -19,12 +20,14 @@ interface StepBase {
 }
 type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
-  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'});
+  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number});
+/** Optional frame metadata sink preserves the existing execute return contract. */
+export interface ExecutionMetadata {deformations?:DeformationEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
   /** Each execution receives new frame nodes/camera; no state survives this call. */
-  execute(nodes: Map<string, Node>, resources: Bundle['resources'], camera: Camera, time:number, parameters?:Readonly<Record<string,ExpressionValue>>): FieldEvaluation|undefined;
+  execute(nodes: Map<string, Node>, resources: Bundle['resources'], camera: Camera, time:number, parameters?:Readonly<Record<string,ExpressionValue>>, metadata?:ExecutionMetadata): FieldEvaluation|undefined;
 }
 
 const operationID = (id: string) => JSON.stringify(['operation',id]);
@@ -43,7 +46,7 @@ function diagnosticAt(error: unknown, step: Step): never {
     ? error.diagnostics : [{severity:'error',code:'OPERATION_EXECUTION',message:error instanceof Error ? error.message : String(error)}];
   const prefix = step.kind === 'operation' ? `$.operations[${JSON.stringify(step.operation.id)}]` : undefined;
   const located = diagnostics.map(d => ({...d,
-    path:prefix && d.path?.startsWith(prefix) ? step.path + d.path.slice(prefix.length) : d.path?.startsWith('$.operationGraph.') || d.path?.startsWith('$.fields.') ? d.path : step.kind === 'expression' ? step.path + '.expression' : step.path,
+    path:prefix && d.path?.startsWith(prefix) ? step.path + d.path.slice(prefix.length) : d.path?.startsWith('$.operationGraph.') || d.path?.startsWith('$.fields.') || d.path?.startsWith('$.deformations.') ? d.path : step.kind === 'expression' ? step.path + '.expression' : step.path,
     ...(d.sourceSpan ? {} : step.sourceSpan ? {sourceSpan:structuredClone(step.sourceSpan)} : {})}));
   if (error instanceof BundleValidationError) throw new BundleValidationError(located);
   throw new OperationValidationError(located);
@@ -80,6 +83,10 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   }
   const fields:PreparedFieldProgram|undefined = bundle.fields ? prepareFieldProgram(bundle.fields,bundle) : undefined;
   if (fields) steps.push({id:'fields',path:'$.fields',kind:'fields',dependencies:[],reads:[...fields.reads],writes:[...fields.writes]});
+  const deformations=bundle.deformations?prepareDeformationProgram(bundle.deformations,bundle):undefined;
+  for(const [index,prepared] of (deformations?.operations??[]).entries())
+    steps.push({id:`deformation:${index}`,path:prepared.path,sourceSpan:prepared.operation.sourceSpan,kind:'deformation',index,
+      dependencies:[],reads:[...prepared.reads],writes:[...prepared.writes]});
   // Canonical property ownership catches whole-vs-component writers and joins
   // track, legacy and authored binding ownership without concatenating node IDs.
   const writers = bundle.tracks.map((track,index) => ({id:`track:${index}`,path:`$.tracks[${index}]`,
@@ -123,9 +130,11 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
       related:blocked.map(s => ({message:s.id,path:s.path,...(s.sourceSpan ? {sourceSpan:structuredClone(s.sourceSpan)} : {})}))}]);
   }
   const ordered = order.map(id => freezeSnapshot(byID.get(id)!));
-  return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>) {
+  return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>,metadata?:ExecutionMetadata) {
     const parameters = expressions.resolveParameters(overrides);
     let fieldResult:FieldEvaluation|undefined;
+    const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
+    if(metadata)delete metadata.deformations;
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -139,6 +148,9 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
           for (const [name,input] of Object.entries(step.operation.inputs)) inputs[name] = input.kind === 'literal'
             ? structuredClone(input.value) as LiteralValue : values.get(input.ref.operation)![input.ref.socket];
           values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs));
+        } else if (step.kind === 'deformation') {
+          const prepared=deformations!.operations[step.index];
+          deformationResults[prepared.operation.id]=prepared.apply(frameNodes,time,parameters);
         } else if (step.kind === 'fields') {
           fieldResult = fields!.sample(frameNodes,time,parameters);
           fields!.apply(fieldResult,frameNodes,camera);
@@ -149,6 +161,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
         } else applyOperationBinding(step.binding,values.get(step.binding.value.operation)![step.binding.value.socket],frameNodes,camera);
       } catch (error) {diagnosticAt(error,step);}
     }
+    if(metadata&&deformations)metadata.deformations=freezeSnapshot(deformationResults);
     return fieldResult;
   }});
 }

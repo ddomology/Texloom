@@ -1,0 +1,24 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-geometry}[2026/10/02 Texloom explicit curve deformation capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLDserial
+\TLDserial=0
+
+% The declaration JSON contains only a generated filename. Metadata and the
+% multiline verbatim expression use the newline-safe PR 04 sidecar writers.
+\def\TLDstart{%
+  \global\advance\TLDserial by 1
+  \edef\TLEbase{\jobname.tl-deformation-\the\TLDserial}%
+  \immediate\write\TLrecords{\string{"type":"deformation-file","file":"\TLEbase"\string}}}
+
+% Explicit modes: controlDeform or pointwiseDeform (the default).
+% Adaptive options: tolerance, max-depth, max-segments. The runtime owns their
+% defaults and checks the complete geometry/writer contract.
+\NewDocumentCommand\loomdeform{O{} m m m +v}{%
+  \TLDstart
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{id}{#2}%
+  \TLEmetadata{source}{#3}%
+  \TLEmetadata{target}{#4}%
+  \TLEwrite{body}{#5}}
+\endinput
