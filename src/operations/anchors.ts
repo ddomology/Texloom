@@ -1,5 +1,5 @@
 import type {Bundle,Node,TexNode,VectorResource,Matrix} from '../schema.js';
-import {OperationValidationError,type AnchorInput,type TextPlacementInput,type DeepReadonly,type InputRef,
+import {OperationValidationError,type AnchorInput,type TextPlacementInput,type TextAnchorInput,type DeepReadonly,type InputRef,
   type LiteralValue,type OutputRef,type SpaceRef,type Diagnostic,type SourceSpan} from '../ir/operations.js';
 import {anchorNames,type AnchorName,type AnchorProvider} from '../ir/text.js';
 import {anchorPosition,createShapeAnchorProvider,createTextAnchorProvider,createMeasuredAnchorProvider} from '../geometry/anchors.js';
@@ -8,7 +8,7 @@ import {spaceMatrix,spaceTransformReads,sameSpace} from '../geometry/spaces.js';
 import type {InputValueType} from './inputs.js';
 import type {PropertyAccess} from './properties.js';
 
-type AnchorRef=DeepReadonly<AnchorInput|TextPlacementInput>;
+type AnchorRef=DeepReadonly<AnchorInput|TextPlacementInput|TextAnchorInput>;
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const pair=(v:unknown):v is [number,number]=>Array.isArray(v)&&v.length===2&&v.every(n=>typeof n==='number'&&Number.isFinite(n)&&n>=0);
@@ -37,12 +37,12 @@ export function validateAnchorInput(raw:Obj,bundle:Bundle,path:string,span:Sourc
     if(type&&(type.type!=='vec2'||type.role!=='point'))error('ANCHOR_POINT','Expected a point input.',at);
     else if(type&&object(space)&&['scene','local','parent','plot'].includes(space.kind)&&!sameSpace(type.space,space))error('OPERATION_SPACE_MISMATCH','Anchor target point must use the declared output space.',at);
   };
-  if(raw.kind==='textPlacement') {
-    keys(raw,['kind','node','anchor','point','innerSep','outerSep'],path);spacing(raw,path);
+  if(raw.kind==='textPlacement'||raw.kind==='textAnchor') {
+    keys(raw,raw.kind==='textAnchor'?['kind','node','anchor','innerSep','outerSep']:['kind','node','anchor','point','innerSep','outerSep'],path);spacing(raw,path);
     if(typeof raw.node!=='string'||bundle.nodes.find(n=>n.id===raw.node)?.kind!=='tex')error('ANCHOR_PLACEMENT_NODE','Placement requires a TeX node.',path+'.node');
     if(!named(raw.anchor))error('ANCHOR_NAME','Unknown anchor name.',path+'.anchor');
-    point(resolve(raw.point,path+'.point'),{kind:'scene'},path+'.point');
-    return {diagnostics,type:{type:'vec2',role:'point',space:{kind:'scene'}}};
+    if(raw.kind==='textPlacement')point(resolve(raw.point,path+'.point'),{kind:'scene'},path+'.point');
+    return {diagnostics,type:{type:'vec2',role:'point',space:raw.kind==='textAnchor'?{kind:'local',node:raw.node}:{kind:'scene'}}};
   }
   keys(raw,['kind','source','query','space'],path);
   if(!object(raw.source))error('ANCHOR_SOURCE','Expected an anchor source.',path+'.source');
@@ -74,6 +74,7 @@ export function validateAnchorInput(raw:Obj,bundle:Bundle,path:string,span:Sourc
 }
 
 export function anchorInputReads(input:AnchorRef,nodes:ReadonlyMap<string,Node>,outputSpace:(ref:DeepReadonly<OutputRef>)=>SpaceRef):PropertyAccess[] {
+  if(input.kind==='textAnchor')return [{node:input.node,property:'scale'}];
   const source=input.kind==='textPlacement'?{kind:'node' as const,node:input.node}:input.source;
   const space=source.kind==='shape'?outputSpace(source.ref):{kind:'local' as const,node:source.node};
   const reads=spaceTransformReads(space,nodes);
@@ -101,6 +102,13 @@ function textProvider(node:TexNode,resources:Bundle['resources'],options:{innerS
 export function resolveAnchorInput(input:AnchorRef,nodes:ReadonlyMap<string,Node>,resources:Bundle['resources'],
   resolve:(input:DeepReadonly<InputRef>,path:string)=>LiteralValue,path:string,metadata?:AnchorEvaluation):LiteralValue {
   let provider:DeepReadonly<AnchorProvider>,matrix:Matrix;
+  if(input.kind==='textAnchor') {
+    provider=textProvider(nodes.get(input.node) as TexNode,resources,input);
+    const position=anchorPosition(provider,{kind:'named',name:input.anchor});
+    const space:SpaceRef={kind:'local',node:input.node};
+    if(metadata)metadata[path]={provider:structuredClone(provider),space,position:[...position]};
+    return {type:'vec2',role:'point',space,value:[...position]};
+  }
   if(input.kind==='textPlacement') {
     const node=nodes.get(input.node) as TexNode;
     provider=textProvider(node,resources,input);

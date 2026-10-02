@@ -340,6 +340,20 @@ python tools/build.py examples/cubic-intersections.tex --out build/cubic-interse
 See [cubic intersections](docs/cubic-intersections.md) for supported tangencies,
 overlap limits, total work budgets, diagnostics and the v2 core/graph APIs.
 
+## Connections and path labels (PR 13)
+
+`texloom-connectors` adds straight, orthogonal and explicitly controlled cubic
+connections from live anchors, plus measured TeX labels placed by parameter or
+arc-length fraction. Labels declare their anchor, normal offset and rotation
+policy. Existing `loomconnect`/`loomlabel` behavior stays compatible.
+
+```sh
+python tools/build.py examples/connector-labels.tex --out build/connector-labels --video
+```
+
+See [connections and labels](docs/connectors.md) for coordinate spaces, baseline
+metrics, reflection rules, typed graph APIs and explicit limits.
+
 ## Core API
 
 ```ts

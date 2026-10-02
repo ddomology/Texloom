@@ -41,8 +41,10 @@ export type AnchorSource = {kind:'node';node:string;innerSep?:[number,number];ou
   | {kind:'shape';ref:OutputRef;outerSep?:[number,number]};
 export type AnchorInput = {kind:'anchor';source:AnchorSource;query:{kind:'named';name:AnchorName}|{kind:'border';towards:InputRef};space:SpaceRef};
 export type TextPlacementInput = {kind:'textPlacement';node:string;anchor:AnchorName;point:InputRef;innerSep?:[number,number];outerSep?:[number,number]};
+/** Metrics-only label anchor, independent of the node's pose being written. */
+export type TextAnchorInput = {kind:'textAnchor';node:string;anchor:AnchorName;innerSep?:[number,number];outerSep?:[number,number]};
 export type InputRef = {kind: 'literal'; value: LiteralValue} | {kind: 'output'; ref: OutputRef}
-  | AnchorInput | TextPlacementInput
+  | AnchorInput | TextPlacementInput | TextAnchorInput
   | {kind:'path';node:string;space:SpaceRef}
   | {kind:'node';node:string;property:'position';space:SpaceRef}
   | {kind:'expression';expression:string;unit:Unit;sourceSpan?:SourceSpan}

@@ -1,0 +1,94 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\usepackage{texloom-connectors}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  caption/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{20}{25}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Connections that follow}]
+\loomnode[heading] (heading) at (480,48) {Connections that follow};
+\loomnode[small] (intro) at (480,82) {Move the objects. Their connections and measured labels stay attached.};
+\loomnode[formula] (equation) at (480,130) {$h\circ f=k\circ g$};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,159)--(905,159) (55,463)--(905,463);};
+
+% Raw TeX objects expose current logical-box anchors. Geometry uses padding
+% outside those boxes, so growing glyphs do not collide with the connections.
+\TLText{object-A}{\fontsize{36}{42}\selectfont $A$}
+\TLText{object-B}{\fontsize{36}{42}\selectfont $B$}
+\TLText{object-C}{\fontsize{36}{42}\selectfont $C$}
+\TLText{object-D}{\fontsize{36}{42}\selectfont $D$}
+\TLNode{A}{tex}{"resourceId":"object-A","x":180,"y":230,"style":{"fill":"#E5F1EF"}}
+\TLNode{B}{tex}{"resourceId":"object-B","x":745,"y":234,"style":{"fill":"#E5F1EF"}}
+\TLNode{C}{tex}{"resourceId":"object-C","x":230,"y":370,"style":{"fill":"#E5F1EF"}}
+\TLNode{D}{tex}{"resourceId":"object-D","x":680,"y":370,"style":{"fill":"#E5F1EF"}}
+\loomparameter[min=0,max=1.5]{motion}{1}
+\loomparameter[min=0.75,max=1.3]{size}{1}
+\loomexpr{A}{x}{180bp+22bp*motion*sin(pi*time/6s)}
+\loomexpr{A}{y}{230bp+8bp*motion*sin(pi*time/6s)}
+\loomexpr{A}{scale}{size*(1+0.1*motion*sin(pi*time/6s))}
+\loomexpr{B}{x}{745bp-18bp*motion*sin(pi*time/6s)}
+\loomexpr{B}{y}{234bp+14bp*motion*sin(pi*time/6s)}
+\loomexpr{B}{scale}{size*(1-0.08*motion*sin(pi*time/6s))}
+\loomexpr{C}{x}{230bp-14bp*motion*sin(pi*time/6s)}
+\loomexpr{C}{y}{370bp-9bp*motion*sin(pi*time/6s)}
+\loomexpr{C}{scale}{size*(1-0.06*motion*sin(pi*time/6s))}
+\loomexpr{D}{x}{680bp+17bp*motion*sin(pi*time/6s)}
+\loomexpr{D}{y}{370bp+7bp*motion*sin(pi*time/6s)}
+\loomexpr{D}{scale}{size*(1+0.09*motion*sin(pi*time/6s))}
+
+% All four targets are editable paths. The new routing profile does not
+% synthesize arrowheads; straight, orthogonal and cubic geometry are explicit.
+\loomgeometry[draw=mint,line width=2.2bp] (top) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=2.2bp] (left) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=2.2bp] (right) {(0,0)--(1,0)};
+\loomgeometry[draw=coral,line width=2.2bp] (bottom) {(0,0)--(1,0)};
+\loomconnector[route=straight]{top}{
+  {"from":{"anchor":{"source":"node:A","query":"east","outerSep":12}},
+   "to":{"anchor":{"source":"node:B","query":"west","outerSep":12}}}
+}
+\loomconnector[route=straight]{left}{
+  {"from":{"anchor":{"source":"node:A","query":"south","outerSep":12}},
+   "to":{"anchor":{"source":"node:C","query":"north","outerSep":12}}}
+}
+\loomconnector[route=orthogonal,order=horizontal]{right}{
+  {"from":{"anchor":{"source":"node:B","query":"south","outerSep":12}},
+   "to":{"anchor":{"source":"node:D","query":"north","outerSep":12}}}
+}
+\loomconnector[route=cubic]{bottom}{
+  {"from":{"anchor":{"source":"node:C","query":"east","outerSep":12}},
+   "to":{"anchor":{"source":"node:D","query":"west","outerSep":12}},
+   "handleA":{"expression":"vec2(380bp,423bp+8bp*motion*sin(pi*time/6s))"},
+   "handleB":{"expression":"vec2(590bp,423bp-8bp*motion*sin(pi*time/6s))"}}
+}
+
+\TLText{label-f-art}{\fontsize{20}{24}\selectfont $f$}
+\TLText{label-g-art}{\fontsize{20}{24}\selectfont $g$}
+\TLText{label-h-art}{\fontsize{20}{24}\selectfont $h$}
+\TLText{label-k-art}{\fontsize{20}{24}\selectfont $k$}
+\TLNode{label-f}{tex}{"resourceId":"label-f-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{label-g}{tex}{"resourceId":"label-g-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{label-h}{tex}{"resourceId":"label-h-art","x":0,"y":0,"style":{"fill":"#F3CB84"}}
+\TLNode{label-k}{tex}{"resourceId":"label-k-art","x":0,"y":0,"style":{"fill":"#EE8D82"}}
+\loompathlabel[mode=length,at=.5,offset=-15,rotate=upright,anchor=base]{label-f}{{"path":"top"}}
+\loompathlabel[mode=length,at=.5,offset=23,rotate=horizontal,anchor=center]{label-g}{{"path":"left"}}
+\loompathlabel[mode=length,at=.62,offset=-22,rotate=horizontal,anchor=center]{label-h}{{"path":"right"}}
+\loompathlabel[mode=length,at=.5,offset=20,rotate=upright,anchor=center]{label-k}{{"path":"bottom"}}
+
+\loomnode[caption,text=mint] (legend-straight) at (245,486) {STRAIGHT / LIVE ANCHORS};
+\loomnode[caption,text=gold] (legend-orthogonal) at (480,486) {ORTHOGONAL / TWO LEGS};
+\loomnode[caption,text=coral] (legend-cubic) at (720,486) {CUBIC / ABSOLUTE HANDLES};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / MEASURED TEX LABELS / ONE GEOMETRY FOR WEB AND VIDEO};
+\end{loomscene}
+\end{document}
