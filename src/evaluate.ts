@@ -1,7 +1,7 @@
 import type {Bundle, Camera, EvaluatedFrame, FieldNode, Node, PathNode, ScalarFieldResource, Track, TrackValue} from './schema.js';
 import {geometryPointSlot} from './path-contract.js';
 import {pathGeometryData, revealGeometry, type PathPoint} from './path-geometry.js';
-import {prepareExecutionPlan, type ExecutionPlan} from './operations/plan.js';
+import {prepareExecutionPlan, type ExecutionPlan, type ExecutionMetadata} from './operations/plan.js';
 import {withPathContext} from './operations/builtins/legacy.js';
 import type {ExpressionValue} from './fields/ast.js';
 
@@ -43,7 +43,8 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
   const byId = new Map(nodes.map(n => [n.id, n]));
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
-  const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters);
+  const metadata:ExecutionMetadata={};
+  const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters, metadata);
   for(const node of nodes) if(node.kind==='path'&&node.geometry) {
     // Full editable geometry survives reveal: dependent points keep sampling the
     // mathematical curve, while both renderers receive the same visible prefix.
@@ -52,7 +53,7 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   }
   for (const node of nodes) if (node.kind === 'field') (node as FieldNode).values = sampleField(bundle.resources[node.resourceId] as ScalarFieldResource, clamped);
   // Resources are immutable shared data; frame-local geometry and camera are independent.
-  return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources,...(fields ? {fields} : {}) };
+  return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources,...(fields ? {fields} : {}),...metadata };
 }
 
 /** Convenience evaluation at an absolute time. Treat returned resources as immutable. */

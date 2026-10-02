@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{11}{15}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={The shape between the points}]
+\loomnode[heading] (heading) at (480,52) {The shape between the points};
+\loomnode[small] (intro) at (480,88) {One cubic. One deformation. Two different geometric meanings.};
+\loomnode[formula] (formula) at (480,133)
+  {$\Phi_t(x,y)=\bigl(x,\,y-A\sin(2\pi x/L-\omega t+\phi)\bigr)$};
+\loompath (guides) {
+  \draw[rule,line width=.65bp] (55,166)--(905,166) (55,480)--(905,480);
+  \draw[rule!65,line width=.65bp,dashed] (170,248)--(870,248) (170,399)--(870,399);
+  \draw[rule,line width=.65bp] (170,327)--(870,327);
+  \draw[gold,line width=2bp] (335,458)--(360,458);
+  \node[text=muted,font=\sffamily\fontsize{10}{13}\selectfont,anchor=west] at (368,458) {Tangent};
+  \draw[coral,line width=2bp] (487,458)--(512,458);
+  \node[text=muted,font=\sffamily\fontsize{10}{13}\selectfont,anchor=west] at (520,458) {Normal};
+};
+\loomnode[label] (control-title) at (94,231) {CONTROL};
+\loomnode[small] (control-subtitle) at (94,254) {Move handles};
+\loomnode[label] (pointwise-title) at (94,382) {POINTWISE};
+\loomnode[small] (pointwise-subtitle) at (94,405) {Map the curve};
+\loomnode[small] (control-caption) at (520,302) {The control polygon changes; the result remains one cubic.};
+% Source and both targets use corresponding local coordinates. Their parent
+% translations only lay out the comparison; no implicit space conversion occurs.
+\begin{loomgroup}[opacity=0]{source-storage}
+\loomgeometry[draw=rule,line width=1bp] (source)
+  {(0,0) .. controls (233.33333,0) and (466.66667,0) .. (700,0)};
+\end{loomgroup}
+\begin{loomgroup}[at={(170,248)}]{control-row}
+\loomgeometry[draw=gold,line width=3bp,line cap=round] (control)
+  {(0,0) .. controls (233.33333,0) and (466.66667,0) .. (700,0)};
+\end{loomgroup}
+\begin{loomgroup}[at={(170,399)}]{pointwise-row}
+\loomgeometry[draw=mint,line width=3bp,line cap=round] (pointwise)
+  {(0,0) .. controls (233.33333,0) and (466.66667,0) .. (700,0)};
+\loomdirection[on=pointwise,point=P,length=90,draw=gold,line width=2bp] (T);
+\loomdirection[on=pointwise,point=P,length=48,normal=true,draw=coral,line width=2bp] (N);
+\loompoint[on=pointwise,at=.06,radius=5.4,fill=ink,draw=mint,line width=2bp,mode=length] (P);
+\end{loomgroup}
+\loomparameter[unit=bp,min=0,max=45]{amplitude}{35}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomdeform[mode=controlDeform]{control-wave}{source}{control}{
+  position + vec2(0bp,-amplitude*sin(2*pi*1rad*dot(position,vec2(1,0))/700bp - 1rad*time/1s + phase))
+}
+\loomdeform[mode=pointwiseDeform,tolerance=0.35,max-depth=16,max-segments=32768]{pointwise-wave}{source}{pointwise}{
+  position + vec2(0bp,-amplitude*sin(2*pi*1rad*dot(position,vec2(1,0))/700bp - 1rad*time/1s + phase))
+}
+\loomanimate[duration=12,easing=linear] (P) {progress to=.94};
+\loomnode[small] (footer) at (480,510) {TEXLOOM / EDITABLE CURVES / TYPED DEFORMATIONS / SHARED RENDERING};
+\end{loomscene}
+\end{document}

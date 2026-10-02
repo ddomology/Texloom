@@ -9,6 +9,7 @@ import type {FieldProgram, FieldOperation, FieldBinding, FieldContext, FieldAttr
 import {createFieldContext} from './context.js';
 import {compileFieldExpression, evaluateFieldExpression, type CompiledFieldExpression} from './evaluate.js';
 import {captureAttribute, setFieldPositions} from '../operations/attributes.js';
+import {validateDeformationProgramInContext} from '../operations/deform.js';
 
 type Obj = Record<string, any>;
 const object = (v:unknown):v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -33,7 +34,7 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):Inspection 
   if (diagnostics.length) return {diagnostics,operations};
   if (!object(bundle)) {fail('FIELD_CONTEXT','Expected a scene bundle.','$'); return {diagnostics,operations};}
   if (!validatedContext) {
-    const {fields:ignored,...base} = bundle;
+    const {fields:ignored,deformations:deferredDeformations,...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') fail('FIELD_BUNDLE_VERSION','Field programs require Bundle 0.3.','$.version');
@@ -139,6 +140,8 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):Inspection 
       writers.push({slots,path:tp});
     });
   });
+  if (!validatedContext && bundle.deformations && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateDeformationProgramInContext(bundle.deformations,{...bundle,fields:input as FieldProgram}));
   return {diagnostics,operations};
 }
 

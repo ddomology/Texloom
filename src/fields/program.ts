@@ -7,6 +7,7 @@ import {bindingProperties, propertiesOverlap, type PropertyAccess} from '../oper
 import type {CompiledExpression, ExpressionBinding, ExpressionProgram, ExpressionValue, ParameterDefinition, Unit, Dimension} from './ast.js';
 import {compileExpression, evaluateExpression} from './scalar.js';
 import {validateFieldProgramInContext} from './program-fields.js';
+import {validateDeformationProgramInContext} from '../operations/deform.js';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -62,7 +63,7 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (!validatedContext) {
     // Fields consume these parameter declarations; validate them only after the
     // candidate expression program has been checked, not against a missing one.
-    const {expressions:ignored,fields:deferredFields,...base} = bundle;
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
@@ -125,6 +126,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   });
   if (!validatedContext && bundle.fields && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateFieldProgramInContext(bundle.fields,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.deformations && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateDeformationProgramInContext(bundle.deformations,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 

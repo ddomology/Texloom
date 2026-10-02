@@ -16,3 +16,7 @@ export {createFieldContext} from './fields/context.js';
 export {compileFieldExpression, evaluateFieldExpression, type CompiledFieldExpression} from './fields/evaluate.js';
 export {captureAttribute, setFieldPositions} from './operations/attributes.js';
 export {validateFieldProgram, prepareFieldProgram} from './fields/program-fields.js';
+export {compileDeformation, type CompiledDeformation} from './geometry/deform-expression.js';
+export {deformGeometry, type DeformationMode, type DeformationOptions, type DeformationReport} from './geometry/deform.js';
+export {validateDeformationProgram, prepareDeformationProgram,
+  type DeformationOperation, type DeformationProgram, type DeformationEvaluation, type PreparedDeformationProgram} from './operations/deform.js';
