@@ -101,6 +101,26 @@ def _value(value, field: str):
     raise AnimationCaptureDiagnostic(f'Animation {field} must be a finite numeric scalar or vector')
 
 
+def _finite_json(value) -> None:
+    """Reject overflowed JSON numbers before passing nested policies to JS."""
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and not _finite_number(value):
+        raise AnimationCaptureDiagnostic('Animation correspondence contains a nonfinite JSON number')
+    if isinstance(value, dict):
+        for item in value.values():
+            _finite_json(item)
+    elif isinstance(value, list):
+        for item in value:
+            _finite_json(item)
+
+
+def _timing(node: dict, options: dict) -> None:
+    node['duration'] = _number(options.get('duration', '1'), 'duration')
+    if 'easing' in options:
+        if options['easing'] not in ('linear', 'smooth', 'step'):
+            raise AnimationCaptureDiagnostic('Animation easing must be linear, smooth or step')
+        node['easing'] = options['easing']
+
+
 def capture_animation(records: list[dict], execution: Path, output: Path) -> dict | None:
     """Preserve grouping and authored values; scheduling belongs to TypeScript."""
     declarations = [record for record in records if record['type'] == 'animation-file']
@@ -182,6 +202,36 @@ def capture_animation(records: list[dict], execution: Path, output: Path) -> dic
                 else:
                     node['value'] = _value(_json(read('value')), 'value')
                     node['sourceSpan'] = captured['value']
+            elif kind in ('morph', 'clone', 'enter', 'exit'):
+                allowed = {'id'} if kind == 'clone' else {'id', 'duration', 'easing'}
+                if kind in ('enter', 'exit'):
+                    allowed.add('mode')
+                options = _options(read('options'), allowed)
+                if kind in ('morph', 'clone') and 'id' not in options:
+                    raise AnimationCaptureDiagnostic(f'Animation {kind} requires an explicit instance id')
+                if 'id' in options:
+                    node['id'] = options['id']
+                if kind != 'clone':
+                    _timing(node, options)
+                if kind in ('morph', 'clone'):
+                    node['source'] = name('source')
+                    if kind == 'morph':
+                        node['destination'] = name('destination')
+                        correspondence = _json(read('correspondence'))
+                        if not isinstance(correspondence, dict):
+                            raise AnimationCaptureDiagnostic('Morph correspondence must be a JSON object')
+                        _finite_json(correspondence)
+                        node['correspondence'] = correspondence
+                        node['sourceSpan'] = captured['correspondence']
+                    else:
+                        node['sourceSpan'] = captured['source']
+                else:
+                    node['target'] = name('target')
+                    if 'mode' in options:
+                        if options['mode'] not in ('fade', 'create'):
+                            raise AnimationCaptureDiagnostic('Animation mode must be fade or create')
+                        node['mode'] = options['mode']
+                    node['sourceSpan'] = captured['options']
             else:
                 raise AnimationCaptureDiagnostic(f'Unknown animation declaration kind: {kind}')
             stack[-1][1]['children'].append(node)

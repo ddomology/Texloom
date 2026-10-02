@@ -12,6 +12,7 @@ import {validateDeformationProgramInContext, type DeformationProgram, type Defor
 import {validatePlotProgramInContext, type PlotProgram, type PlotEvaluation} from './operations/plot.js';
 import {validateTimelineMetadata,type TimelineMetadata,type Easing} from './timeline/ast.js';
 import {trackHasSingularScale} from './timeline/track.js';
+import {validateMorphProgramInContext,type MorphProgram,type MorphEvaluation} from './timeline/morph.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -24,7 +25,7 @@ export interface Clip { d: string; fillRule?: 'nonzero' | 'evenodd' }
 export interface NodeBase { id: string; parent?: string; transform?: Transform; style?: Style; clip?: Clip; visible?: boolean; source?: Record<string, unknown> }
 export interface MeasuredAnchorMetrics {kind:'pgf';shape:string;logicalTextBox:[number,number,number,number];
   textMetrics:{width:number;height:number;depth:number};innerSep:[number,number];outerSep:[number,number];alignment:string;revision:string}
-export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]>;anchorMetrics?:MeasuredAnchorMetrics }
+export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]>;anchorMetrics?:MeasuredAnchorMetrics;morphProgress?:number }
 export interface ResolvedPath { start: [number, number]; c1: [number, number]; c2: [number, number]; end: [number, number] }
 export interface PathNode extends NodeBase { kind: 'path'; d: string; arrowStart?: boolean; arrowEnd?: boolean; arrowSize?: number; resolvedPath?: ResolvedPath;
   geometry?: PathGeometry; reveal?: number; revealMode?: 'parameter'|'length'; pathTolerance?: number;
@@ -68,8 +69,9 @@ export interface Bundle {
   deformations?: DeformationProgram;
   plots?: PlotProgram;
   timeline?: TimelineMetadata;
+  morphs?: MorphProgram;
 }
-export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
+export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
 
 type Obj = Record<string, any>;
 const object = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -84,7 +86,7 @@ const common: Record<string, PropertySpec> = {
   'style.strokeOpacity': { min: 0, max: 1 }, 'style.strokeWidth': { min: 0 }, 'style.miterLimit': { min: 1 },
 };
 const scalarProperties: Record<string, Record<string, PropertySpec>> = {
-  group: {}, path: {reveal:{min:0,max:1},'arrows.start':{min:0,max:2},'arrows.end':{min:0,max:2},
+  group: {morphProgress:{min:0,max:1}}, path: {reveal:{min:0,max:1},'arrows.start':{min:0,max:2},'arrows.end':{min:0,max:2},
     'arrows.length':{strictMin:0},'arrows.width':{strictMin:0},'arrows.inset':{min:0},
     'arrows.shortenStart':{min:0},'arrows.shortenEnd':{min:0},'arrows.tolerance':{strictMin:0}}, ellipse: { cx: {}, cy: {}, rx: { strictMin: 0 }, ry: { strictMin: 0 } },
   point: { x: {}, y: {}, r: { min: 0 }, phase: {}, progress:{min:0,max:1} }, line: { x1: {}, y1: {}, x2: {}, y2: {} },
@@ -243,7 +245,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
     }
     for (const [key, spec] of Object.entries(scalarProperties[n.kind])) {
       if(key.startsWith('arrows.'))continue; // Optional nested profile is validated below.
-      if (['phase','scale','progress','reveal'].includes(key) && n[key] === undefined) continue;
+      if (['phase','scale','progress','reveal','morphProgress'].includes(key) && n[key] === undefined) continue;
       number(n[key], `${path}.${key}`, spec);
     }
     if (n.kind === 'group' && n.anchors !== undefined) {
@@ -502,6 +504,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.fields !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateFieldProgramInContext(b.fields,b as Bundle));
   if (b.deformations !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateDeformationProgramInContext(b.deformations,b as Bundle));
   if (b.plots !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePlotProgramInContext(b.plots,b as Bundle));
+  if (b.morphs !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMorphProgramInContext(b.morphs,b as Bundle));
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');
     else errors.push(...validateTimelineMetadata(b.timeline,b.duration));

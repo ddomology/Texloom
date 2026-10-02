@@ -48,3 +48,5 @@ export {validatePlotProgram,preparePlotProgram,type PlotProgram,type PlotOperati
 export * from './timeline/ast.js';
 export {compileTimeline,lowerTimeline} from './timeline/compile.js';
 export {evaluateTrack,trackHasSingularScale} from './timeline/track.js';
+export * from './geometry/correspondence.js';
+export {validateMorphProgram,prepareMorphProgram,morphWrites,type MorphProgram,type MorphOperation,type MorphReport,type MorphEvaluation} from './timeline/morph.js';

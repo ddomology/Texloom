@@ -1,5 +1,7 @@
 # Animation composition (PR19)
 
+For geometric morphs, clones, entrances and exits, see [PR20 geometric transitions](morphing.md).
+
 Write the order of actions in TeX. The shared TypeScript compiler resolves
 their times and lowers them to numeric tracks. SVG, Canvas, video and the
 Chalkspace adapter continue to consume the same evaluated frames.

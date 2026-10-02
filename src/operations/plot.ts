@@ -13,6 +13,7 @@ import {createCartesianMapping, type CartesianConfig} from '../geometry/data-spa
 import {pathGeometryData, transformGeometry, type PathPoint, type PathGeometry} from '../path-geometry.js';
 import {adaptiveSampleCurve, areaBetweenCurves, sampledDataPlot, type SamplingReport} from '../geometry/adaptive-sampling.js';
 import type {AnchorEvaluation} from './anchors.js';
+import {validateMorphProgramInContext} from '../timeline/morph.js';
 
 export type PlotMode='function'|'parametric'|'samples'|'area';
 export interface PlotOperation {
@@ -144,6 +145,8 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):{diagnostic
     const dependencies=[...new Set(flattenOperationInputs(operation.inputs).flatMap(i=>i.kind==='output'?[i.ref.operation]:[]))];
     entries.push({operation:freezeSnapshot(raw as PlotOperation),path,expressions,inputs,dependencies});
   });
+  if(!validatedContext&&bundle.morphs!==undefined&&!diagnostics.some(d=>d.severity==='error'))
+    diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,plots:input as PlotProgram}));
   return {diagnostics,entries};
 }
 

@@ -383,6 +383,15 @@ This is a documented subset of decoration behavior, not a PGF state-machine
 interpreter. See the [authoring and API guide](docs/decorations.md) and
 [animated example](examples/path-decorations.tex).
 
+## Geometric transitions (PR 20)
+
+Explicitly approved contour/segment correspondence animates editable paths,
+including line-to-cubic promotion and opt-in arc-length resampling. Independent
+transition instances preserve authored endpoints; clones, entrances and exits
+compose with the existing timeline. Unmatched stroke contours support fade or
+create policies. See the [geometry transition guide](docs/morphing.md) and
+[`examples/geometry-transitions.tex`](examples/geometry-transitions.tex).
+
 ## Animation composition (PR 19)
 
 `texloom-animation` composes actions with sequence, parallel, stagger, waits

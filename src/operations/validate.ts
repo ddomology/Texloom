@@ -11,6 +11,7 @@ import {validateDynamicInput,hasTransformWriter} from './inputs.js';
 import {sameSpace} from '../geometry/spaces.js';
 import type {Unit} from '../fields/ast.js';
 import {validatePlotProgramInContext} from './plot.js';
+import {validateMorphProgramInContext} from '../timeline/morph.js';
 import {trackHasSingularScale} from '../timeline/track.js';
 
 type Obj = Record<string, any>;
@@ -276,6 +277,8 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
   }
   if(!validatedContext&&bundle.plots!==undefined&&!diagnostics.some(d=>d.severity==='error'))
     diagnostics.push(...validatePlotProgramInContext(bundle.plots,{...bundle,operationGraph:graph as unknown as OperationGraph}));
+  if(!validatedContext&&bundle.morphs!==undefined&&!diagnostics.some(d=>d.severity==='error'))
+    diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,operationGraph:graph as unknown as OperationGraph}));
   return {diagnostics, order};
 }
 

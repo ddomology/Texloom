@@ -1,4 +1,6 @@
-import type {Track,TrackValue} from '../schema.js';
+import type {Track,TrackValue,Node} from '../schema.js';
+import type {CorrespondenceOptions} from '../geometry/correspondence.js';
+import type {MorphProgram} from './morph.js';
 import type {Diagnostic,SourceSpan} from '../ir/operations.js';
 import {validateJsonData,validateSourceSpan} from '../operations/values.js';
 
@@ -9,12 +11,16 @@ export type TimelineNode=Source & (
   {kind:'stagger';children:TimelineNode[];lag:number} |
   {kind:'wait';duration:number} | {kind:'cue';name:string} |
   {kind:'tween';target:string;property:string;duration:number;from?:TrackValue;to:TrackValue;easing?:Easing} |
-  {kind:'set';target:string;property:string;value:TrackValue});
+  {kind:'set';target:string;property:string;value:TrackValue} |
+  {kind:'morph';id:string;source:string;destination:string;duration:number;easing?:Easing;correspondence:CorrespondenceOptions} |
+  {kind:'clone';id:string;source:string} |
+  {kind:'enter'|'exit';target:string;duration:number;easing?:Easing;mode?:'fade'|'create'});
 export interface TimelineProgram {version:1;origin?:number;root:TimelineNode}
 export interface TimelineCue {name:string;time:number;sourceSpan?:SourceSpan}
 export interface TimelineClip {id:string;kind:'tween'|'set';target:string;property:string;start:number;end:number;sourceSpan?:SourceSpan}
 export interface TimelineMetadata {version:1;origin:number;end:number;duration:number;cues:TimelineCue[];clips:TimelineClip[]}
-export interface CompiledTimeline {tracks:Track[];cues:TimelineCue[];clips:TimelineClip[];origin:number;end:number;duration:number}
+export interface CompiledTimeline {tracks:Track[];cues:TimelineCue[];clips:TimelineClip[];origin:number;end:number;duration:number;
+  generatedNodes?:Node[];morphs?:MorphProgram}
 export const TIMELINE_MAX_DEPTH=32,TIMELINE_MAX_NODES=4096;
 
 /** The runtime only receives schedule metadata, never an authoring AST. */

@@ -5,6 +5,7 @@ import {geometryPointSlot} from '../path-contract.js';
 import {prepareExecutionPlan} from '../operations/plan.js';
 import type {TimelineProgram,TimelineCue,TimelineClip,CompiledTimeline,Easing} from './ast.js';
 import {TIMELINE_MAX_DEPTH,TIMELINE_MAX_NODES} from './ast.js';
+import {materializeTimeline} from './materialize.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -76,6 +77,9 @@ export function compileTimeline(program:TimelineProgram,bundle:Bundle):DeepReado
   const keys=(raw:Obj,allowed:string[],path:string,span?:SourceSpan)=>{for(const key of Object.keys(raw))if(!allowed.includes(key))fail('TIMELINE_PROPERTY',`Unknown property ${key}.`,path+'.'+key,span);};
   keys(program,['version','origin','root'],'$.timelineProgram');
   if(program.version!==1)fail('TIMELINE_VERSION','Supported authoring version is 1.','$.timelineProgram.version');
+  const materialized=materializeTimeline(program,bundle);
+  program=materialized.program;bundle=materialized.bundle;
+  assertBundle(bundle);
   const origin=program.origin===undefined?0:program.origin;if(!finite(origin)||origin<0||origin>bundle.duration)fail('TIMELINE_TIME','Origin must stay within scene duration.','$.timelineProgram.origin');
   const actions:Action[]=[],cues:TimelineCue[]=[],ids=new Set<string>(),names=new Set<string>(),nodes=new Map(bundle.nodes.map(n=>[n.id,n]));
   let count=0,order=0;
@@ -164,7 +168,9 @@ export function compileTimeline(program:TimelineProgram,bundle:Bundle):DeepReado
   }
   const clips:TimelineClip[]=actions.map(({id,kind,target,property,start,end,sourceSpan})=>({id,kind,target,property,start,end,...(sourceSpan?{sourceSpan}:{} )}));
   cues.sort((a,b)=>a.time-b.time);
-  const result={tracks,cues,clips,origin,end,duration:length};
+  const result={tracks,cues,clips,origin,end,duration:length,
+    ...(materialized.generatedNodes.length?{generatedNodes:materialized.generatedNodes}:{}),
+    ...(materialized.morphs?{morphs:materialized.morphs}:{})};
   // Existing bindings and legacy tracks keep their whole-scene ownership.
   const candidate={...bundle,tracks:[...bundle.tracks,...tracks]};
   try{assertBundle(candidate);prepareExecutionPlan(candidate);}catch(error){
@@ -188,6 +194,8 @@ export function compileTimeline(program:TimelineProgram,bundle:Bundle):DeepReado
  * numeric tracks. Cues are immutable metadata, never callback instructions. */
 export function lowerTimeline(program:TimelineProgram,bundle:Bundle):Bundle {
   const compiled=compileTimeline(program,bundle),result=structuredClone(bundle);
+  if(compiled.generatedNodes)result.nodes.push(...structuredClone(compiled.generatedNodes) as Node[]);
+  if(compiled.morphs)result.morphs=structuredClone(compiled.morphs) as Bundle['morphs'];
   result.tracks.push(...structuredClone(compiled.tracks) as Track[]);
   result.timeline={version:1,origin:compiled.origin,end:compiled.end,duration:compiled.duration,cues:structuredClone(compiled.cues) as TimelineCue[],clips:structuredClone(compiled.clips) as TimelineClip[]};
   assertBundle(result);prepareExecutionPlan(result);return result;

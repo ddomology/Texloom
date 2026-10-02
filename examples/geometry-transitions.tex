@@ -1,0 +1,123 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-animation}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{29}{34}\selectfont},
+  subtitle/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{10}{14}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=16,title={Geometry in transition}]
+\loomnode[heading] (heading) at (480,47) {Geometry in transition};
+\loomnode[subtitle] (subtitle) at (480,84) {Turn a line into a curve, move a copy, and control every unmatched stroke.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,112)--(905,112) (632,133)--(632,316) (55,336)--(905,336);};
+\loomnode[label,text=mint] (main-label) at (330,143) {01 / LINE TO CURVE};
+\loomnode[label,text=gold] (copy-label) at (772,143) {02 / AN INDEPENDENT COPY};
+\loompath (main-guide) {\draw[rule,dashed,line width=.6bp] (86,222)--(574,222);\fill[mint] (100,222) circle[radius=2bp] (560,222) circle[radius=2bp];};
+\begin{loomgroup}[at={(330,222)}]{main-stage}
+  \loomgeometry[draw=mint,line width=3.2bp,line cap=round]
+    (main-line) {(-230,0)--(230,0)};
+  \loomgeometry[draw=mint,line width=3.2bp,line cap=round]
+    (main-curve) {(-230,0) .. controls (-130,-95) and (130,95) .. (230,0)};
+\end{loomgroup}
+\loomnode[formula] (main-formula) at (330,285) {$\gamma_\alpha=(1-\alpha)\gamma_0+\alpha\gamma_1$};
+\loomnode[small] (main-caption) at (330,312) {Exact endpoints. An explicit match between the two paths.};
+
+\begin{loomgroup}[at={(735,215)}]{copy-stage}
+  \loomgeometry[draw=gold,draw opacity=.35,line width=3bp,line cap=round]
+    (original) {(-60,10) .. controls (-15,-75) and (15,75) .. (60,-10)};
+\end{loomgroup}
+\loomnode[small,text=gold] (original-label) at (714,266) {original};
+\loomnode[small,text=gold] (moving-label) at (831,303) {moving copy};
+
+\loomnode[label,text=coral] (policy-label) at (480,365) {03 / EVERY UNMATCHED STROKE HAS A POLICY};
+\loompath (policy-divider) {\draw[rule,line width=.55bp] (480,389)--(480,469);};
+\begin{loomgroup}[at={(260,426)}]{fade-stage}
+  \loomgeometry[draw=coral,line width=3bp,line cap=round]
+    (fade-source) {(-135,0)--(135,0) (-94,-24)--(-94,24)};
+  \loomgeometry[draw=coral,line width=3bp,line cap=round]
+    (fade-target) {(-135,0) .. controls (-50,-30) and (50,30) .. (135,0) (94,-24)--(94,24)};
+\end{loomgroup}
+\begin{loomgroup}[at={(700,426)}]{create-stage}
+  \loomgeometry[draw=coral,line width=3bp,line cap=round]
+    (create-source) {(-135,0)--(135,0) (-94,-24)--(-94,24)};
+  \loomgeometry[draw=coral,line width=3bp,line cap=round]
+    (create-target) {(-135,0) .. controls (-50,-30) and (50,30) .. (135,0) (94,-24)--(94,24)};
+\end{loomgroup}
+\loomnode[label,text=coral] (fade-caption) at (260,480) {FADE / CROSSFADE THE UNMATCHED STROKES};
+\loomnode[label,text=coral] (create-caption) at (700,480) {CREATE / RETRACT AND DRAW};
+\loomnode[small] (footer) at (480,518) {TEXLOOM / GEOMETRY IN MOTION / LOCAL SHAPES, SHARED TIME};
+
+% TeX/PGF provides genuine editable paths. Only the endpoint templates are
+% hidden: each transition and the clone receives its own persistent scene ID.
+\loomexpr{main-line}{visible}|false|
+\loomexpr{main-curve}{visible}|false|
+\loomexpr{fade-source}{visible}|false|
+\loomexpr{fade-target}{visible}|false|
+\loomexpr{create-source}{visible}|false|
+\loomexpr{create-target}{visible}|false|
+
+\begin{loomanimation}[origin=0.5]
+  \loomcue{begin}
+  \begin{loomparallel}
+    \begin{loomsequence}
+      \loommorph[id=line-up,duration=3,easing=smooth]{main-line}{main-curve}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"error"}|
+      \loomcue{curve-reached}
+      \loomwait{1}
+      \loomsetvalue{line-up}{style.opacity}|0|
+      \loommorph[id=line-down,duration=3,easing=smooth]{main-curve}{main-line}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"error"}|
+      \loomwait{1}
+      \loomsetvalue{line-down}{style.opacity}|0|
+      \loommorph[id=line-return,duration=3,easing=smooth]{main-line}{main-curve}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"error"}|
+      \loomwait{3.5}
+    \end{loomsequence}
+    \begin{loomsequence}
+      \loomwait{0.5}
+      \loomclone[id=moving-copy]{original}
+      \loomsetvalue{moving-copy}{style.strokeOpacity}|1|
+      \loomenter[duration=0.6,easing=smooth]{moving-copy}
+      \begin{loomparallel}
+        \loomtween[duration=3.4,easing=smooth]{moving-copy}{transform.translate}|{"to":[83,47]}|
+        \loomtween[duration=3.4,easing=smooth]{moving-copy}{transform.rotate}|{"to":-0.2}|
+        \loomtween[duration=3.4,easing=smooth]{moving-copy}{transform.scale}|{"to":[0.82,0.82]}|
+      \end{loomparallel}
+      \loomcue{copy-independent}
+      \loomwait{3.5}
+      \begin{loomparallel}
+        \loomtween[duration=3,easing=smooth]{moving-copy}{transform.translate}|{"to":[76,53]}|
+        \loomtween[duration=3,easing=smooth]{moving-copy}{transform.rotate}|{"to":0.18}|
+      \end{loomparallel}
+      \loomwait{3.5}
+    \end{loomsequence}
+    \begin{loomsequence}
+      \loomwait{2}
+      \loomcue{unmatched-begins}
+      \begin{loomparallel}
+        \loommorph[id=fade-forward,duration=5,easing=smooth]{fade-source}{fade-target}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"fade"}|
+        \loommorph[id=create-forward,duration=5,easing=smooth]{create-source}{create-target}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"create"}|
+      \end{loomparallel}
+      \loomcue{unmatched-target}
+      \loomwait{1}
+      \loomsetvalue{fade-forward}{style.opacity}|0|
+      \loomsetvalue{create-forward}{style.opacity}|0|
+      \begin{loomparallel}
+        \loommorph[id=fade-back,duration=5,easing=smooth]{fade-target}{fade-source}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"fade"}|
+        \loommorph[id=create-back,duration=5,easing=smooth]{create-target}{create-source}|{"approved":true,"contours":[{"source":"contour-0","target":"contour-0","segments":[{"source":"segment-0","target":"segment-0"}]}],"unmatched":"create"}|
+      \end{loomparallel}
+      \loomcue{unmatched-source}
+      \loomwait{1.5}
+    \end{loomsequence}
+  \end{loomparallel}
+  \loomcue{finish}
+\end{loomanimation}
+\end{loomscene}
+\end{document}

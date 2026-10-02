@@ -32,4 +32,15 @@
 \NewDocumentCommand\loomsetvalue{O{} m m +v}{%
   \TLAnimationStart{set}\TLEmetadata{options}{#1}%
   \TLEmetadata{target}{#2}\TLEmetadata{property}{#3}\TLEwrite{value}{#4}}
+% Endpoint node IDs and transition instance IDs remain separate. Correspondence
+% is literal JSON checked by the shared compiler, never expanded as TeX code.
+\NewDocumentCommand\loommorph{O{} m m +v}{%
+  \TLAnimationStart{morph}\TLEmetadata{options}{#1}%
+  \TLEmetadata{source}{#2}\TLEmetadata{destination}{#3}\TLEwrite{correspondence}{#4}}
+\NewDocumentCommand\loomclone{O{} m}{%
+  \TLAnimationStart{clone}\TLEmetadata{options}{#1}\TLEmetadata{source}{#2}}
+\NewDocumentCommand\loomenter{O{} m}{%
+  \TLAnimationStart{enter}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}}
+\NewDocumentCommand\loomexit{O{} m}{%
+  \TLAnimationStart{exit}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}}
 \endinput

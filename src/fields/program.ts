@@ -9,6 +9,7 @@ import {compileExpression, evaluateExpression} from './scalar.js';
 import {validateFieldProgramInContext} from './program-fields.js';
 import {validateDeformationProgramInContext} from '../operations/deform.js';
 import {validatePlotProgramInContext} from '../operations/plot.js';
+import {validateMorphProgramInContext} from '../timeline/morph.js';
 import {validateOperationGraphInContext} from '../operations/validate.js';
 
 type Obj = Record<string, any>;
@@ -135,6 +136,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
     diagnostics.push(...validateDeformationProgramInContext(bundle.deformations,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.plots !== undefined && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validatePlotProgramInContext(bundle.plots,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.morphs !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 
