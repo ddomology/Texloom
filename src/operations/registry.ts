@@ -1,6 +1,7 @@
 import {OperationValidationError, type DeepReadonly, type Diagnostic, type OperatorDefinition} from '../ir/operations.js';
 import {freezeSnapshot, validateJsonData, validateLiteralValue} from './values.js';
 import {coordinateOperatorDefinitions} from './coordinates.js';
+import {shapeOperatorDefinitions} from './shapes.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -56,7 +57,7 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
           keys(input, ['type', 'role', 'space'], location);
           if (input.role !== 'point' && input.role !== 'vector') fail('SOCKET_ROLE', 'Expected point or vector role.', `${location}.role`);
           space('space'); break;
-        case 'path2d': keys(input, ['type', 'space'], location); space('space'); break;
+        case 'points2d': case 'shape2d': case 'path2d': keys(input, ['type', 'space'], location); space('space'); break;
         case 'transform2d': keys(input, ['type', 'from', 'to'], location); space('from'); space('to'); break;
         default: fail('SOCKET_TYPE', 'Expected scalar, vec2, path2d or transform2d socket type.', `${location}.type`);
       }
@@ -98,6 +99,7 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
 
 export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry([
   ...coordinateOperatorDefinitions,
+  ...shapeOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

@@ -56,7 +56,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     return true;
   };
   const valueSpaces = (v: Obj, path: string, span?: SourceSpan) => {
-    if (v.type === 'vec2' || v.type === 'path2d') space(v.space, path + '.space', span);
+    if (['vec2','points2d','shape2d','path2d'].includes(v.type)) space(v.space, path + '.space', span);
     if (v.type === 'transform2d') {space(v.from, path + '.from', span); space(v.to, path + '.to', span);}
   };
   if (!object(graph)) {error('OPERATION_GRAPH', 'Expected an operation graph object.', '$.operationGraph'); return {diagnostics, order};}
@@ -130,23 +130,26 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
   for (const [id, entry] of entries) {
     const {raw,path,span,definition} = entry;
     if (!definition || !object(raw.inputs)) continue;
+    const resolveInput=(value:unknown,ip:string):ResolvedType|undefined=>{
+      if (!object(value)) {error('OPERATION_INPUT_REF', 'Expected a typed input reference.', ip, span);return;}
+      if(value.kind==='literal') {
+        keys(value,['kind','value'],ip,span);
+        const errors=validateLiteralValue(value.value,ip+'.value');
+        diagnostics.push(...errors.map(d=>({...d,...(span?{sourceSpan:span}:{})})));
+        if(!errors.length){valueSpaces(value.value,ip+'.value',span);return value.value;}
+      }else if(value.kind==='output') {
+        keys(value,['kind','ref'],ip,span);return output(value.ref,ip+'.ref',span,id);
+      }else{
+        const dynamic=validateDynamicInput(value,{...bundle,operationGraph:graph as unknown as OperationGraph},ip,span,resolveInput);
+        diagnostics.push(...dynamic.diagnostics);return dynamic.type;
+      }
+    };
     for (const name of Object.keys(raw.inputs)) if (!own(definition.inputs, name)) error('OPERATION_INPUT_SOCKET', `Unknown input socket ${name}.`, path + '.inputs.' + name, span);
     for (const [name, socket] of Object.entries(definition.inputs)) {
       const ip = path + '.inputs.' + name;
       const value = own(raw.inputs, name) ? raw.inputs[name] : socket.default === undefined ? undefined : {kind:'literal',value:socket.default};
       if (value === undefined) {error('OPERATION_REQUIRED_INPUT', `Required input ${name} is missing.`, ip, span); continue;}
-      if (!object(value)) {error('OPERATION_INPUT_REF', 'Expected a literal or output input.', ip, span); continue;}
-      let actual: ResolvedType | undefined;
-      if (value.kind === 'literal') {
-        keys(value, ['kind','value'], ip, span);
-        const errors = validateLiteralValue(value.value, ip + '.value');
-        diagnostics.push(...errors.map(d => ({...d, ...(span ? {sourceSpan:span} : {})})));
-        if (!errors.length) {actual = value.value; valueSpaces(value.value, ip + '.value', span);}
-      } else if (value.kind === 'output') {
-        keys(value, ['kind','ref'], ip, span); actual = output(value.ref, ip + '.ref', span, id);
-      } else {
-        const dynamic=validateDynamicInput(value,{...bundle,operationGraph:graph as unknown as OperationGraph},ip,span);diagnostics.push(...dynamic.diagnostics);actual=dynamic.type;
-      }
+      const actual=resolveInput(value,ip);
       compatible(resolveType(socket.value, entry), actual, ip, span);
     }
   }
@@ -179,7 +182,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     keys(raw, ['target','property','value','sourceSpan'], path, span);
     const actual = output(raw.value, path + '.value', span);
     const target = nodes.get(raw.target), kind = raw.target === '$camera' ? 'camera' : target?.kind;
-    if (!named(raw.target) || !kind) {error('OPERATION_BINDING_TARGET', `Missing target ${String(raw.target)}.`, path + '.target', span); return;}
+    if (!named(raw.target) || !kind) {error('OPERATION_BINDING_TARGET', typeof raw.target==='string'?`Missing target ${raw.target}.`:'Target must be a node ID string or $camera.', path + '.target', span); return;}
     if (!named(raw.property)) {error('OPERATION_BINDING_PROPERTY', 'Expected a property name.', path + '.property', span); return;}
     const local: SpaceRef = {kind:'local',node:raw.target};
     const parent: SpaceRef = target?.parent ? {kind:'local',node:target.parent} : {kind:'scene'};

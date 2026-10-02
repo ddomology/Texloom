@@ -22,3 +22,5 @@ export {validateDeformationProgram, prepareDeformationProgram,
   type DeformationOperation, type DeformationProgram, type DeformationEvaluation, type PreparedDeformationProgram} from './operations/deform.js';
 export {coordinateOperatorDefinitions,executeCoordinateOperation} from './operations/coordinates.js';
 export {sameSpace,spaceMatrix,spaceTransform,nodePosition} from './geometry/spaces.js';
+export * from './geometry/primitives.js';
+export {shapeOperatorDefinitions,executeShapeOperation,type ShapeEvaluation} from './operations/shapes.js';

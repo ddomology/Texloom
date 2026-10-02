@@ -4,6 +4,7 @@ import {PathGeometryError, sampleGeometry} from '../../path-geometry.js';
 import {validateLiteralValue} from '../values.js';
 import {isCoordinateOperator, executeCoordinateOperation} from '../coordinates.js';
 import {sameSpace} from '../../geometry/spaces.js';
+import {isShapeOperator,executeShapeOperation,type ShapeEvaluation} from '../shapes.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -156,6 +157,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isShapeOperator(name,version))return;
   if(isCoordinateOperator(name,version))return;
   if (!implementations.get(name)?.has(version)) throw new OperationValidationError([
     {severity: 'error', code: 'OPERATION_IMPLEMENTATION', message: `No authored implementation for ${name}@${version}.`, path: '$.operator'},
@@ -163,7 +165,9 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 }
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
-export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs): Record<string, LiteralValue> {
+export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation): Record<string, LiteralValue> {
+  const shape=executeShapeOperation(operation,inputs,shapes);
+  if(shape)return shape;
   const coordinate=executeCoordinateOperation(operation,inputs);
   if(coordinate)return coordinate;
   const implementation = implementations.get(operation.operator)?.get(operation.version);
