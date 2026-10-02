@@ -6,6 +6,7 @@ import {freezeSnapshot, validateJsonData, validateSourceSpan} from '../operation
 import {bindingProperties, propertiesOverlap, type PropertyAccess} from '../operations/properties.js';
 import type {CompiledExpression, ExpressionBinding, ExpressionProgram, ExpressionValue, ParameterDefinition, Unit, Dimension} from './ast.js';
 import {compileExpression, evaluateExpression} from './scalar.js';
+import {validateFieldProgramInContext} from './program-fields.js';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -59,7 +60,9 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (diagnostics.length) return {diagnostics,bindings};
   if (!object(bundle)) {fail('EXPRESSION_CONTEXT','Expected a scene bundle.','$'); return {diagnostics,bindings};}
   if (!validatedContext) {
-    const {expressions:ignored,...base} = bundle;
+    // Fields consume these parameter declarations; validate them only after the
+    // candidate expression program has been checked, not against a missing one.
+    const {expressions:ignored,fields:deferredFields,...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
@@ -120,6 +123,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
       fail('EXPRESSION_WRITER_CONFLICT',`Multiple writers overlap ${binding.target}.${binding.property}.`,path,binding,[{message:'Earlier writer.',path:writer.path}]);
     writers.push({slots,path});
   });
+  if (!validatedContext && bundle.fields && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateFieldProgramInContext(bundle.fields,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 

@@ -66,7 +66,7 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     if (track.property.startsWith('transform.')) features.add('transform.affine.2d');
     if (['style.opacity', 'style.fillOpacity', 'style.strokeOpacity'].includes(track.property)) features.add('paint.opacity');
   }
-  for (const binding of [...(bundle.operationGraph?.bindings ?? []),...(bundle.expressions?.bindings ?? [])]) {
+  for (const binding of [...(bundle.operationGraph?.bindings ?? []),...(bundle.expressions?.bindings ?? []),...(bundle.fields?.bindings ?? [])]) {
     if (binding.property === 'transform' || binding.property.startsWith('transform.')) features.add('transform.affine.2d');
     if (['style.opacity','style.fillOpacity','style.strokeOpacity'].includes(binding.property)) features.add('paint.opacity');
   }

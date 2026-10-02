@@ -156,9 +156,18 @@ function constantAtCompileTime(node:Node):boolean {
 }
 
 /** Validate every branch, then fold only reachable, genuinely constant expressions. */
-export function compileExpression(text:string,parameters:Readonly<Record<string,ParameterDefinition>>={},sourceSpan?:SourceSpan):CompiledExpression {
+export function compileExpression(text:string,parameters:Readonly<Record<string,ParameterDefinition>>={},sourceSpan?:SourceSpan,
+  variables:Readonly<Record<string,ExpressionType>>={}):CompiledExpression {
   const ast=parseExpression(text,sourceSpan), types=new Map<Node,ExpressionType>();
   const parameterTypes:Record<string,ExpressionType>=Object.create(null);
+  const reservedVariables=new Set(['time','pi','true','false','vec2','sin','cos','dot','length','normalize','mask','if']);
+  for(const [name,type] of Object.entries(variables)) {
+    if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)||reservedVariables.has(name)||own(parameters,name))
+      fail(ast,'EXPRESSION_VARIABLE',`Invalid, reserved or colliding variable ${name}.`);
+    if(!type||!['scalar','vec2','boolean'].includes(type.kind)||type.kind!=='boolean'&&
+        (!type.dimension||!['length','time','angle'].every(key=>Number.isSafeInteger(type.dimension[key as keyof typeof type.dimension]))))
+      fail(ast,'EXPRESSION_VARIABLE',`Invalid expression type for variable ${name}.`);
+  }
   const numeric=(node:Node,type:ExpressionType,kind?:'scalar'|'vec2'):{kind:'scalar'|'vec2';dimension:Dimension}=>{
     if(type.kind==='boolean'||kind&&type.kind!==kind)fail(node,'EXPRESSION_TYPE',`Expected ${kind??'scalar or vec2'}.`);
     return type;
@@ -176,6 +185,10 @@ export function compileExpression(text:string,parameters:Readonly<Record<string,
       case 'identifier': {
         if(node.name==='pi')type=scalarType();
         else if(node.name==='time')type=scalarType({...dimensions.s});
+        else if(own(variables,node.name)) {
+          type=structuredClone(variables[node.name]);
+          parameterTypes[node.name]=type;
+        }
         else {
           if(!parameters||!own(parameters,node.name))fail(node,'EXPRESSION_IDENTIFIER',`Unknown parameter ${node.name}.`);
           const parameter=parameters[node.name];

@@ -1,0 +1,41 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-fields}[2026/10/02 Texloom typed curve field capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLFserial
+\TLFserial=0
+
+% Reuse the newline-safe PR 04 literal writer, with a separate file namespace.
+% Only generated filenames enter JSON; all author-supplied data use sidecars.
+\def\TLFstart#1{%
+  \global\advance\TLFserial by 1
+  \edef\TLEbase{\jobname.tl-field-\the\TLFserial}%
+  \immediate\write\TLrecords{\string{"type":"field-program-file","kind":"#1","file":"\TLEbase"\string}}}
+
+% Samples are a verbatim JSON array. Path-control domains use an empty array;
+% curve-sample domains supply explicit {"id":...,"parameter":...} entries.
+\NewDocumentCommand\loomdomain{m m m +v}{%
+  \TLFstart{domain}%
+  \TLEmetadata{id}{#1}%
+  \TLEmetadata{geometry}{#2}%
+  \TLEmetadata{domain}{#3}%
+  \TLEwrite{samples}{#4}}
+
+% Options: position=current or position=original (current when omitted).
+\NewDocumentCommand\loomfield{O{} m m m +v}{%
+  \TLFstart{operation}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{id}{#2}%
+  \TLEmetadata{domain}{#3}%
+  \TLEmetadata{operation-kind}{#4}%
+  \TLEwrite{body}{#5}}
+
+% Targets are a verbatim JSON array. Optional from/to colors are six hex digits
+% without a hash: [from=31505C,to=71DFC2]. The capture layer supplies JSON colors.
+\NewDocumentCommand\loomfieldbind{O{} m m m +v}{%
+  \TLFstart{binding}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{domain}{#2}%
+  \TLEmetadata{field}{#3}%
+  \TLEmetadata{property}{#4}%
+  \TLEwrite{targets}{#5}}
+\endinput

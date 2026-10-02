@@ -11,3 +11,8 @@ export * from './fields/ast.js';
 export {parseExpression} from './fields/parser.js';
 export {compileExpression, evaluateExpression} from './fields/scalar.js';
 export {validateExpressionProgram, prepareExpressionProgram} from './fields/program.js';
+export * from './fields/types.js';
+export {createFieldContext} from './fields/context.js';
+export {compileFieldExpression, evaluateFieldExpression, type CompiledFieldExpression} from './fields/evaluate.js';
+export {captureAttribute, setFieldPositions} from './operations/attributes.js';
+export {validateFieldProgram, prepareFieldProgram} from './fields/program-fields.js';
