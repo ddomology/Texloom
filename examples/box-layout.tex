@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-geometry}
+\usepackage{texloom-layout}
+\usepackage{texloom-connectors}
+\usepackage{texloom-arrows}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{33}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{11}{15}\selectfont},
+  caption/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{20}{25}\selectfont,inner sep=7bp,outer sep=0bp}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Content sets the spacing}]
+\loomnode[heading] (heading) at (480,45) {Content sets the spacing};
+\loomnode[small] (intro) at (480,81) {Change the formulas. Keep the layout rules.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,111)--(905,111) (55,454)--(905,454);};
+\loomnode[label,text=mint] (left-heading) at (237,139) {01 / A COMMUTATIVE SQUARE};
+\loomnode[label,text=gold] (right-heading) at (665,139) {02 / TENSOR WITH $M$};
+
+\loomparameter[unit=bp,min=56,max=112]{gap}{84}
+% Layout uses these raw TeX logical boxes, including the depth below baseline.
+\TLText{A-art}{\fontsize{20}{25}\selectfont $A$}
+\TLText{B-art}{\fontsize{20}{25}\selectfont $B$}
+\TLText{C-art}{\fontsize{20}{25}\selectfont $A/K$}
+\TLText{D-art}{\fontsize{20}{25}\selectfont $B/L$}
+\TLNode{A}{tex}{"resourceId":"A-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+\TLNode{B}{tex}{"resourceId":"B-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+\TLNode{C}{tex}{"resourceId":"C-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+\TLNode{D}{tex}{"resourceId":"D-art","x":0,"y":0,"style":{"fill":"#E5F1EF"}}
+
+% The second square uses PGF-measured groups and a deliberately multiline cell.
+\loomnode[formula] (E) at (0,0) {$A\otimes_R M$};
+\loomnode[formula] (F) at (0,0) {$B\otimes_R M$};
+\loomnode[formula] (G) at (0,0) {$(A/K)\otimes_R M$};
+\loomnode[formula,align=center] (H) at (0,0)
+  {$(B/L)\otimes_R M$\\[-1bp]{\fontsize{10}{13}\selectfont quotient module}};
+
+\loomlayout[mode=matrix,columns=2,align-y=baseline]{short-square}{
+  {"nodes":["A","B","C","D"],"origin":[155,202],
+   "gapX":"gap+12bp*sin(pi*time/6s)","gapY":"64bp+10bp*sin(pi*time/6s)"}
+}
+\loomlayout[mode=matrix,columns=2,align-y=baseline]{long-square}{
+  {"nodes":["E","F","G","H"],"origin":[512,202],
+   "gapX":"gap+12bp*sin(pi*time/6s)","gapY":"64bp+10bp*sin(pi*time/6s)"}
+}
+\loomgeometry[draw=mint,opacity=.25,line width=1bp] (left-frame) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,opacity=.25,line width=1bp] (right-frame) {(0,0)--(1,0)};
+\loomfit[padding-x=28,padding-y=24]{left-frame}{{"layout":"short-square"}}
+\loomfit[padding-x=22,padding-y=24]{right-frame}{{"layout":"long-square"}}
+
+\loomgeometry[draw=mint,line width=1.6bp] (ab) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1.6bp] (ac) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1.6bp] (bd) {(0,0)--(1,0)};
+\loomgeometry[draw=mint,line width=1.6bp] (cd) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.6bp] (ef) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.6bp] (eg) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.6bp] (fh) {(0,0)--(1,0)};
+\loomgeometry[draw=gold,line width=1.6bp] (gh) {(0,0)--(1,0)};
+\loomconnector{ab}{{"from":{"anchor":{"source":"node:A","query":"east","outerSep":9}},"to":{"anchor":{"source":"node:B","query":"west","outerSep":9}}}}
+\loomconnector{ac}{{"from":{"anchor":{"source":"node:A","query":"south","outerSep":9}},"to":{"anchor":{"source":"node:C","query":"north","outerSep":9}}}}
+\loomconnector{bd}{{"from":{"anchor":{"source":"node:B","query":"south","outerSep":9}},"to":{"anchor":{"source":"node:D","query":"north","outerSep":9}}}}
+\loomconnector{cd}{{"from":{"anchor":{"source":"node:C","query":"east","outerSep":9}},"to":{"anchor":{"source":"node:D","query":"west","outerSep":9}}}}
+\loomconnector{ef}{{"from":{"anchor":{"source":"node:E","query":"east"}},"to":{"anchor":{"source":"node:F","query":"west"}}}}
+\loomconnector{eg}{{"from":{"anchor":{"source":"node:E","query":"south"}},"to":{"anchor":{"source":"node:G","query":"north"}}}}
+\loomconnector{fh}{{"from":{"anchor":{"source":"node:F","query":"south"}},"to":{"anchor":{"source":"node:H","query":"north"}}}}
+\loomconnector{gh}{{"from":{"anchor":{"source":"node:G","query":"east"}},"to":{"anchor":{"source":"node:H","query":"west"}}}}
+\loomarrows[end=triangle,length=8,width=6]{ab}{{}}
+\loomarrows[end=triangle,length=8,width=6]{ac}{{}}
+\loomarrows[end=triangle,length=8,width=6]{bd}{{}}
+\loomarrows[end=triangle,length=8,width=6]{cd}{{}}
+\loomarrows[end=triangle,length=8,width=6]{ef}{{}}
+\loomarrows[end=triangle,length=8,width=6]{eg}{{}}
+\loomarrows[end=triangle,length=8,width=6]{fh}{{}}
+\loomarrows[end=triangle,length=8,width=6]{gh}{{}}
+
+\TLText{label-f-art}{\fontsize{15}{19}\selectfont $f$}
+\TLText{label-qA-art}{\fontsize{13}{17}\selectfont $q_A$}
+\TLText{label-qB-art}{\fontsize{13}{17}\selectfont $q_B$}
+\TLText{label-fbar-art}{\fontsize{15}{19}\selectfont $\bar f$}
+\TLText{label-ft-art}{\fontsize{13}{17}\selectfont $f\otimes 1$}
+\TLText{label-qAt-art}{\fontsize{11}{15}\selectfont $q_A\otimes 1$}
+\TLText{label-qBt-art}{\fontsize{11}{15}\selectfont $q_B\otimes 1$}
+\TLText{label-fbart-art}{\fontsize{13}{17}\selectfont $\bar f\otimes 1$}
+\TLNode{f}{tex}{"resourceId":"label-f-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{qA}{tex}{"resourceId":"label-qA-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{qB}{tex}{"resourceId":"label-qB-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{fbar}{tex}{"resourceId":"label-fbar-art","x":0,"y":0,"style":{"fill":"#71DFC2"}}
+\TLNode{ft}{tex}{"resourceId":"label-ft-art","x":0,"y":0,"style":{"fill":"#F3CB84"}}
+\TLNode{qAt}{tex}{"resourceId":"label-qAt-art","x":0,"y":0,"style":{"fill":"#F3CB84"}}
+\TLNode{qBt}{tex}{"resourceId":"label-qBt-art","x":0,"y":0,"style":{"fill":"#F3CB84"}}
+\TLNode{fbart}{tex}{"resourceId":"label-fbart-art","x":0,"y":0,"style":{"fill":"#F3CB84"}}
+\loompathlabel[at=.5,offset=-13,anchor=base]{f}{{"path":"ab"}}
+\loompathlabel[at=.5,offset=14,anchor=center]{qA}{{"path":"ac"}}
+\loompathlabel[at=.5,offset=-14,anchor=center]{qB}{{"path":"bd"}}
+\loompathlabel[at=.5,offset=20,anchor=center]{fbar}{{"path":"cd"}}
+\loompathlabel[at=.5,offset=-13,anchor=base]{ft}{{"path":"ef"}}
+\loompathlabel[at=.5,offset=22,anchor=center]{qAt}{{"path":"eg"}}
+\loompathlabel[at=.5,offset=-22,anchor=center]{qBt}{{"path":"fh"}}
+\loompathlabel[at=.5,offset=24,anchor=center]{fbart}{{"path":"gh"}}
+
+\loomnode[caption,text=mint] (left-caption) at (237,413) {LOGICAL WIDTH + HEIGHT + DEPTH};
+\loomnode[caption,text=gold] (right-caption) at (665,413) {LONGER CONTENT / SHARED ROW BASELINES};
+\loomnode[small] (explanation) at (480,480) {The gap breathes. Boxes, connectors, labels and fit frames update together.};
+\loomnode[caption] (footer) at (480,516) {TEXLOOM / REAL TEX METRICS / ONE LAYOUT GRAPH FOR SVG, CANVAS AND VIDEO};
+\end{loomscene}
+\end{document}

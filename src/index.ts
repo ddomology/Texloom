@@ -39,3 +39,5 @@ export {arrowOperatorDefinitions,executeArrowOperation} from './operations/arrow
 export * from './geometry/path-frame.js';
 export * from './geometry/decorations.js';
 export {decorationOperatorDefinitions,executeDecorationOperation} from './operations/decorations.js';
+export * from './geometry/boxes.js';
+export {layoutOperatorDefinitions,executeLayoutOperation} from './operations/layout.js';

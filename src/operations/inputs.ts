@@ -10,6 +10,7 @@ import {nodePosition,nodePositionReads,spaceTransform,spaceTransformReads} from 
 import {validateAnchorInput,anchorInputReads,resolveAnchorInput,type AnchorEvaluation} from './anchors.js';
 import type {PathGeometry} from '../path-geometry.js';
 import {seedCurveProvenance,transformCurveInput,type CurveProvenance} from '../geometry/curves.js';
+import {measureNodeBox,boxInputReads,resolveBoxesInput} from './boxes.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -111,6 +112,22 @@ export function validateDynamicInput(raw:unknown,bundle:Bundle,path:string,span?
       else if(valid&&itemType&&!sameInputSpace(raw.space,itemType.space))fail('OPERATION_SPACE_MISMATCH','Point list items must share its declared space.',at);
     });
     if(valid)type={type:'points2d',space:raw.space};
+  }else if(raw.kind==='boxes'){
+    keys(['kind','space','nodes']);
+    const valid=space(raw.space,path+'.space');
+    if(!Array.isArray(raw.nodes)||raw.nodes.length>4096)fail('OPERATION_BOXES_INPUT','Expected at most 4096 node IDs or null slots.',path+'.nodes');
+    else {
+      const seen=new Set<string>();
+      raw.nodes.forEach((id:unknown,index:number)=>{
+        const at=`${path}.nodes[${index}]`;
+        if(id===null)return;
+        if(!name(id)){fail('OPERATION_BOXES_NODE','Expected a nonempty node ID or null.',at);return;}
+        if(seen.has(id)){fail('OPERATION_BOXES_DUPLICATE','A measured node may occupy only one box slot.',at);return;}
+        seen.add(id);
+        try {measureNodeBox(nodes.get(id),bundle.resources);}catch(error) {diagnostics.push(...located(error,at,span));}
+      });
+    }
+    if(valid)type={type:'boxes2d',space:raw.space};
   }else if(raw.kind==='expression'||raw.kind==='pointExpression'){
     const point=raw.kind==='pointExpression';
     keys(point?['kind','expression','space','sourceSpan']:['kind','expression','unit','sourceSpan']);
@@ -162,6 +179,7 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
       ...spaceTransformReads({kind:'local',node:input.node},nodes),...spaceTransformReads(input.space,nodes));
     else if(input.kind==='spaceTransform')reads.push(...spaceTransformReads(input.from,nodes),...spaceTransformReads(input.to,nodes));
     else if(input.kind==='property')reads.push({node:input.node,property:input.property});
+    else if(input.kind==='boxes')reads.push(...boxInputReads(input,nodes));
     else if(input.kind==='anchor'||input.kind==='textPlacement'||input.kind==='textAnchor')reads.push(...anchorInputReads(input,nodes,outputSpace));
     else if(input.kind==='expression'||input.kind==='pointExpression')compiled.set(input,compileInput(input,bundle));
   }
@@ -182,6 +200,7 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
         }
         if(input.kind==='spaceTransform')return {type:'transform2d',from:structuredClone(input.from),to:structuredClone(input.to),value:spaceTransform(input.from,input.to,frameNodes)};
         if(input.kind==='anchor'||input.kind==='textPlacement'||input.kind==='textAnchor')return resolveAnchorInput(input,frameNodes,bundle.resources,resolve,at,anchors);
+        if(input.kind==='boxes')return resolveBoxesInput(input,frameNodes,bundle.resources);
         if(input.kind==='points')return {type:'points2d',space:structuredClone(input.space),value:input.items.map((item,index)=>{
           const value=resolve(item,`${at}.items[${index}]`);
           if(value.type!=='vec2'||value.role!=='point')throw new Error('Point list item did not resolve to a point.');return [...value.value];

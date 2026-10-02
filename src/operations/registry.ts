@@ -8,6 +8,7 @@ import {connectorOperatorDefinitions} from './connectors.js';
 import {pathLabelOperatorDefinitions} from './path-labels.js';
 import {arrowOperatorDefinitions} from './arrows.js';
 import {decorationOperatorDefinitions} from './decorations.js';
+import {layoutOperatorDefinitions} from './layout.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -63,9 +64,9 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
           keys(input, ['type', 'role', 'space'], location);
           if (input.role !== 'point' && input.role !== 'vector') fail('SOCKET_ROLE', 'Expected point or vector role.', `${location}.role`);
           space('space'); break;
-        case 'points2d': case 'shape2d': case 'path2d': case 'intersections2d': keys(input, ['type', 'space'], location); space('space'); break;
+        case 'points2d': case 'boxes2d': case 'shape2d': case 'path2d': case 'intersections2d': keys(input, ['type', 'space'], location); space('space'); break;
         case 'transform2d': keys(input, ['type', 'from', 'to'], location); space('from'); space('to'); break;
-        default: fail('SOCKET_TYPE', 'Expected scalar, vec2, points2d, shape2d, path2d, intersections2d or transform2d socket type.', `${location}.type`);
+        default: fail('SOCKET_TYPE', 'Expected scalar, vec2, points2d, boxes2d, shape2d, path2d, intersections2d or transform2d socket type.', `${location}.type`);
       }
     };
     if (!object(raw.inputs)) fail('OPERATOR_INPUTS', 'Expected an input socket dictionary.', `${path}.inputs`);
@@ -112,6 +113,7 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
   ...pathLabelOperatorDefinitions,
   ...arrowOperatorDefinitions,
   ...decorationOperatorDefinitions,
+  ...layoutOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

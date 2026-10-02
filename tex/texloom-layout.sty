@@ -1,0 +1,23 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-layout}[2026/10/03 Texloom measured box layout capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLLserial
+\TLLserial=0
+\def\TLLstart#1{%
+  \ifnum\TLLserial=0
+    \immediate\write\TLrecords{\string{"type":"anchor-profile","version":1\string}}%
+  \fi
+  \global\advance\TLLserial by 1
+  \edef\TLEbase{\jobname.tl-layout-\the\TLLserial}%
+  \immediate\write\TLrecords{\string{"type":"layout-file","kind":"#1","file":"\TLEbase"\string}}}
+\NewDocumentCommand\loomlayout{O{} m +v}{%
+  \TLLstart{layout}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\NewDocumentCommand\loomfit{O{} m +v}{%
+  \TLLstart{fit}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

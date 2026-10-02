@@ -11,6 +11,7 @@ import {isConnectorOperator,executeConnectorOperation} from '../connectors.js';
 import {isPathLabelOperator,executePathLabelOperation} from '../path-labels.js';
 import {isArrowOperator,executeArrowOperation} from '../arrows.js';
 import {isDecorationOperator,executeDecorationOperation} from '../decorations.js';
+import {isLayoutOperator,executeLayoutOperation} from '../layout.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -166,6 +167,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 export function requireAuthoredImplementation(name: string, version: number): void {
   if(isArrowOperator(name,version))return;
   if(isDecorationOperator(name,version))return;
+  if(isLayoutOperator(name,version))return;
   if(isConnectorOperator(name,version)||isPathLabelOperator(name,version))return;
   if(isIntersectionOperator(name,version))return;
   if(isCurveOperator(name,version))return;
@@ -180,6 +182,8 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation,intersections?:IntersectionEvaluation): Record<string, LiteralValue> {
   const arrows=executeArrowOperation(operation,inputs);
   const decorations=executeDecorationOperation(operation,inputs);
+  const layout=executeLayoutOperation(operation,inputs);
+  if(layout)return layout;
   if(decorations)return decorations;
   if(arrows)return arrows;
   const connector=executeConnectorOperation(operation,inputs);
