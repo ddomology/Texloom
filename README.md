@@ -117,6 +117,31 @@ The standalone player provides parameter controls. Core sampling accepts
 between calls. See [expressions and parameters](docs/expressions.md) for syntax,
 unit conventions, browser API behavior and limits.
 
+### Fields on curve domains (PR 05)
+
+Fields evaluate expressions across stable path-control or named curve-sample
+elements. They can capture a position attribute, change the domain's working
+positions, and drive existing point nodes' positions, radii, colors, opacity
+and visibility. Every sample starts fresh; a capture preserves values across
+later operations within that sample.
+
+```tex
+\usepackage{texloom-fields}
+\loomdomain{samples}{curve}{curve-sample}{[{"id":"mid","parameter":0.5}]}
+\loomfield{rest}{samples}{capture}{position}
+\loomfield{move}{samples}{setPosition}{position + vec2(0bp,20bp)}
+\loomfieldbind{samples}{move}{position}{[{"element":"mid","target":"P"}]}
+```
+
+`curve` must be an editable path node and `P` an existing point node.
+`setPosition` updates the sampled dataset; it leaves the source curve geometry
+unchanged. The [field guide](docs/fields.md) documents domain identity, current
+versus original positions, typed attributes, target-space conversion and ramps.
+
+```sh
+python tools/build.py examples/curve-fields.tex --out build/curve-fields --video
+```
+
 ## Architecture
 
 ```text

@@ -155,6 +155,10 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     target:binding.target, slots:bindingProperties(binding,nodes).map(access => access.property),
     path:`$.expressions.bindings[${i}]`, ...(binding.sourceSpan ? {span:binding.sourceSpan} : {}),
   }));
+  if (!validatedContext) bundle.fields?.bindings.forEach((binding,i) => binding.targets.forEach(target => writers.push({
+    target:target.target, slots:bindingProperties({target:target.target,property:binding.property},nodes).map(access => access.property),
+    path:`$.fields.bindings[${i}]`, ...(binding.sourceSpan ? {span:binding.sourceSpan} : {}),
+  })));
   graph.bindings.forEach((raw: unknown, i: number) => {
     const path = `$.operationGraph.bindings[${i}]`;
     if (!object(raw)) {error('OPERATION_BINDING', 'Expected an output binding.', path); return;}

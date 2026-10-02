@@ -43,7 +43,7 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
   const byId = new Map(nodes.map(n => [n.id, n]));
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
-  plan.execute(byId, bundle.resources, camera, clamped, parameters);
+  const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters);
   for(const node of nodes) if(node.kind==='path'&&node.geometry) {
     // Full editable geometry survives reveal: dependent points keep sampling the
     // mathematical curve, while both renderers receive the same visible prefix.
@@ -52,7 +52,7 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   }
   for (const node of nodes) if (node.kind === 'field') (node as FieldNode).values = sampleField(bundle.resources[node.resourceId] as ScalarFieldResource, clamped);
   // Resources are immutable shared data; frame-local geometry and camera are independent.
-  return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources };
+  return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources,...(fields ? {fields} : {}) };
 }
 
 /** Convenience evaluation at an absolute time. Treat returned resources as immutable. */

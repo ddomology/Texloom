@@ -1,0 +1,78 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-fields}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={One curve, many values}]
+\loomnode[heading] (heading) at (480,52) {One curve, many values};
+\loomnode[small] (intro) at (480,88) {Evaluate a field across a curve. Capture a value. Keep its identity.};
+\loomnode[formula] (formula) at (480,133)
+  {$\widetilde p_i(t)=p_i+\bigl(0,-A\sin(2\pi s_i+\omega t+\phi)\bigr)$};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,166)--(905,166) (55,467)--(905,467);
+  \draw[rule!55,line width=.5bp] (65,220)--(895,220) (65,315)--(895,315) (65,410)--(895,410);
+  \draw[muted,line width=1bp] (94,442) circle[radius=3bp];
+  \node[text=muted,font=\sffamily\small,anchor=west] at (106,442) {Captured original};
+  \fill[mint] (349,442) circle[radius=4bp];
+  \node[text=muted,font=\sffamily\small,anchor=west] at (362,442) {Current position};
+  \fill[coral] (627,442) circle[radius=6bp];
+  \node[text=muted,font=\sffamily\small,anchor=west] at (642,442) {Size: index / Color: height};
+};
+% This PGF path is real editable geometry. PR 05 moves the sampled dataset and
+% its marker consumers; it intentionally leaves the source curve unchanged.
+\loomgeometry[draw=rule,line width=1.2bp,line cap=round] (curve)
+  {(90,335) .. controls (205,200) and (365,425) .. (500,310)
+             .. controls (615,215) and (720,415) .. (865,290)};
+\loomparameter[unit=bp,min=0,max=65]{amplitude}{35}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\TLNode{ghost-s00}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s01}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s02}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s03}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s04}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s05}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s06}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s07}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s08}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s09}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s10}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s11}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{ghost-s12}{point}{"x":0,"y":0,"r":3.2,"style":{"fill":"none","stroke":"#91ACB5","strokeWidth":1.1,"opacity":0.65}}
+\TLNode{marker-s00}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s01}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s02}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s03}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s04}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s05}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s06}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s07}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s08}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s09}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s10}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s11}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\TLNode{marker-s12}{point}{"x":0,"y":0,"r":4,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":0.8}}
+\loomdomain{samples}{curve}{curve-sample}{[{"id":"s00","parameter":0},{"id":"s01","parameter":0.08333333333333333},{"id":"s02","parameter":0.16666666666666666},{"id":"s03","parameter":0.25},{"id":"s04","parameter":0.3333333333333333},{"id":"s05","parameter":0.4166666666666667},{"id":"s06","parameter":0.5},{"id":"s07","parameter":0.5833333333333334},{"id":"s08","parameter":0.6666666666666666},{"id":"s09","parameter":0.75},{"id":"s10","parameter":0.8333333333333334},{"id":"s11","parameter":0.9166666666666666},{"id":"s12","parameter":1}]}
+\loomfield[position=original]{rest}{samples}{capture}{position}
+\loomfield{shift}{samples}{setPosition}{position + vec2(0bp,-amplitude*sin(6.283185307179586rad*parameter + 1rad*time/1s + phase))}
+\loomfield{moved}{samples}{evaluate}{position}
+\loomfield{radius}{samples}{evaluate}{3bp + 4bp*index/(count-1)}
+\loomfield{height}{samples}{evaluate}{(dot(position,vec2(0,1)) - 180bp)/240bp}
+\loomfieldbind{samples}{rest}{position}{[{"element":"s00","target":"ghost-s00"},{"element":"s01","target":"ghost-s01"},{"element":"s02","target":"ghost-s02"},{"element":"s03","target":"ghost-s03"},{"element":"s04","target":"ghost-s04"},{"element":"s05","target":"ghost-s05"},{"element":"s06","target":"ghost-s06"},{"element":"s07","target":"ghost-s07"},{"element":"s08","target":"ghost-s08"},{"element":"s09","target":"ghost-s09"},{"element":"s10","target":"ghost-s10"},{"element":"s11","target":"ghost-s11"},{"element":"s12","target":"ghost-s12"}]}
+\loomfieldbind{samples}{moved}{position}{[{"element":"s00","target":"marker-s00"},{"element":"s01","target":"marker-s01"},{"element":"s02","target":"marker-s02"},{"element":"s03","target":"marker-s03"},{"element":"s04","target":"marker-s04"},{"element":"s05","target":"marker-s05"},{"element":"s06","target":"marker-s06"},{"element":"s07","target":"marker-s07"},{"element":"s08","target":"marker-s08"},{"element":"s09","target":"marker-s09"},{"element":"s10","target":"marker-s10"},{"element":"s11","target":"marker-s11"},{"element":"s12","target":"marker-s12"}]}
+\loomfieldbind{samples}{radius}{r}{[{"element":"s00","target":"marker-s00"},{"element":"s01","target":"marker-s01"},{"element":"s02","target":"marker-s02"},{"element":"s03","target":"marker-s03"},{"element":"s04","target":"marker-s04"},{"element":"s05","target":"marker-s05"},{"element":"s06","target":"marker-s06"},{"element":"s07","target":"marker-s07"},{"element":"s08","target":"marker-s08"},{"element":"s09","target":"marker-s09"},{"element":"s10","target":"marker-s10"},{"element":"s11","target":"marker-s11"},{"element":"s12","target":"marker-s12"}]}
+\loomfieldbind[from=71DFC2,to=EE8D82]{samples}{height}{style.fill}{[{"element":"s00","target":"marker-s00"},{"element":"s01","target":"marker-s01"},{"element":"s02","target":"marker-s02"},{"element":"s03","target":"marker-s03"},{"element":"s04","target":"marker-s04"},{"element":"s05","target":"marker-s05"},{"element":"s06","target":"marker-s06"},{"element":"s07","target":"marker-s07"},{"element":"s08","target":"marker-s08"},{"element":"s09","target":"marker-s09"},{"element":"s10","target":"marker-s10"},{"element":"s11","target":"marker-s11"},{"element":"s12","target":"marker-s12"}]}
+\loomnode[small] (footer) at (480,505) {TEXLOOM / STABLE ELEMENTS / CAPTURED ATTRIBUTES / SHARED FIELD EVALUATION};
+\end{loomscene}
+\end{document}

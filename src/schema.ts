@@ -5,6 +5,8 @@ import {validateOperationGraphInContext} from './operations/validate.js';
 import {validateSourceSpan} from './operations/values.js';
 import type {ExpressionProgram} from './fields/ast.js';
 import {validateExpressionProgramInContext} from './fields/program.js';
+import type {FieldProgram, FieldEvaluation} from './fields/types.js';
+import {validateFieldProgramInContext} from './fields/program-fields.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -50,8 +52,9 @@ export interface Bundle {
   /** Typed declarations validated at preparation and executed by the shared plan. */
   operationGraph?: OperationGraph;
   expressions?: ExpressionProgram;
+  fields?: FieldProgram;
 }
-export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource> }
+export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation }
 
 type Obj = Record<string, any>;
 const object = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -438,6 +441,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
     if (!errors.some(d => d.severity === 'error')) errors.push(...validateOperationGraphInContext(b.operationGraph, b as Bundle));
   }
   if (b.expressions !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateExpressionProgramInContext(b.expressions,b as Bundle));
+  if (b.fields !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateFieldProgramInContext(b.fields,b as Bundle));
   return errors;
 }
 
