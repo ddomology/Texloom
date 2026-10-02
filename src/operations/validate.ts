@@ -180,7 +180,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     if (!object(raw)) {error('OPERATION_BINDING', 'Expected an output binding.', path); return;}
     const span = source(raw, path);
     keys(raw, ['target','property','value','sourceSpan'], path, span);
-    const actual = output(raw.value, path + '.value', span);
+    let actual = output(raw.value, path + '.value', span);
     const target = nodes.get(raw.target), kind = raw.target === '$camera' ? 'camera' : target?.kind;
     if (!named(raw.target) || !kind) {error('OPERATION_BINDING_TARGET', typeof raw.target==='string'?`Missing target ${raw.target}.`:'Target must be a node ID string or $camera.', path + '.target', span); return;}
     if (!named(raw.property)) {error('OPERATION_BINDING_PROPERTY', 'Expected a property name.', path + '.property', span); return;}
@@ -198,6 +198,11 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
       expected = {type:'path2d',space:local};
     } else if (raw.property === 'transform' && kind !== 'camera') {
       expected = {type:'transform2d',from:local,to:parent};
+      // The sink's own parent(node) chart is exactly its immediate parent.
+      // Accept that explicit alias here without weakening graph socket-space
+      // identity or accepting another node's coincident numeric transform.
+      if(actual?.type==='transform2d'&&actual.to?.kind==='parent'&&actual.to.node===raw.target)
+        actual={...actual,to:parent};
     } else {
       const spec = propertySpec(kind, raw.property);
       if (spec) {

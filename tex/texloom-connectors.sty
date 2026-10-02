@@ -1,0 +1,22 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-connectors}[2026/10/03 Texloom explicit connector and path-label capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLCOserial
+\TLCOserial=0
+\def\TLCOstart#1{%
+  \global\advance\TLCOserial by 1
+  \edef\TLEbase{\jobname.tl-connector-\the\TLCOserial}%
+  \immediate\write\TLrecords{\string{"type":"connector-file","kind":"#1","file":"\TLEbase"\string}}}
+% A route replaces an existing editable path's geometry; its style stays authored.
+\NewDocumentCommand\loomconnector{O{} m +v}{%
+  \TLCOstart{connector}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+% Labels own an existing raw TeX node's whole pose in its parent space.
+\NewDocumentCommand\loompathlabel{O{} m +v}{%
+  \TLCOstart{label}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

@@ -85,8 +85,8 @@ export function validateDynamicInput(raw:unknown,bundle:Bundle,path:string,span?
     const from=space(raw.from,path+'.from'),to=space(raw.to,path+'.to');
     if(to)inverse(raw.to);
     if(from&&to)type={type:'transform2d',from:raw.from,to:raw.to};
-  }else if(raw.kind==='anchor'||raw.kind==='textPlacement'){
-    const valid=raw.kind==='textPlacement'||space(raw.space,path+'.space');
+  }else if(raw.kind==='anchor'||raw.kind==='textPlacement'||raw.kind==='textAnchor'){
+    const valid=raw.kind!=='anchor'||space(raw.space,path+'.space');
     if(raw.kind==='anchor'&&valid)inverse(raw.space);
     if(!resolveInput)fail('ANCHOR_CONTEXT','Anchor validation requires its containing graph.');
     else {
@@ -162,7 +162,7 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
       ...spaceTransformReads({kind:'local',node:input.node},nodes),...spaceTransformReads(input.space,nodes));
     else if(input.kind==='spaceTransform')reads.push(...spaceTransformReads(input.from,nodes),...spaceTransformReads(input.to,nodes));
     else if(input.kind==='property')reads.push({node:input.node,property:input.property});
-    else if(input.kind==='anchor'||input.kind==='textPlacement')reads.push(...anchorInputReads(input,nodes,outputSpace));
+    else if(input.kind==='anchor'||input.kind==='textPlacement'||input.kind==='textAnchor')reads.push(...anchorInputReads(input,nodes,outputSpace));
     else if(input.kind==='expression'||input.kind==='pointExpression')compiled.set(input,compileInput(input,bundle));
   }
   return Object.freeze({reads:Object.freeze(reads),resolve(frameNodes,time,parameters,outputs,anchors){
@@ -181,7 +181,7 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
             provenance:structuredClone(transformed.provenance) as CurveProvenance};
         }
         if(input.kind==='spaceTransform')return {type:'transform2d',from:structuredClone(input.from),to:structuredClone(input.to),value:spaceTransform(input.from,input.to,frameNodes)};
-        if(input.kind==='anchor'||input.kind==='textPlacement')return resolveAnchorInput(input,frameNodes,bundle.resources,resolve,at,anchors);
+        if(input.kind==='anchor'||input.kind==='textPlacement'||input.kind==='textAnchor')return resolveAnchorInput(input,frameNodes,bundle.resources,resolve,at,anchors);
         if(input.kind==='points')return {type:'points2d',space:structuredClone(input.space),value:input.items.map((item,index)=>{
           const value=resolve(item,`${at}.items[${index}]`);
           if(value.type!=='vec2'||value.role!=='point')throw new Error('Point list item did not resolve to a point.');return [...value.value];

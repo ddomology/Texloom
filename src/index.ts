@@ -32,3 +32,5 @@ export {curveOperatorDefinitions,executeCurveOperation,type CurveEvaluation} fro
 export * from './geometry/intersections.js';
 export * from './geometry/intersections-cubic.js';
 export {intersectionOperatorDefinitions,executeIntersectionOperation,type IntersectionEvaluation} from './operations/intersections.js';
+export {connectorOperatorDefinitions,executeConnectorOperation} from './operations/connectors.js';
+export {pathLabelOperatorDefinitions,executePathLabelOperation} from './operations/path-labels.js';
