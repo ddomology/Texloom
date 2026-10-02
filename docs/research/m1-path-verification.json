@@ -1,0 +1,84 @@
+{
+  "pgfReference": [
+    {
+      "path": "curve",
+      "time": 0,
+      "changedPixels": 195,
+      "changedFraction": 0.0003761574074074074,
+      "maximumChannelDifference": 44,
+      "meanChannelDifference": 0.0008863811728395062
+    }
+  ],
+  "frameParity": [
+    {
+      "time": -0.0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    {
+      "time": 0.6000000000000001,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    {
+      "time": 1.2000000000000002,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    {
+      "time": 2,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    {
+      "time": 4,
+      "changedPixels": 2,
+      "changedFraction": 3.858024691358025e-06,
+      "maximumChannelDifference": 1,
+      "meanChannelDifference": 1.4467592592592592e-06
+    },
+    {
+      "time": 6,
+      "changedPixels": 2,
+      "changedFraction": 3.858024691358025e-06,
+      "maximumChannelDifference": 1,
+      "meanChannelDifference": 9.645061728395062e-07
+    },
+    {
+      "time": 8,
+      "changedPixels": 2,
+      "changedFraction": 3.858024691358025e-06,
+      "maximumChannelDifference": 1,
+      "meanChannelDifference": 1.4467592592592592e-06
+    },
+    {
+      "time": 10,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    },
+    {
+      "time": 12,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0
+    }
+  ],
+  "browserErrors": [],
+  "deformation": {
+    "controlCoordinatesChange": true,
+    "renderedCurveChanges": true,
+    "reverseSeekStable": true,
+    "topologyStable": true
+  }
+}

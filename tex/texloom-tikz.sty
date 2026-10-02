@@ -70,6 +70,57 @@
  \TLMemit{\string{"type":"tikz-path","line":\the\inputlineno,"id":"#2","resourceId":"#2-art","parent":"\TLMparent","x":\TLMx,"y":\TLMy,"scale":\TLMscale\string}}%
  \TLWriteAsset{#2-art}{tikz-path}{\begin{tikzpicture}[baseline=0pt,x=1bp,y=-1bp]#3\TLMCaptureOrigin\end{tikzpicture}}}
 
+% v0.3 editable geometry. PGF executes the path; the compiler captures its
+% normalized soft path before backend output. Appearance is deliberately a
+% documented key set, separate from unrestricted static \loompath artwork.
+\def\TLMpaintcode#1#2{\edef\TLMrequestedpaint{#2}\def\TLMnone{none}%
+ \ifx\TLMrequestedpaint\TLMnone\def#1{none}%
+ \else\TLMhexcolor{#2}\edef#1{\TLMhex}\fi}
+\pgfkeys{/loom/geometry/.is family,/loom/geometry,
+ at/.code=\TLMposition{#1},draw/.store in=\TLMdraw,fill/.store in=\TLMfill,
+ line width/.store in=\TLMlinewidth,line cap/.store in=\TLMcap,line join/.store in=\TLMjoin,
+ fill opacity/.code=\TLMnumber\TLMfillopacity{#1},draw opacity/.code=\TLMnumber\TLMdrawopacity{#1},
+ opacity/.style={fill opacity=#1,draw opacity=#1},
+ fill rule/.is choice,fill rule/nonzero/.code={\def\TLMrule{nonzero}\def\TLMtikzrule{nonzero rule}},
+ fill rule/evenodd/.code={\def\TLMrule{evenodd}\def\TLMtikzrule{even odd rule}},
+ reveal/.code=\TLMnumber\TLMreveal{#1},
+ mode/.is choice,mode/parameter/.code=\def\TLMmode{parameter},mode/length/.code=\def\TLMmode{length},
+ tolerance/.code=\TLMnumber\TLMtolerance{#1},
+ rotate/.code=\TLMnumber\TLMrotate{#1},scale/.code=\TLMnumber\TLMscale{#1},
+ xshift/.store in=\TLMxshift,yshift/.store in=\TLMyshift}
+\NewDocumentCommand\loomgeometry{O{} r() +m t;}{%
+ \pgfkeys{/loom/geometry,at={(0,0)},draw=black,fill=none,line width=1bp,line cap=butt,line join=miter,
+   opacity=1,fill rule=nonzero,reveal=1,mode=parameter,tolerance=.05,rotate=0,scale=1,xshift=0bp,yshift=0bp,#1}%
+ \TLMpaintcode\TLMstrokehex{\TLMdraw}\TLMpaintcode\TLMfillhex{\TLMfill}%
+ \TLMnumber\TLMlinewidthvalue{\TLMlinewidth}%
+ \TLMemit{\string{"type":"tikz-geometry","line":\the\inputlineno,"id":"#2","resourceId":"#2-art","parent":"\TLMparent","x":\TLMx,"y":\TLMy,"stroke":"\TLMstrokehex","fill":"\TLMfillhex","lineWidthPt":\TLMlinewidthvalue,"lineCap":"\TLMcap","lineJoin":"\TLMjoin","fillRule":"\TLMrule","fillOpacity":\TLMfillopacity,"strokeOpacity":\TLMdrawopacity,"reveal":\TLMreveal,"mode":"\TLMmode","tolerance":\TLMtolerance\string}}%
+ \edef\TLMwritegeometry{\noexpand\TLWriteAsset{#2-art}{tikz-geometry}{%
+   \noexpand\begin{tikzpicture}[baseline=0pt,x=1bp,y=-1bp]%
+   \noexpand\TLMCaptureGeometry{draw={\TLMdraw},fill={\TLMfill},line width=\TLMlinewidth,
+     line cap=\TLMcap,line join=\TLMjoin,miter limit=10,fill opacity=\TLMfillopacity,draw opacity=\TLMdrawopacity,
+     \TLMtikzrule,rotate=\TLMrotate,scale=\TLMscale,xshift=\TLMxshift,yshift=\TLMyshift}{\unexpanded{#3}}%
+   \noexpand\end{tikzpicture}}}%
+ \TLMwritegeometry}
+
+\pgfkeys{/loom/point/.is family,/loom/point,
+ on/.store in=\TLMon,at/.code=\TLMnumber\TLMprogress{#1},radius/.code=\TLMnumber\TLMradius{#1},
+ fill/.store in=\TLMfill,draw/.store in=\TLMdraw,line width/.store in=\TLMlinewidth,
+ mode/.is choice,mode/parameter/.code=\def\TLMmode{parameter},mode/length/.code=\def\TLMmode{length},
+ tolerance/.code=\TLMnumber\TLMtolerance{#1}}
+\NewDocumentCommand\loompoint{O{} r() t;}{%
+ \pgfkeys{/loom/point,on=,at=0,radius=4,fill=black,draw=none,line width=1bp,mode=parameter,tolerance=.05,#1}%
+ \TLMpaintcode\TLMstrokehex{\TLMdraw}\TLMpaintcode\TLMfillhex{\TLMfill}\TLMnumber\TLMlinewidthvalue{\TLMlinewidth}%
+ \TLMemit{\string{"type":"tikz-point","line":\the\inputlineno,"id":"#2","parent":"\TLMparent","path":"\TLMon","progress":\TLMprogress,"radius":\TLMradius,"stroke":"\TLMstrokehex","fill":"\TLMfillhex","lineWidthPt":\TLMlinewidthvalue,"mode":"\TLMmode","tolerance":\TLMtolerance\string}}}
+
+\pgfkeys{/loom/direction/.is family,/loom/direction,
+ on/.store in=\TLMon,point/.store in=\TLMpoint,length/.code=\TLMnumber\TLMlength{#1},
+ normal/.is choice,normal/true/.code=\def\TLMnormal{true},normal/false/.code=\def\TLMnormal{false},normal/.default=true,
+ draw/.store in=\TLMdraw,line width/.store in=\TLMlinewidth}
+\NewDocumentCommand\loomdirection{O{} r() t;}{%
+ \pgfkeys{/loom/direction,on=,point=,length=80,normal=false,draw=black,line width=1bp,#1}%
+ \TLMpaintcode\TLMstrokehex{\TLMdraw}\TLMnumber\TLMlinewidthvalue{\TLMlinewidth}%
+ \TLMemit{\string{"type":"tikz-direction","line":\the\inputlineno,"id":"#2","parent":"\TLMparent","path":"\TLMon","point":"\TLMpoint","length":\TLMlength,"normal":\TLMnormal,"stroke":"\TLMstrokehex","lineWidthPt":\TLMlinewidthvalue\string}}}
+
 \pgfkeys{/loom/animation/.is family,/loom/animation,
  duration/.code=\TLMnumber\TLMaduration{#1},delay/.code=\TLMnumber\TLMadelay{#1},
  easing/.is choice,easing/smooth/.code=\def\TLMeasing{smooth},
@@ -79,8 +130,16 @@
  move to/.code={\TLMposition{#1}\TLMtween{transform.translate}{[\TLMx,\TLMy]}},
  rotate to/.code={\TLMnumber\TLMv{#1}\TLMtween{transform.rotate}{\TLMv}},
  scale to/.code={\TLMnumber\TLMv{#1}\TLMtween{transform.scale}{[\TLMv,\TLMv]}},
- opacity to/.code={\TLMnumber\TLMv{#1}\TLMtween{style.opacity}{\TLMv}}}
+ opacity to/.code={\TLMnumber\TLMv{#1}\TLMtween{style.opacity}{\TLMv}},
+ progress to/.code={\TLMnumber\TLMv{#1}\TLMtween{progress}{\TLMv}},
+ reveal to/.code={\TLMnumber\TLMv{#1}\TLMtween{reveal}{\TLMv}}}
 \NewDocumentCommand\loomanimate{O{} r() +m t;}{%
  \def\TLMtarget{#2}\pgfkeys{/loom/animation,duration=12,delay=0,easing=smooth,#1}%
  \pgfkeys{/loom/tween,#3}}
+\NewDocumentCommand\loomcontrol{O{} r() m m m m t;}{%
+ \def\TLMtarget{#2}\pgfkeys{/loom/animation,duration=12,delay=0,easing=smooth,#1}%
+ \TLMposition{#6}%
+ \if\relax\detokenize{#4}\relax
+   \TLMtween{geometry.#3.#5}{[\TLMx,\TLMy]}%
+ \else\TLMtween{geometry.#3.#4.#5}{[\TLMx,\TLMy]}\fi}
 \endinput

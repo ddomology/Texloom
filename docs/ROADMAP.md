@@ -12,9 +12,10 @@ TikZ·Manim·Blender의 넓은 표현 범위를 목표로 한다. 기능별 지�
 `native live / compiled static / baked / explicit fallback / unsupported`로
 기록한다. 도구 전체와의 호환을 하나의 yes/no로 표시하지 않는다.
 
-현재 v0.2는 실제 TeX 조판, PGF 앵커, 2D 관계·트랙, SVG·웹·MP4를 지원한다.
-이번 작업은 그 위에 **M0 공통 실행·소비 기반**을 구현했다. 아래에서 M0만
-완료 상태이며 나머지는 후속 구현과 검증이 필요한 계획이다.
+현재 v0.3은 실제 TeX 조판, PGF 앵커와 soft-path 캡처, 편집 가능한 2D 곡선,
+관계·트랙, SVG·Canvas·웹·MP4를 지원한다. **M0 및 M1.1, M1.2의
+reveal/point/tangent/normal**을 구현했다. 교차점과 실제 소비자 강의 통합은
+다음 단계이며, M1 전체가 완료된 상태는 아니다.
 
 ## 2. 조사로 결정한 구조
 
@@ -80,7 +81,7 @@ IR에는 실행할 JS/Python 문자열을 넣지 않는다. 향후 플러그인�
 | 단계 | 핵심 구현 | 완료를 판정할 데모와 검증 | 의존성 / 상태 |
 | --- | --- | --- | --- |
 | **M0 공통 실행 기반** | prepared runtime, 소비 기능 프로필, host clip 시간, native Canvas, 보드 배치 | 같은 frame을 SVG와 Canvas가 소비; clip/opacity/currentColor/TeX 기준점; 역탐색 | **이번 작업 완료**, 기존 IR 0.1/0.2 유지 |
-| **M1 살아 있는 2D 기하 + 실제 소비자 연결** | 타입화된 다중 경로, PGF named soft-path capture, split/derivative/bounds/length, reveal, 점·접선·법선; 소비자 clip hook | 변형되는 곡선·접선·교차점이 웹과 기존 Chalkspace 강의에서 동일하게 재생·export | M0. **다음 구현 단위** |
+| **M1 살아 있는 2D 기하 + 실제 소비자 연결** | 타입화된 다중 경로, PGF named soft-path capture, split/derivative/bounds/length, reveal, 점·접선·법선; 소비자 clip hook | 변형되는 곡선·접선·교차점이 웹과 기존 Chalkspace 강의에서 동일하게 재생·export | **기하·reveal·점·방향 구현**. 교차점·소비자 hook 진행 예정 |
 | **M2 애니메이션 구성·수식 대응** | sequence/parallel/stagger, easing, 시간 warp, stable formula parts, 동일 topology morph | 식의 특정 항만 옮기는 유도 과정; 중복 기호 대응; 문장과 강의 cue 정렬 | M1 |
 | **M3 수학 객체 라이브러리** | 좌표축·plot·불연속 구간, graph/tree/layout, braces/decorations, diagram constraints, live expression subset | 해석학 plot, 대수학 diagram, 집합·위상 예제; 파라미터 변화 | M1/M2, 각 기능마다 고정 fixture |
 | **M4 3D 표현** | indexed mesh, instances, normals, cameras, unlit 우선·이후 PBR, TeX overlay; GPU adapter | torus/sphere와 moving labels, 궤도 카메라, 고정 시각 프레임 비교 | resource loader와 명시적 2D/3D 공간 |
@@ -117,7 +118,7 @@ Chalkspace 현행 `render`는 closure 내부에서 호출된다. 외부에서 �
 Lemniro 본문 sanitizer는 script/iframe을 거부하므로 React 컴포넌트 경계가 필요하다.
 구체적 파일·줄 번호는 [소비자 감사](research/consumer-audit.md)에 있다.
 
-이번 M0 데모는 **실제 Chalkspace board-surface 모듈 + native Canvas 경로**를
+M0 및 v0.3 데모는 **실제 Chalkspace board-surface 모듈 + native Canvas 경로**를
 사용한다. 기존 강의 scheduler, chalk grain, stroke inference, eraser, 음성,
 영상 캐시와의 전체 연결은 M1 이후의 별도 gate로 남겨뒀다.
 
@@ -156,9 +157,18 @@ Lemniro 본문 sanitizer는 script/iframe을 거부하므로 React 컴포넌트 
 - [x] `prepareScene`, 기능 프로필·진단, 절대시간 clip binding.
 - [x] native Canvas2D backend와 board-world 배치 adapter.
 - [x] 실제 칠판 표면을 사용하는 동시 재생 데모와 브라우저 conformance.
-- [ ] **다음: M1.1 PathGeometry 커널 및 named PGF soft-path 캡처.**
-- [ ] M1.2 reveal/point/tangent/normal, 이어서 교차점의 명시적 branch 정책.
+- [x] M1.1 PathGeometry 커널 및 named PGF soft-path 캡처.
+- [x] M1.2 reveal/point/tangent/normal 및 제어점 변형 트랙.
+- [ ] **다음: M1.2 교차점의 명시적 branch/missing 정책과 수치 검증.**
 - [ ] M1.3 실제 소비자 timeline/cache/component 통합과 영상 gate.
+
+v0.3 구현은 `examples/living-paths.tex`, [문법](../tex/README-v03.md),
+[IR 계약](ir-contract.md)에 정리했다. 라이브러리가 계산하는 곡선과 실제 PGF
+출력 비교, 부분 reveal·제어점 변형 중 SVG/Canvas 비교, 역탐색을 검증한다.
+PGF에서 이미 근사한 원/호는 해당 cubic으로 보존한다. 일반 TikZ 패키지의
+모든 제약이나 동적 의미를 자동으로 복원하는 기능은 아니다.
+
+완료 범위와 테스트 수치는 [v0.3 구현 기록](research/m1-implementation.md)을 참고한다.
 
 빌드·재현: [공통 런타임 계약](runtime-contract.md). 이 문서의 체크박스와 각
 gate의 검증 결과를 기능 구현과 같은 커밋에서 갱신한다.

@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  formula/.style={text=ink,font=\fontsize{19}{24}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={A path that stays alive}]
+\loomnode[heading] (heading) at (480,52) {A path that stays alive};
+\loomnode[small] (intro) at (480,88) {Native PGF geometry. Moving controls. Shared web and chalk frames.};
+\loomnode[formula] (formula) at (480,133) {$\gamma(s),\qquad T(s)=\dfrac{\gamma'(s)}{\|\gamma'(s)\|},\qquad N(s)=J\,T(s)$};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,161)--(905,161) (55,468)--(905,468);};
+
+\begin{loomgroup}[at={(480,310)}]{geometry-stage}
+  % The actual TikZ path executes once through PGF. Its cubic remains editable.
+  \loomgeometry[draw=mint,line width=3bp,line cap=round,reveal=0,mode=length]
+    (curve) {(-285,65) .. controls (-175,-145) and (150,145) .. (285,-65)};
+  \begin{loomgroup}[opacity=0]{markers}
+    % Direction lines are placed before the point in paint order.
+    \loomdirection[on=curve,point=P,length=112,draw=gold,line width=2bp] (T);
+    \loomdirection[on=curve,point=P,length=72,normal=true,draw=coral,line width=2bp] (N);
+    \loompoint[on=curve,at=.03,radius=5.5,fill=ink,draw=mint,line width=2bp,mode=length] (P);
+  \end{loomgroup}
+\end{loomgroup}
+
+\loomnode[small,text=mint] (legend-curve) at (284,432) {PGF cubic};
+\loomnode[small,text=gold] (legend-tangent) at (480,432) {Tangent};
+\loomnode[small,text=coral] (legend-normal) at (675,432) {Normal};
+\loomnode[small] (footer) at (480,505) {TEXLOOM 0.3 / TEX TO EDITABLE GEOMETRY TO SHARED FRAMES};
+
+\loomanimate[duration=2,easing=linear] (curve) {reveal to=1};
+\loomanimate[delay=1.7,duration=.3] (markers) {opacity to=1};
+\loomanimate[delay=2,duration=8,easing=linear] (P) {progress to=.97};
+% Source IDs are capture-order stable: first contour, first cubic, its controls.
+\loomcontrol[delay=2,duration=4] (curve) {contour-0}{segment-0}{c1}{(-120,-35)};
+\loomcontrol[delay=6,duration=4] (curve) {contour-0}{segment-0}{c1}{(-175,-145)};
+\loomcontrol[delay=2,duration=4] (curve) {contour-0}{segment-0}{c2}{(100,-65)};
+\loomcontrol[delay=6,duration=4] (curve) {contour-0}{segment-0}{c2}{(150,145)};
+\loomanimate[delay=2,duration=4] (geometry-stage) {rotate to=-5,scale to=1.04,move to={(490,315)}};
+\loomanimate[delay=6,duration=4] (geometry-stage) {rotate to=0,scale to=1,move to={(480,310)}};
+\end{loomscene}
+\end{document}

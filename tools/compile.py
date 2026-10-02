@@ -18,7 +18,7 @@ import time
 import tempfile
 
 from svg_import import import_svg, ImportDiagnostic
-from tikz_capture import CAPTURE_PREAMBLE, read_capture, lower_records
+from tikz_capture import CAPTURE_PREAMBLE, read_capture, read_soft_path, lower_records
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -85,9 +85,13 @@ def compile_resource(resource,execution,out,setup,commands):
     vector['provenance'].update({'engine':'latex-dvi','dvi':str((folder/'asset.dvi').relative_to(out)).replace('\\','/'),
         'dviSha256':digest(folder/'asset.dvi'),'texSha256':digest(folder/'asset.tex'),'svgTransportSha256':digest(folder/'asset.svg'),
         'logicalMetricsTeXPt':{k:float(v.removesuffix('pt')) for k,v in zip(('width','height','depth'),values)}})
-    if resource['kind'] in ('tikz-node','tikz-path'):
+    if resource['kind'] in ('tikz-node','tikz-path','tikz-geometry'):
         vector['provenance']['pgfCapture']=read_capture(folder/'asset.anchors')
         vector.setdefault('capabilities',[]).append('pgf-measured-anchors' if resource['kind']=='tikz-node' else 'pgf-native-path')
+    if resource['kind']=='tikz-geometry':
+        vector['provenance']['pgfSoftPath']=read_soft_path(folder/'asset.path')
+        vector['provenance']['pgfSoftPathSha256']=digest(folder/'asset.path')
+        vector.setdefault('capabilities',[]).append('pgf-editable-soft-path')
     return vector
 
 def scalar_resource(path):
@@ -127,6 +131,9 @@ def compile_scene(source,out):
     scenes=[r for r in records if r['type']=='scene']
     if len(scenes)!=1: raise CompileDiagnostic('Exactly one TLScene declaration is required')
     scene=scenes[0]
+    for record in records:
+        if record['type']=='tikz-geometry' and record['stroke']=='none' and record['fill']=='none':
+            raise CompileDiagnostic('Live geometry currently requires draw or fill paint for its PGF reference artifact')
     bundle={'version':scene.get('version','0.1'),'title':scene['title'],'duration':scene['duration'],'viewport':{'width':scene['width'],'height':scene['height']},
             'units':'bp','nodes':[],'tracks':[],'relations':[],'resources':{},'camera':{'x':0,'y':0,'zoom':1},'diagnostics':[]}
     setup_path=execution/'scene.tl-setup.tex'; setup=decode_detokenized(setup_path.read_text(encoding='utf8')) if setup_path.exists() else ''
@@ -152,7 +159,7 @@ def compile_scene(source,out):
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
         elif kind!='scene' and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
-    if bundle['version']=='0.2': lower_records(records,bundle,source.name)
+    if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
     targets=[(t['target'],t['property']) for t in bundle['tracks']]
@@ -161,7 +168,7 @@ def compile_scene(source,out):
         'frontend':'executed LaTeX declarations','typesetting':'TeX boxes + DVI + dvisvgm transport + strict vector import',
         'toolchain':{'latex':version('latex'),'dvisvgm':version('dvisvgm')},'sourceDvi':str((execution/'scene.dvi').relative_to(out)).replace('\\','/'),
         'sourceDviSha256':digest(execution/'scene.dvi'),'units':{'texPtPerInch':72.27,'sceneBpPerInch':72},
-        'compatibility':('Executed named TikZ wrappers; real PGF anchors and artwork; explicit runtime connections. Arbitrary TikZ source does not gain inferred animation semantics.' if bundle['version']=='0.2' else 'Explicit v0.1 scene DSL and supported vector transport; arbitrary TeX animation semantics are not inferred.')}
+        'compatibility':('Executed named TikZ wrappers; real PGF anchors, artwork and declared editable soft paths; explicit runtime relations. Arbitrary TikZ source does not gain inferred animation semantics.' if bundle['version'] in ('0.2','0.3') else 'Explicit v0.1 scene DSL and supported vector transport; arbitrary TeX animation semantics are not inferred.')}
     # One shared validator defines the interchange contract for compiler and player.
     # Validate before publishing; malformed tracks or resources cannot be reported
     # as a successful scene merely because their TeX happened to compile.

@@ -1,0 +1,162 @@
+{
+  "browserErrors": [],
+  "parity": [
+    {
+      "scene": "opacity-clip",
+      "width": 160,
+      "height": 100,
+      "changedPixels": 0,
+      "maximumChannelDifference": 0,
+      "meanChannelDifference": 0,
+      "changedFraction": 0,
+      "reverseSeekSame": true,
+      "centerNative": [
+        4,
+        13,
+        147,
+        255
+      ],
+      "centerSvg": [
+        4,
+        13,
+        147,
+        255
+      ]
+    },
+    {
+      "scene": "demo",
+      "width": 960,
+      "height": 540,
+      "changedPixels": 2871,
+      "maximumChannelDifference": 7,
+      "meanChannelDifference": 0.0027314814814814814,
+      "changedFraction": 0.0055381944444444445,
+      "reverseSeekSame": true,
+      "centerNative": [
+        9,
+        28,
+        39,
+        255
+      ],
+      "centerSvg": [
+        9,
+        28,
+        39,
+        255
+      ]
+    },
+    {
+      "scene": "v02",
+      "width": 960,
+      "height": 540,
+      "changedPixels": 7,
+      "maximumChannelDifference": 5,
+      "meanChannelDifference": 1.398533950617284e-05,
+      "changedFraction": 1.3503086419753087e-05,
+      "reverseSeekSame": true,
+      "centerNative": [
+        9,
+        28,
+        39,
+        255
+      ],
+      "centerSvg": [
+        9,
+        28,
+        39,
+        255
+      ]
+    },
+    {
+      "scene": "field",
+      "width": 960,
+      "height": 540,
+      "changedPixels": 9,
+      "maximumChannelDifference": 2,
+      "meanChannelDifference": 8.680555555555556e-06,
+      "changedFraction": 1.736111111111111e-05,
+      "reverseSeekSame": true,
+      "centerNative": [
+        9,
+        28,
+        39,
+        255
+      ],
+      "centerSvg": [
+        9,
+        28,
+        39,
+        255
+      ]
+    },
+    {
+      "scene": "v03",
+      "width": 960,
+      "height": 540,
+      "changedPixels": 2,
+      "maximumChannelDifference": 1,
+      "meanChannelDifference": 9.645061728395062e-07,
+      "changedFraction": 3.858024691358025e-06,
+      "reverseSeekSame": true,
+      "centerNative": [
+        9,
+        28,
+        39,
+        255
+      ],
+      "centerSvg": [
+        9,
+        28,
+        39,
+        255
+      ]
+    }
+  ],
+  "seek": [
+    {
+      "time": 12,
+      "samePixels": true
+    },
+    {
+      "time": 3,
+      "samePixels": true
+    },
+    {
+      "time": 9,
+      "samePixels": true
+    },
+    {
+      "time": 0,
+      "samePixels": true
+    },
+    {
+      "time": 6,
+      "samePixels": true
+    }
+  ],
+  "contextState": {
+    "preserved": true
+  },
+  "hostClip": {
+    "outside": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "inside": [
+      9,
+      28,
+      39,
+      255
+    ]
+  },
+  "timing": {
+    "samples": 40,
+    "width": 960,
+    "height": 540,
+    "medianMs": 1.5,
+    "p95Ms": 3.5,
+    "scope": "sample + native Canvas render on this machine; no video encoding"
+  }
+}

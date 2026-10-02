@@ -1,4 +1,4 @@
-# IR contract 0.1 / 0.2
+# IR contract 0.1 / 0.2 / 0.3
 
 Canonical dimensions are big points (72 per inch), +x right, +y down. TeX
 measurements are converted from TeX points (72.27 per inch); original dimensions
@@ -78,3 +78,65 @@ tracks independently; a render frame has only resolved state.
 Extensions such as mesh/surface/volume data, typed field operations, constraints,
 simulation bakes and richer document semantics require versioned schema changes.
 An unknown kind fails validation. No arbitrary JS/Python closure is serialized.
+
+## v0.3 editable path geometry
+
+A path may supply `geometry: {contours: [...]}`. Each contour has a unique `id`,
+a `start: [x,y]`, `segments`, and optional `closed`. A segment is either
+`{kind:'line', id, to}` or `{kind:'cubic', id, c1, c2, to}`. Segment IDs are unique
+within their contour; IDs cannot contain dots. Closed contours reserve the
+segment ID `<contour-id>:close` for their implicit closing edge. Geometry uses the node's local
+bp space. No SVG DOM parsing occurs during evaluation.
+
+`d` remains the paint transport field and is regenerated from geometry at each
+evaluation. Authored geometry cannot coexist with a `connect` writer on the same
+path. The original PGF artwork resource is retained through
+`source.referenceResourceId` for comparison and provenance; it is not drawn as
+a duplicate. PGF-produced arcs/circles are the cubics emitted by PGF, not exact
+analytic conics. Capture does not infer live constraints hidden in arbitrary
+TikZ code. See the explicit frontend support list in `tex/README-v03.md`.
+
+Control tracks address stable coordinates as `geometry.<contour>.start` or
+`geometry.<contour>.<segment>.c1|c2|to`, with finite pairs as key values. Missing
+IDs and cubic controls on lines fail validation. Editing coordinates preserves
+topology; arbitrary topology-changing morphs are not implemented.
+
+`reveal` in [0,1] creates a genuine geometric prefix using exact cubic splits.
+`revealMode` is `parameter` (default) or `length`; `pathTolerance` defaults to
+0.05 local bp. Full geometry stays available to dependent operations. Zero
+reveal yields no ink. Disjoint contours never gain connecting segments. A
+partially revealed closed contour stays open until the closing segment is done.
+Fill uses ordinary SVG/Canvas implicit closure of open contours; use
+`fill:'none'` for stroke drawing. Reveal is not human handwriting inference.
+
+Parameter mode divides progress equally between nondegenerate drawable segments,
+including a nonzero implicit closing line (`<contour-id>:close`). Length mode
+uses bounded adaptive subdivision and monotone length inversion. Tolerance is
+absolute in local bp; nonuniform parent scaling does not turn local length
+progress into constant world speed. Exact internal boundaries choose the next
+segment, including an intentional jump to the next disconnected contour.
+Progress 1 selects the last endpoint. Zero-length segments consume no progress.
+
+`pointOnPath` writes a point's x/y using its `progress` (default 0). It resolves
+source and target ancestor transforms. `mode` and `tolerance` belong to this
+relation; `pathDirection` inherits its referenced point's sample. A direction
+must reference the same source path as that point. The tangent is with respect
+to the current curve parameter, not velocity of a deforming curve over time.
+
+`pathDirection` writes a line centered on the sampled point. Its `length` is in
+world bp, before the viewing camera. It transforms and normalizes the tangent
+in world space; with `normal:true` the direction is (-Ty, Tx) in that space,
+remaining perpendicular under nonuniform/reflected parent transforms. Target
+coordinates are obtained by inverse transformation. Singular inverses are
+diagnosed, including continuous scale tracks crossing zero.
+
+Sampling empty/all-degenerate geometry fails explicitly. A zero endpoint
+derivative uses the first nonzero one-sided control secant. A stationary
+interior tangent raises `UNDEFINED_TANGENT`. Static drawing and reveal need no
+tangent and can still display those curves. Unmet numerical budgets raise
+`ARC_LENGTH_TOLERANCE`; they are not silently accepted. Bounds are analytic for
+cubic extrema, include move-only starts and return null for zero contours.
+
+The pure kernel is exported from `src/path-geometry.ts`. Runtime kernel errors
+carry the source path ID in shared bundle diagnostics. SVG and native Canvas
+consume the same generated prefix `d` and relation coordinates.

@@ -1,3 +1,5 @@
+import type {PathGeometry} from './path-geometry.js';
+import {validatePathGeometry, parseGeometryProperty, geometryPointSlot} from './path-contract.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Diagnostic { severity: 'error' | 'warning'; code: string; message: string; path?: string }
 export interface Style {
@@ -10,9 +12,10 @@ export interface Clip { d: string; fillRule?: 'nonzero' | 'evenodd' }
 export interface NodeBase { id: string; parent?: string; transform?: Transform; style?: Style; clip?: Clip; visible?: boolean; source?: Record<string, unknown> }
 export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]> }
 export interface ResolvedPath { start: [number, number]; c1: [number, number]; c2: [number, number]; end: [number, number] }
-export interface PathNode extends NodeBase { kind: 'path'; d: string; arrowStart?: boolean; arrowEnd?: boolean; arrowSize?: number; resolvedPath?: ResolvedPath }
+export interface PathNode extends NodeBase { kind: 'path'; d: string; arrowStart?: boolean; arrowEnd?: boolean; arrowSize?: number; resolvedPath?: ResolvedPath;
+  geometry?: PathGeometry; reveal?: number; revealMode?: 'parameter'|'length'; pathTolerance?: number }
 export interface EllipseNode extends NodeBase { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
-export interface PointNode extends NodeBase { kind: 'point'; x: number; y: number; r: number; phase?: number }
+export interface PointNode extends NodeBase { kind: 'point'; x: number; y: number; r: number; phase?: number; progress?: number }
 export interface LineNode extends NodeBase { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
 export interface TexNode extends NodeBase { kind: 'tex'; resourceId: string; x: number; y: number; scale?: number }
 export interface FieldNode extends NodeBase { kind: 'field'; resourceId: string; x: number; y: number; width: number; height: number; values?: number[] }
@@ -29,11 +32,13 @@ export type Relation =
   | { type: 'tangent'; target: string; source: string; point: string; length: number }
   | { type: 'attach'; target: string; source: string; offset: [number, number] }
   | { type: 'lineBetween'; target: string; a: string; b: string }
+  | { type: 'pointOnPath'; target: string; source: string; mode?: 'parameter'|'length'; tolerance?: number }
+  | { type: 'pathDirection'; target: string; source: string; point: string; length: number; normal?: boolean }
   | { type: 'connect'; target: string; from: { node: string; anchor: string }; to: { node: string; anchor: string }; bend?: number }
   | { type: 'pathLabel'; target: string; path: string; position: number; offset: number; rotate?: boolean };
 export interface Camera { x: number; y: number; zoom: number; rotation?: number }
 export interface Bundle {
-  version: '0.1' | '0.2'; title: string; duration: number; units: 'bp'; viewport: { width: number; height: number };
+  version: '0.1' | '0.2' | '0.3'; title: string; duration: number; units: 'bp'; viewport: { width: number; height: number };
   nodes: Node[]; resources: Record<string, Resource>; tracks: Track[]; relations: Relation[]; camera: Camera;
   document?: { blocks: unknown[] }; provenance?: Record<string, unknown>; diagnostics?: Diagnostic[];
 }
@@ -52,21 +57,25 @@ const common: Record<string, PropertySpec> = {
   'style.strokeOpacity': { min: 0, max: 1 }, 'style.strokeWidth': { min: 0 }, 'style.miterLimit': { min: 1 },
 };
 const scalarProperties: Record<string, Record<string, PropertySpec>> = {
-  group: {}, path: {}, ellipse: { cx: {}, cy: {}, rx: { strictMin: 0 }, ry: { strictMin: 0 } },
-  point: { x: {}, y: {}, r: { min: 0 }, phase: {} }, line: { x1: {}, y1: {}, x2: {}, y2: {} },
+  group: {}, path: {reveal:{min:0,max:1}}, ellipse: { cx: {}, cy: {}, rx: { strictMin: 0 }, ry: { strictMin: 0 } },
+  point: { x: {}, y: {}, r: { min: 0 }, phase: {}, progress:{min:0,max:1} }, line: { x1: {}, y1: {}, x2: {}, y2: {} },
   tex: { x: {}, y: {}, scale: { strictMin: 0 } }, field: { x: {}, y: {}, width: { strictMin: 0 }, height: { strictMin: 0 } },
   camera: { x: {}, y: {}, zoom: { strictMin: 0 }, rotation: {} },
 };
 export function propertySpec(kind: string, property: string): PropertySpec | undefined {
+  if(kind==='path'&&parseGeometryProperty(property))return {size:2};
   const direct = scalarProperties[kind];
   return direct && own(direct, property) ? direct[property] : kind !== 'camera' && own(common, property) ? common[property] : undefined;
 }
 export function relationOutputs(relation: Relation): string[] {
+  if(relation.type==='pointOnPath')return ['x','y'];
   if (relation.type === 'connect') return ['d'];
   if (relation.type === 'pathLabel') return ['x', 'y', ...(relation.rotate ? ['transform.rotate'] : [])];
   return relation.type === 'pointOnEllipse' || relation.type === 'attach' ? ['x', 'y'] : ['x1', 'y1', 'x2', 'y2'];
 }
 export function relationSources(relation: Relation): string[] {
+  if(relation.type==='pointOnPath')return [relation.source];
+  if(relation.type==='pathDirection')return [relation.source,relation.point];
   if (relation.type === 'connect') return [relation.from.node, relation.to.node];
   if (relation.type === 'pathLabel') return [relation.path];
   return relation.type === 'lineBetween' ? [relation.a, relation.b] : relation.type === 'tangent' ? [relation.source, relation.point] : [relation.source];
@@ -146,7 +155,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       if (item.kind !== 'group') error('PATH_CHILDREN', 'Only paint groups may have children.', path);
     }
   };
-  if (b.version !== '0.1' && b.version !== '0.2') error('VERSION', 'Supported bundle versions are 0.1 and 0.2.', '$.version');
+  if (!['0.1','0.2','0.3'].includes(b.version)) error('VERSION', 'Supported bundle versions are 0.1, 0.2 and 0.3.', '$.version');
   if (b.units !== 'bp') error('UNITS', 'Coordinates must use bp (72 per inch).', '$.units');
   string(b.title, '$.title'); number(b.duration, '$.duration', { min: 0 });
   if (!object(b.viewport)) error('VIEWPORT', 'Viewport is required.', '$.viewport');
@@ -204,7 +213,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       }
     }
     for (const [key, spec] of Object.entries(scalarProperties[n.kind])) {
-      if ((key === 'phase' || key === 'scale') && n[key] === undefined) continue;
+      if (['phase','scale','progress','reveal'].includes(key) && n[key] === undefined) continue;
       number(n[key], `${path}.${key}`, spec);
     }
     if (n.kind === 'group' && n.anchors !== undefined) {
@@ -216,6 +225,14 @@ export function validateBundle(input: unknown): Diagnostic[] {
       for (const key of ['arrowStart', 'arrowEnd']) if (n[key] !== undefined && typeof n[key] !== 'boolean') error('ARROW_BOOLEAN', `${key} must be boolean.`, `${path}.${key}`);
       if (n.arrowSize !== undefined) number(n.arrowSize, `${path}.arrowSize`, { strictMin: 0 });
       if (n.resolvedPath !== undefined) error('GENERATED_GEOMETRY', 'resolvedPath is generated during evaluation; author a connect relation.', `${path}.resolvedPath`);
+      if(n.geometry!==undefined){
+        if(b.version!=='0.3')error('PATH_VERSION','Structured path geometry requires version 0.3.',path);
+        for(const d of validatePathGeometry(n.geometry))error('PATH_GEOMETRY',d.message,path+'.geometry'+d.path);
+      }
+      if(n.revealMode!==undefined)choice(n.revealMode,['parameter','length'],path+'.revealMode');
+      if(n.pathTolerance!==undefined)number(n.pathTolerance,path+'.pathTolerance',{strictMin:0});
+      if((n.reveal!==undefined||n.revealMode!==undefined||n.pathTolerance!==undefined)&&n.geometry===undefined)
+        error('PATH_GEOMETRY_REQUIRED','Reveal/sampling options require structured geometry.',path);
     }
     if (n.kind === 'tex' || n.kind === 'field') {
       string(n.resourceId, `${path}.resourceId`);
@@ -256,6 +273,9 @@ export function validateBundle(input: unknown): Diagnostic[] {
     if (!kind) { error('TRACK_REFERENCE', `Missing target ${t.target}.`, `${path}.target`); return; }
     const spec = propertySpec(kind, t.property);
     if (!spec) error('TRACK_PROPERTY', `Property ${t.property} cannot be animated on ${kind}.`, `${path}.property`);
+    if(parseGeometryProperty(t.property)&&!geometryPointSlot(nodes.get(t.target)?.geometry,t.property))
+      error('PATH_CONTROL_REFERENCE','Control track must identify an existing contour/segment coordinate.',path+'.property');
+    if(t.property==='reveal'&&!nodes.get(t.target)?.geometry)error('PATH_GEOMETRY_REQUIRED','Reveal track requires structured geometry.',path);
     write(t.target, t.property, path);
     if (typeof t.property === 'string' && t.property.startsWith('transform.')) transformTargets.add(t.target);
     if (t.interpolation !== undefined) choice(t.interpolation, ['linear', 'smooth', 'step'], `${path}.interpolation`);
@@ -278,6 +298,27 @@ export function validateBundle(input: unknown): Diagnostic[] {
   else b.relations.forEach((r: unknown, i: number) => {
     const path = `$.relations[${i}]`;
     if (!object(r)) { error('RELATION_TYPE', 'Expected relation object.', path); return; }
+    if(r.type==='pointOnPath'||r.type==='pathDirection'){
+      if(b.version!=='0.3')error('PATH_VERSION','Path sampling relations require version 0.3.',path);
+      const expected=r.type==='pointOnPath'?{target:'point',source:'path'}:{target:'line',source:'path',point:'point'};
+      for(const [key,kind]of Object.entries(expected)){
+        string(r[key],`${path}.${key}`);
+        if(nodes.get(r[key])?.kind!==kind)error('RELATION_NODE_KIND',`${key} must identify an existing ${kind}.`,`${path}.${key}`);
+      }
+      if(!nodes.get(r.source)?.geometry)error('PATH_GEOMETRY_REQUIRED','Path sampling requires structured geometry.',path+'.source');
+      inverseTargets.add(r.target);
+      if(r.type==='pointOnPath'){
+        if(r.mode!==undefined)choice(r.mode,['parameter','length'],path+'.mode');
+        if(r.tolerance!==undefined)number(r.tolerance,path+'.tolerance',{strictMin:0});
+      }else{
+        number(r.length,path+'.length',{strictMin:0});
+        if(r.normal!==undefined&&typeof r.normal!=='boolean')error('PATH_NORMAL','normal must be boolean.',path+'.normal');
+        if(r.mode!==undefined||r.tolerance!==undefined)error('PATH_DIRECTION_SAMPLING','Direction inherits sampling from its pointOnPath relation.',path);
+      }
+      for(const property of relationOutputs(r as Relation))write(r.target,property,path);
+      dependencyGraph.set(r.target,[...(dependencyGraph.get(r.target)??[]),...relationSources(r as Relation)]);
+      return;
+    }
     if (r.type === 'connect' || r.type === 'pathLabel') {
       string(r.target, `${path}.target`);
       const target = nodes.get(r.target), targetKind = r.type === 'connect' ? 'path' : 'tex';
@@ -286,6 +327,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       inverseTargets.add(r.target);
       const sources: string[] = [];
       if (r.type === 'connect') {
+        if(target?.geometry)error('CONFLICTING_WRITERS','A path cannot have both authored geometry and a connect writer.',path);
         connectTargets.add(r.target);
         for (const key of ['from', 'to']) {
           const endpoint = r[key];
@@ -338,6 +380,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
   checkCycles(dependencyGraph, 'RELATION_CYCLE');
   if (Array.isArray(b.relations)) b.relations.forEach((r: any, i: number) => {
     if (object(r) && r.type === 'pathLabel' && !connectTargets.has(r.path)) error('PATH_LABEL_GEOMETRY', 'pathLabel requires a path generated by a connect relation.', `$.relations[${i}].path`);
+    if(object(r)&&r.type==='pathDirection'){
+      const producer=b.relations.find((other:any)=>object(other)&&other.type==='pointOnPath'&&other.target===r.point);
+      if(!producer||producer.source!==r.source)error('PATH_POINT_SOURCE','Direction point must sample the same path via pointOnPath.',`$.relations[${i}].point`);
+    }
   });
   for (const [id, n] of nodes) if (n.kind === 'path' && (n.arrowStart || n.arrowEnd) && !connectTargets.has(id)) error('ARROW_GEOMETRY', 'Arrowheads require a path generated by a connect relation.', `$.nodes.${id}`);
   // Every matrix inverted for a connector or label must remain nonsingular.

@@ -21,6 +21,13 @@ chalkspaceLayer.draw(frame, canvasContext, boardCamera)
 TeX → 의미·기하·타임라인 IR → 공통 평가기 → 렌더러별 표현
 시뮬레이션 → 버전이 있는 샘플 데이터 → 같은 평가기</pre></details><footer>FOUNDATION M0 · SOURCE AND ROADMAP IN ddomology/Texloom</footer></main><script id="scene-data" type="application/json">${data}</script><script>${safeScript(material)}</script><script>${safeScript(js.outputFiles[0].text)}</script></body></html>`;
 await mkdir(dirname(resolve(output)),{recursive:true});
-await writeFile(output,html.replace('<details>','<p><a href="https://github.com/ddomology/Texloom/blob/main/docs/ROADMAP.md">전체 로드맵과 단계별 완료 기준 ↗</a></p><details>'));
+let page=html.replace('<details>','<p><a href="https://github.com/ddomology/Texloom/blob/main/docs/ROADMAP.md">전체 로드맵과 단계별 완료 기준 ↗</a></p><details>');
+if(bundle.version==='0.3')page=page
+  .replace('RESEARCH → SHARED RUNTIME FOUNDATION','TEXLOOM 0.3 → EDITABLE PGF GEOMETRY')
+  .replace('한 장면, 두 개의 렌더러.','TeX의 곡선이 살아 움직이게.')
+  .replace('같은 TeX 장면을 한 번 평가해 웹의 SVG와 칠판의 Canvas에 전달합니다. 시간을 앞뒤로 움직여도 두 화면은 같은 객체 위치와 관계를 사용합니다.',
+    '0–2초에는 경로를 그리고, 2–10초에는 제어점이 변하며 점·접선·법선이 따라갑니다. 시간을 앞뒤로 움직여도 웹과 칠판은 같은 계산 결과를 사용합니다.')
+  .replace('FOUNDATION M0 · SOURCE AND ROADMAP IN','LIVE PATHS M1.1 + CORE M1.2 · SOURCE AND ROADMAP IN');
+await writeFile(output,page);
 await writeFile(resolve(dirname(output),'dual-provenance.json'),JSON.stringify({scene:bundle.title,boardModule:'Chalkspace/src/chalkspace/web/board-surface.js',boardSha256:createHash('sha256').update(material).digest('hex'),sceneVersion:bundle.version,notes:'Real board material + native Canvas geometry; not full lesson scheduler/eraser integration.'},null,2));
 console.log(JSON.stringify({output:resolve(output),bytes:Buffer.byteLength(html)}));

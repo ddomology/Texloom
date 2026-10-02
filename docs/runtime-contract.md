@@ -98,3 +98,25 @@ Optional `build/field/bundle.json` expands Canvas QA to scalar fields.
 v0.1/v0.2 compiled scenes, backwards seek, host context state, SVG/Canvas image
 differences and a local performance baseline. Reports include exact dimensions
 and timings, not guarantees for every device or future scene class.
+
+## Live path slice (0.3)
+
+The evaluator also resolves editable PGF paths, control-point tracks, prefix
+reveal, point-on-path and tangent/normal relations. Consumers need no extra
+geometry implementation: the generated path `d` and point/line coordinates
+already belong to the shared frame. Complete geometry is retained separately
+from its visible prefix for analytic sampling. See the versioned IR contract
+for local-length progress and world-direction conventions.
+
+```sh
+python tools/build.py examples/living-paths.tex --out build/v03 --video
+node tools/build-dual-demo.mjs build/v03/bundle.json build/v03/dual.html ../Chalkspace
+python tools/qa_dual.py build/v03/dual.html
+python tools/qa_paths.py build/v03/dual.html build/v03/bundle.json
+```
+
+The path browser check compares captured geometry with the actual retained PGF
+artwork, then compares SVG/native Canvas at nine times including partial reveal
+and deformation. PGF's separate driver conversion can cause small edge-pixel
+differences. Full Chalkspace lesson scheduler/eraser/cache and Lemniro React
+component integration remain a separate milestone.

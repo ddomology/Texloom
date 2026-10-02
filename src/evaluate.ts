@@ -1,5 +1,7 @@
 import { assertBundle, relationSources, type Bundle, type Camera, type EllipseNode, type EvaluatedFrame, type FieldNode, type GroupNode, type LineNode, type Node, type PathNode, type PointNode, type Relation, type ResolvedPath, type ScalarFieldResource, type TexNode, type Track, type TrackValue, type VectorResource } from './schema.js';
-import { geometryError, inverseMatrix, localMatrix, multiplyMatrix, pathData, pathPoint, pathTangent, transformPath, transformPoint, worldMatrix, type Point } from './geometry.js';
+import { geometryError, inverseMatrix, localMatrix, multiplyMatrix, pathData, pathPoint, pathTangent, transformPath, transformPoint, transformVector, worldMatrix, type Point } from './geometry.js';
+import {geometryPointSlot} from './path-contract.js';
+import {PathGeometryError, pathGeometryData, revealGeometry, sampleGeometry, type PathPoint} from './path-geometry.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -20,6 +22,10 @@ function trackValue(track: Track, time: number): TrackValue {
   return mix(track.keys[a][1], track.keys[b][1], t);
 }
 function setValue(target: Node | Camera, property: string, value: TrackValue): void {
+  if(property.startsWith('geometry.')) {
+    geometryPointSlot((target as PathNode).geometry,property)!.set(value as PathPoint);
+    return;
+  }
   const [head, tail] = property.split('.');
   const record = target as unknown as Record<string, any>;
   if (tail) { record[head] ??= {}; record[head][tail] = value; }
@@ -40,8 +46,38 @@ function relationOrder(relations: Relation[], nodes: Node[]): Relation[] {
   for (const relation of relations) visit(relation.target);
   return result;
 }
-function applyRelation(relation: Relation, nodes: Map<string, Node>, resources: Bundle['resources']): void {
-  if (relation.type === 'pointOnEllipse') {
+interface SampledPath { source: string; tangent: Point }
+function withPathContext<T>(id:string, fn:()=>T):T {
+  try { return fn(); }
+  catch(error) {
+    if(error instanceof PathGeometryError) geometryError(error.code,`Path ${id}: ${error.message}`);
+    throw error;
+  }
+}
+function applyRelation(relation: Relation, nodes: Map<string, Node>, resources: Bundle['resources'], samples:Map<string,SampledPath>): void {
+  if(relation.type==='pointOnPath') {
+    const path=nodes.get(relation.source) as PathNode, point=nodes.get(relation.target) as PointNode;
+    const sample=withPathContext(path.id,()=>sampleGeometry(path.geometry!,point.progress??0,
+      relation.mode??'parameter',relation.tolerance??path.pathTolerance??.05));
+    const world=transformPoint(worldMatrix(path.id,nodes),sample.point);
+    const local=transformPoint(inverseMatrix(worldMatrix(point.id,nodes),`point ${point.id}`),world);
+    if(!local.every(Number.isFinite))geometryError('NONFINITE_GEOMETRY',`Point ${point.id} position is not finite.`);
+    [point.x,point.y]=local;
+    samples.set(point.id,{source:path.id,tangent:sample.tangent});
+  } else if(relation.type==='pathDirection') {
+    const path=nodes.get(relation.source) as PathNode, point=nodes.get(relation.point) as PointNode,
+      line=nodes.get(relation.target) as LineNode;
+    const sample=samples.get(point.id)!;
+    const tangent=transformVector(worldMatrix(path.id,nodes),sample.tangent), size=Math.hypot(...tangent);
+    if(!Number.isFinite(size)||size===0)geometryError('DEGENERATE_TANGENT',`Path ${path.id} has no finite world tangent at ${point.id}.`);
+    const unit:Point=relation.normal?[-tangent[1]/size,tangent[0]/size]:[tangent[0]/size,tangent[1]/size];
+    const center=transformPoint(worldMatrix(point.id,nodes),[point.x,point.y]);
+    const inverse=inverseMatrix(worldMatrix(line.id,nodes),`direction ${line.id}`), half=relation.length/2;
+    const a=transformPoint(inverse,[center[0]-half*unit[0],center[1]-half*unit[1]]);
+    const b=transformPoint(inverse,[center[0]+half*unit[0],center[1]+half*unit[1]]);
+    if(![...a,...b].every(Number.isFinite))geometryError('NONFINITE_GEOMETRY',`Direction ${line.id} endpoints are not finite.`);
+    [line.x1,line.y1]=a; [line.x2,line.y2]=b;
+  } else if (relation.type === 'pointOnEllipse') {
     const ellipse = nodes.get(relation.source) as EllipseNode, point = nodes.get(relation.target) as PointNode;
     const phase = point.phase ?? 0;
     point.x = ellipse.cx + ellipse.rx * Math.cos(phase); point.y = ellipse.cy + ellipse.ry * Math.sin(phase);
@@ -117,7 +153,14 @@ function evaluateValidated(bundle: Bundle, time: number, ordered: Relation[]): E
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
   const byId = new Map(nodes.map(n => [n.id, n]));
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
-  for (const relation of ordered) applyRelation(relation, byId, bundle.resources);
+  const samples=new Map<string,SampledPath>();
+  for (const relation of ordered) applyRelation(relation, byId, bundle.resources,samples);
+  for(const node of nodes) if(node.kind==='path'&&node.geometry) {
+    // Full editable geometry survives reveal: dependent points keep sampling the
+    // mathematical curve, while both renderers receive the same visible prefix.
+    node.d=withPathContext(node.id,()=>pathGeometryData(node.reveal===undefined?node.geometry!:
+      revealGeometry(node.geometry!,node.reveal,node.revealMode??'parameter',node.pathTolerance??.05)));
+  }
   for (const node of nodes) if (node.kind === 'field') (node as FieldNode).values = sampleField(bundle.resources[node.resourceId] as ScalarFieldResource, clamped);
   // Resources are immutable shared data; frame-local geometry and camera are independent.
   return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources };

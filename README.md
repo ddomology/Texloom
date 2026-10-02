@@ -8,9 +8,9 @@ This is a working 2D vertical slice. It includes a real TeX compiler, an explici
 TikZ scene frontend, typed IR validation, geometric dependencies, a shared
 time evaluator, static SVG output, an offline HTML player, and MP4 export.
 
-Version 0.2 adds real PGF-measured node anchors, named connections, moving path
-labels and nested transformed groups. v0.1 bundles and source commands remain
-supported.
+Version 0.3 captures actual PGF soft paths as editable line/cubic geometry. It
+adds animated control points, geometric reveal, point-on-path, tangents and
+normals. Version 0.2 anchors/connections and v0.1 bundles remain supported.
 
 ## Development direction: common runtime, many consumers
 
@@ -35,10 +35,10 @@ itself uses the standard library and the shared Node validator.
 npm ci
 python -m pip install -r requirements.txt
 python -m playwright install chromium
-python tools/build.py examples/commutative.tex --out build/v02 --video
+python tools/build.py examples/living-paths.tex --out build/v03 --video
 ```
 
-Open `build/v02/player.html`. It is self-contained and works without a server.
+Open `build/v03/player.html`. It is self-contained and works without a server.
 It also exposes `window.texloom.render(seconds)` for exact-time capture.
 
 The earlier examples still build with the same compiler:
@@ -80,6 +80,13 @@ by PGF. Connection and animation keys are a documented Texloom subset. Scene
 positions use bp with +y down; authored rotations are degrees, lowered to radians
 in the IR. `bend` is a control-point offset in bp, not a TikZ bend angle.
 
+Editable paths use `\loomgeometry`, `\loompoint`, `\loomdirection`, and
+`\loomcontrol`. The path body is executed by PGF, including macros, arcs and
+coordinate transforms, then its soft-path operations are captured. See
+[v0.3 authoring](tex/README-v03.md) and `examples/living-paths.tex`. This supports
+explicit live geometry alongside static TikZ resources, not arbitrary TikZ
+animation programs.
+
 The lower-level v0.1 JSON command interface remains documented in `tex/README.md`.
 Existing arbitrary LaTeX documents do not automatically become animated object
 graphs. Explicit wrappers preserve the identities and intent needed at runtime.
@@ -115,6 +122,10 @@ for richer future node capture. Run `python tools/compiler_probe.py` to repeat.
 - Translation, rotation, scale, camera pan/zoom/rotation, scalar/vector keyframes,
   linear/smoothstep/step interpolation, simultaneous independent tracks.
 - Point-on-ellipse, tangent, attached label, line-between-points dependencies.
+- Multi-contour line/cubic geometry, exact splitting and bounds, bounded
+  arc-length measurement, prefix reveal, stable-ID control-point tracks.
+- Point-on-path with parameter or length progress; tangents and world-space
+  perpendicular normals across transformed parents.
 - Real TikZ node art and named center/cardinal/diagonal/base/mid anchors when the
   shape defines them; native TikZ path bodies exported as vector resources.
 - Named straight/curved connections with triangular arrowheads, attached TeX
@@ -172,10 +183,14 @@ npm run check
 npm test
 python -m unittest discover -s tests -p compiler_test.py -v
 python -m unittest discover -s tests -p tikz_compiler_test.py -v
+python -m unittest discover -s tests -p path_compiler_test.py -v
 npm run snapshot -- build/demo/bundle.json build/demo/snapshot.svg 6
 npx tsx tools/resource-snapshots.ts build/demo/bundle.json build/demo/qa/resources
 python tools/qa_player.py build/demo
 python tools/qa_anchors.py build/v02
+node tools/build-dual-demo.mjs build/v03/bundle.json build/v03/dual.html ../Chalkspace
+python tools/qa_dual.py build/v03/dual.html
+python tools/qa_paths.py build/v03/dual.html build/v03/bundle.json
 ```
 
 QA checks actual browser controls, downloads, mobile overflow, reversed seeking,

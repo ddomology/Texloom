@@ -24,7 +24,7 @@ def run(page_path):
     output=page_path.resolve().parent
     report={'browserErrors':[],'parity':[],'seek':[]}
     scenes=[('opacity-clip',fixture())]
-    for name in ('demo','v02','field'):
+    for name in ('demo','v02','field','v03'):
         path=ROOT/'build'/name/'bundle.json'
         if path.exists():scenes.append((name,json.loads(path.read_text(encoding='utf8'))))
     with sync_playwright() as p:
