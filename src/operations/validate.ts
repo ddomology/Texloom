@@ -10,6 +10,7 @@ import {deformationWrites} from './deform.js';
 import {validateDynamicInput,hasTransformWriter} from './inputs.js';
 import {sameSpace} from '../geometry/spaces.js';
 import type {Unit} from '../fields/ast.js';
+import {validatePlotProgramInContext} from './plot.js';
 
 type Obj = Record<string, any>;
 type ResolvedType = {type: string; unit?:Unit; role?: string; space?: SpaceRef; from?: SpaceRef; to?: SpaceRef};
@@ -25,7 +26,7 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
   // Strip only the graph; validate every other scene field using the existing boundary.
   if (!object(bundle)) return {diagnostics: [{severity:'error',code:'OPERATION_CONTEXT',message:'Expected a scene bundle.',path:'$'}], order};
   if (!validatedContext) {
-    const {operationGraph: ignored, ...base} = bundle;
+    const {operationGraph: ignored, plots: deferredPlots, ...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') diagnostics.push({severity:'error',code:'OPERATION_BUNDLE_VERSION',message:'Operation graphs require bundle version 0.3.',path:'$.version'});
@@ -175,6 +176,14 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     target:operation.target,slots:deformationWrites(operation.target).map(access=>access.property),
     path:`$.deformations.operations[${i}]`,...(operation.sourceSpan?{span:operation.sourceSpan}:{}),
   }));
+  // Plots are deferred until graph references are validated. Their raw shape
+  // cannot be trusted here; the later plot pass diagnoses malformed entries.
+  if (!validatedContext && Array.isArray(bundle.plots?.operations)) bundle.plots.operations.forEach((operation,i) => {
+    if(object(operation)&&named(operation.target))writers.push({
+      target:operation.target,slots:deformationWrites(operation.target).map(access=>access.property),
+      path:`$.plots.operations[${i}]`,...(operation.sourceSpan?{span:operation.sourceSpan}:{}),
+    });
+  });
   graph.bindings.forEach((raw: unknown, i: number) => {
     const path = `$.operationGraph.bindings[${i}]`;
     if (!object(raw)) {error('OPERATION_BINDING', 'Expected an output binding.', path); return;}
@@ -265,6 +274,8 @@ function inspect(graph: unknown, bundle: Bundle, registry: OperatorRegistry, val
     error('OPERATION_CYCLE', `A dependency cycle blocks: ${blocked.join(', ')}.`, entry.path, entry.span,
       blocked.map(id => ({message:`Blocked operation ${id}.`,path:entries.get(id)!.path,...(entries.get(id)!.span ? {sourceSpan:entries.get(id)!.span} : {})})));
   }
+  if(!validatedContext&&bundle.plots!==undefined&&!diagnostics.some(d=>d.severity==='error'))
+    diagnostics.push(...validatePlotProgramInContext(bundle.plots,{...bundle,operationGraph:graph as unknown as OperationGraph}));
   return {diagnostics, order};
 }
 
@@ -273,8 +284,8 @@ export function validateOperationGraph(graph: unknown, bundle: Bundle, registry:
 }
 
 /** @internal The schema has already validated the scene, including its warnings. */
-export function validateOperationGraphInContext(graph: unknown, bundle: Bundle): Diagnostic[] {
-  return inspect(graph, bundle, defaultOperatorRegistry, true).diagnostics;
+export function validateOperationGraphInContext(graph: unknown, bundle: Bundle, registry: OperatorRegistry = defaultOperatorRegistry): Diagnostic[] {
+  return inspect(graph, bundle, registry, true).diagnostics;
 }
 
 /** Own a frozen snapshot, resolve defaults and order dependencies. No execution/cache. */

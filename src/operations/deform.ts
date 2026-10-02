@@ -57,6 +57,7 @@ function inspect(input:unknown,bundle:Bundle,validatedContext=false):Inspection 
     ...(bundle.operationGraph?.bindings??[]).map((b,i)=>({slots:bindingProperties(b,nodes),path:`$.operationGraph.bindings[${i}]`,sourceSpan:b.sourceSpan})),
     ...(bundle.expressions?.bindings??[]).map((b,i)=>({slots:bindingProperties(b,nodes),path:`$.expressions.bindings[${i}]`,sourceSpan:b.sourceSpan})),
     ...(bundle.fields?.bindings??[]).flatMap((b,i)=>b.targets.map(t=>({slots:bindingProperties({target:t.target,property:b.property},nodes),path:`$.fields.bindings[${i}]`,sourceSpan:b.sourceSpan}))),
+    ...(!validatedContext?bundle.plots?.operations??[]:[]).map((p,i)=>({slots:deformationWrites(p.target),path:`$.plots.operations[${i}]`,sourceSpan:p.sourceSpan})),
   ];
   input.operations.forEach((raw:unknown,index:number)=>{
     const path=`$.deformations.operations[${index}]`;

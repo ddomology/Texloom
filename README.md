@@ -383,6 +383,16 @@ This is a documented subset of decoration behavior, not a PGF state-machine
 interpreter. See the [authoring and API guide](docs/decorations.md) and
 [animated example](examples/path-decorations.tex).
 
+## Function and parametric plots (PR 18)
+
+`texloom-plots` generates editable paths from typed functions, parametric
+curves, ordered sample data and regions between two function boundaries.
+Adaptive sampling uses the existing Cartesian mapping and preserves authored
+domain gaps. Expressions and quality parameters are evaluated by the shared
+runtime; downstream curve operations consume the generated geometry.
+See [plot authoring, quality and discontinuity contracts](docs/plots.md) and
+[`examples/function-plots.tex`](examples/function-plots.tex).
+
 ## Mathematical coordinates and axes (PR 17)
 
 `texloom-axes` maps dimensionless mathematical data into bp geometry, with

@@ -8,6 +8,7 @@ import type {CompiledExpression, ExpressionBinding, ExpressionProgram, Expressio
 import {compileExpression, evaluateExpression} from './scalar.js';
 import {validateFieldProgramInContext} from './program-fields.js';
 import {validateDeformationProgramInContext} from '../operations/deform.js';
+import {validatePlotProgramInContext} from '../operations/plot.js';
 import {validateOperationGraphInContext} from '../operations/validate.js';
 
 type Obj = Record<string, any>;
@@ -63,7 +64,7 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (!validatedContext) {
     // Graph expression inputs, fields and deformations consume these candidate
     // parameters; defer them until the declarations have been checked.
-    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,operationGraph:deferredGraph,...base} = bundle;
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
@@ -132,6 +133,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
     diagnostics.push(...validateFieldProgramInContext(bundle.fields,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.deformations && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateDeformationProgramInContext(bundle.deformations,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.plots !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validatePlotProgramInContext(bundle.plots,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 

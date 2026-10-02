@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-plots}[2026/10/03 Texloom mathematical plot capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLPlotSerial
+\TLPlotSerial=0
+% The last argument is unexpanded JSON, not an executable TeX expression.
+% Merely loading this package has no scene, resource or anchor-profile effect.
+\NewDocumentCommand\loomplot{m +v}{%
+  \global\advance\TLPlotSerial by 1
+  \edef\TLEbase{\jobname.tl-plot-\the\TLPlotSerial}%
+  \immediate\write\TLrecords{\string{"type":"plot-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\endinput
