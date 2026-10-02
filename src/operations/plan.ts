@@ -17,6 +17,7 @@ import {prepareOperationInputs,flattenOperationInputs,type PreparedOperationInpu
 import {isShapeOperator,type ShapeEvaluation} from './shapes.js';
 import type {AnchorEvaluation} from './anchors.js';
 import {isCurveOperator,type CurveEvaluation} from './curves.js';
+import {isIntersectionOperator,type IntersectionEvaluation} from './intersections.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -26,7 +27,7 @@ type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
   {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
@@ -139,6 +140,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   const ordered = order.map(id => freezeSnapshot(byID.get(id)!));
   const hasShapes=graph?.operations.some(operation=>isShapeOperator(operation.operator,operation.version));
   const hasCurves=graph?.operations.some(operation=>isCurveOperator(operation.operator,operation.version));
+  const hasIntersections=graph?.operations.some(operation=>isIntersectionOperator(operation.operator,operation.version));
   return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>,metadata?:ExecutionMetadata) {
     const parameters = expressions.resolveParameters(overrides);
     let fieldResult:FieldEvaluation|undefined;
@@ -146,7 +148,8 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     const shapes:ShapeEvaluation={definitions:Object.create(null),approximations:Object.create(null)};
     const anchors:AnchorEvaluation=Object.create(null);
     const curves:CurveEvaluation={operations:Object.create(null),samples:Object.create(null)};
-    if(metadata){delete metadata.deformations;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;}
+    const intersections:IntersectionEvaluation={sets:Object.create(null),selections:Object.create(null)};
+    if(metadata){delete metadata.deformations;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -157,7 +160,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
           executeLegacyOperation(step.lowered.relation,context);
         } else if (step.kind === 'operation') {
           const inputs=operationInputs.get(step.operation.id)!.resolve(frameNodes,time,parameters,values,anchors);
-          values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs,shapes,curves));
+          values.set(step.operation.id,executeAuthoredOperation(step.operation,inputs,shapes,curves,intersections));
         } else if (step.kind === 'deformation') {
           const prepared=deformations!.operations[step.index];
           deformationResults[prepared.operation.id]=prepared.apply(frameNodes,time,parameters);
@@ -175,6 +178,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     if(metadata&&hasShapes)metadata.shapes=structuredClone(shapes);
     if(metadata&&Object.keys(anchors).length)metadata.anchors=structuredClone(anchors);
     if(metadata&&hasCurves)metadata.curves=structuredClone(curves);
+    if(metadata&&hasIntersections)metadata.intersections=structuredClone(intersections);
     return fieldResult;
   }});
 }

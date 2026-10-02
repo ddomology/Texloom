@@ -311,6 +311,21 @@ polyline and a moving reverse-direction probe. See [curve operations](docs/curve
 for TeX syntax, current-geometry reads, reusable outputs, numerical tolerances
 and resampling limits. The historical sampler and renderer APIs remain unchanged.
 
+## Path intersections (PR 11)
+
+The `texloom-intersections` package computes reusable line-line and line-cubic
+intersection sets. Select points or labels along either input with an explicit
+branch index and missing policy. Shared endpoints retain their incident segment
+references; overlapping intervals remain distinct from isolated points.
+
+```sh
+python tools/build.py examples/path-intersections.tex --out build/path-intersections --video
+```
+
+See [path intersections](docs/intersections.md) for finite/infinite domains,
+typed outputs, numerical tolerances, selection, and TeX authoring. Cubic-cubic
+solving is the subsequent PR 12 scope.
+
 ## Core API
 
 ```ts

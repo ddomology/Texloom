@@ -1,0 +1,22 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-intersections}[2026/10/03 Texloom explicit path intersections]
+\RequirePackage{texloom-expressions}
+\newcount\TLXserial
+\TLXserial=0
+\def\TLXstart#1{%
+  \global\advance\TLXserial by 1
+  \edef\TLEbase{\jobname.tl-intersection-\the\TLXserial}%
+  \immediate\write\TLrecords{\string{"type":"intersection-file","kind":"#1","file":"\TLEbase"\string}}}
+% An intersection result is a first-class graph value, not a drawn scene node.
+\NewDocumentCommand\loomintersections{O{} m +v}{%
+  \TLXstart{intersect}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{result}{#2}%
+  \TLEwrite{inputs}{#3}}
+% Selection declares a sorting path, branch and explicit missing policy.
+\NewDocumentCommand\loomintersectionpoint{O{} m +v}{%
+  \TLXstart{select}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

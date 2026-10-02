@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-intersections}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Intersections are a set}]
+\loomnode[heading] (heading) at (480,48) {Intersections are a set};
+\loomnode[small] (intro) at (480,82) {Compute all contacts. Choose a branch explicitly.};
+\loomnode[formula] (formula) at (480,126) {$f(t)=1000\bigl(t-\tfrac15\bigr)\bigl(t-\tfrac12\bigr)\bigl(t-\tfrac45\bigr),\qquad f(t)=h$};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,163)--(905,163) (55,488)--(905,488);
+};
+\loomnode[label] (curve-title) at (480,187) {LINE / CUBIC / EXPLICIT ORDER ALONG THE CUBIC};
+% x=120+720t, y=320+f(t). The line moves independently of the source cubic.
+\loomgeometry[draw=mint,line width=2.4bp] (cubic) {(120,240) .. controls (360,460) and (600,180) .. (840,400)};
+\loomgeometry[draw=ink,line width=1bp] (scan) {(100,320)--(860,320)};
+\loomparameter[unit=bp,min=-30,max=30]{height}{0}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomexpr{scan}{transform.translate}{vec2(0bp,height+18bp*sin(pi*1rad*time/6s+phase))}
+\loomintersections[position-tolerance=0.000001,parameter-tolerance=0.000000001]{contacts}{{"a":"scan","b":"cubic"}}
+\TLNode{point-0}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-0-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_0$}}
+\TLNode{label-0}{tex}{"resourceId":"label-0-art","x":70,"y":450,"style":{"fill":"#F3CB84"}}
+\loomintersectionpoint[along=b,index=0,missing=hide]{point-0}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=0,missing=hide]{label-0}{{"intersections":"contacts"}}
+\TLNode{point-1}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#E5F1EF","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-1-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_1$}}
+\TLNode{label-1}{tex}{"resourceId":"label-1-art","x":70,"y":450,"style":{"fill":"#E5F1EF"}}
+\loomintersectionpoint[along=b,index=1,missing=hide]{point-1}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=1,missing=hide]{label-1}{{"intersections":"contacts"}}
+\TLNode{point-2}{point}{"x":70,"y":450,"r":5.2,"style":{"fill":"#EE8D82","stroke":"#091C27","strokeWidth":1.6}}
+\TLText{label-2-art}{\hspace{7bp}\raisebox{11bp}{\fontsize{14}{18}\selectfont $p_2$}}
+\TLNode{label-2}{tex}{"resourceId":"label-2-art","x":70,"y":450,"style":{"fill":"#EE8D82"}}
+\loomintersectionpoint[along=b,index=2,missing=hide]{point-2}{{"intersections":"contacts"}}
+\loomintersectionpoint[along=b,index=2,missing=hide]{label-2}{{"intersections":"contacts"}}
+
+\loomnode[label,text=mint] (cubic-legend) at (240,440) {CUBIC GEOMETRY};
+\loomnode[label,text=ink] (line-legend) at (480,440) {MOVING LINE};
+\loomnode[label,text=gold] (branch-legend) at (740,440) {0 / 1 / 2: CURRENT ORDER};
+\loomnode[small] (caption) at (480,467) {Missing branches hide. Each frame is solved from its current geometry.};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / INTERSECTION SETS / EXPLICIT SELECTION / NO PLAYBACK MEMORY};
+\end{loomscene}
+\end{document}

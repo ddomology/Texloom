@@ -3,6 +3,7 @@ import type {Unit} from '../fields/ast.js';
 import type {Primitive2D} from '../geometry/primitives.js';
 import type {AnchorName} from './text.js';
 import type {CurveProvenance} from '../geometry/curves.js';
+import type {IntersectionSet} from '../geometry/intersections.js';
 
 /** Lines/columns are 1-based; end is exclusive. Columns count Unicode code points. */
 export interface SourceSpan {
@@ -15,7 +16,7 @@ export interface Diagnostic {
   sourceSpan?: SourceSpan;
   related?: {message: string; path?: string; sourceSpan?: SourceSpan}[];
 }
-export type ValueType = 'scalar' | 'vec2' | 'points2d' | 'shape2d' | 'path2d' | 'transform2d';
+export type ValueType = 'scalar' | 'vec2' | 'points2d' | 'shape2d' | 'path2d' | 'intersections2d' | 'transform2d';
 /** Scene coordinates exclude the camera. Local spaces are distinct even at identity. */
 export type SpaceRef = {kind: 'scene'} | {kind: 'local'|'parent'|'plot'; node: string};
 export type Vec2Role = 'point' | 'vector';
@@ -23,7 +24,7 @@ export type Vec2Role = 'point' | 'vector';
 export type SocketType =
   | {type: 'scalar'; unit?:Unit}
   | {type: 'vec2'; role: Vec2Role; space: string}
-  | {type: 'points2d'|'shape2d'; space: string}
+  | {type: 'points2d'|'shape2d'|'intersections2d'; space: string}
   | {type: 'path2d'; space: string}
   | {type: 'transform2d'; from: string; to: string};
 export type LiteralValue =
@@ -32,6 +33,7 @@ export type LiteralValue =
   | {type: 'points2d'; space: SpaceRef; value: [number,number][]}
   | {type: 'shape2d'; space: SpaceRef; value: Primitive2D}
   | {type: 'path2d'; space: SpaceRef; value: PathGeometry; provenance?:CurveProvenance}
+  | {type: 'intersections2d'; space: SpaceRef; value: IntersectionSet}
   /** SVG affine convention [a,b,c,d,e,f]; maps from -> to, no inverse implied. */
   | {type: 'transform2d'; from: SpaceRef; to: SpaceRef; value: [number, number, number, number, number, number]};
 export interface OutputRef {operation: string; socket: string}
