@@ -27,3 +27,5 @@ export {shapeOperatorDefinitions,executeShapeOperation,type ShapeEvaluation} fro
 export * from './ir/text.js';
 export * from './geometry/anchors.js';
 export {textResourceRevision,type AnchorEvaluation,type AnchorEvaluationEntry} from './operations/anchors.js';
+export * from './geometry/curves.js';
+export {curveOperatorDefinitions,executeCurveOperation,type CurveEvaluation} from './operations/curves.js';

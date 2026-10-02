@@ -2,6 +2,7 @@ import {OperationValidationError, type DeepReadonly, type Diagnostic, type Opera
 import {freezeSnapshot, validateJsonData, validateLiteralValue} from './values.js';
 import {coordinateOperatorDefinitions} from './coordinates.js';
 import {shapeOperatorDefinitions} from './shapes.js';
+import {curveOperatorDefinitions} from './curves.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -100,6 +101,7 @@ export function createOperatorRegistry(definitions: readonly OperatorDefinition[
 export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry([
   ...coordinateOperatorDefinitions,
   ...shapeOperatorDefinitions,
+  ...curveOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

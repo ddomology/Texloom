@@ -8,6 +8,8 @@ import {validateSpaceRef,validateSourceSpan} from './values.js';
 import {scalarPropertyUnit,type PropertyAccess} from './properties.js';
 import {nodePosition,nodePositionReads,spaceTransform,spaceTransformReads} from '../geometry/spaces.js';
 import {validateAnchorInput,anchorInputReads,resolveAnchorInput,type AnchorEvaluation} from './anchors.js';
+import type {PathGeometry} from '../path-geometry.js';
+import {seedCurveProvenance,transformCurveInput,type CurveProvenance} from '../geometry/curves.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -74,6 +76,10 @@ export function validateDynamicInput(raw:unknown,bundle:Bundle,path:string,span?
     if(!node||!['point','ellipse','tex'].includes(node.kind))fail('OPERATION_NODE_REFERENCE','Position input requires an existing point, ellipse or tex node.',path+'.node');
     if(raw.property!=='position')fail('OPERATION_NODE_PROPERTY','Only position is supported for node inputs.',path+'.property');
     if(space(raw.space,path+'.space')){inverse(raw.space);type={type:'vec2',role:'point',space:raw.space};}
+  }else if(raw.kind==='path'){
+    keys(['kind','node','space']);
+    if(!name(raw.node)||nodes.get(raw.node)?.kind!=='path')fail('OPERATION_PATH_REFERENCE','Path input requires an existing path node.',path+'.node');
+    if(space(raw.space,path+'.space')){inverse(raw.space);type={type:'path2d',space:raw.space};}
   }else if(raw.kind==='spaceTransform'){
     keys(['kind','from','to']);
     const from=space(raw.from,path+'.from'),to=space(raw.to,path+'.to');
@@ -152,6 +158,8 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
   };
   for(const input of flattenOperationInputs(operation.inputs)){
     if(input.kind==='node')reads.push(...nodePositionReads(input.node,input.space,nodes));
+    else if(input.kind==='path')reads.push({node:input.node,property:'geometry'},
+      ...spaceTransformReads({kind:'local',node:input.node},nodes),...spaceTransformReads(input.space,nodes));
     else if(input.kind==='spaceTransform')reads.push(...spaceTransformReads(input.from,nodes),...spaceTransformReads(input.to,nodes));
     else if(input.kind==='property')reads.push({node:input.node,property:input.property});
     else if(input.kind==='anchor'||input.kind==='textPlacement')reads.push(...anchorInputReads(input,nodes,outputSpace));
@@ -163,6 +171,15 @@ export function prepareOperationInputs(operation:DeepReadonly<Operation>,bundle:
         if(input.kind==='literal')return structuredClone(input.value) as LiteralValue;
         if(input.kind==='output')return outputs.get(input.ref.operation)![input.ref.socket];
         if(input.kind==='node')return {type:'vec2',role:'point',space:structuredClone(input.space),value:nodePosition(input.node,input.space,frameNodes)};
+        if(input.kind==='path'){
+          const node=frameNodes.get(input.node);
+          if(node?.kind!=='path'||!node.geometry)throw new OperationValidationError([{severity:'error',code:'OPERATION_PATH_GEOMETRY',message:'Path input requires current editable geometry; SVG d strings are not parsed implicitly.'}]);
+          const transformed=transformCurveInput({geometry:node.geometry,provenance:seedCurveProvenance(node.geometry,input.node)},
+            spaceTransform({kind:'local',node:input.node},input.space,frameNodes));
+          return {type:'path2d',space:structuredClone(input.space),
+            value:structuredClone(transformed.geometry) as PathGeometry,
+            provenance:structuredClone(transformed.provenance) as CurveProvenance};
+        }
         if(input.kind==='spaceTransform')return {type:'transform2d',from:structuredClone(input.from),to:structuredClone(input.to),value:spaceTransform(input.from,input.to,frameNodes)};
         if(input.kind==='anchor'||input.kind==='textPlacement')return resolveAnchorInput(input,frameNodes,bundle.resources,resolve,at,anchors);
         if(input.kind==='points')return {type:'points2d',space:structuredClone(input.space),value:input.items.map((item,index)=>{

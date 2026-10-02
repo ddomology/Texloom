@@ -1,0 +1,98 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-curves}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=muted,font=\sffamily\fontsize{9}{12}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={A curve is more than a stroke}]
+\loomnode[heading] (heading) at (480,48) {A curve is more than a stroke};
+\loomnode[small] (intro) at (480,82) {Trim an interval. Measure distance. Reuse the geometry.};
+\loomnode[formula] (formula) at (480,126) {$\gamma\big|_{[a,b]}\qquad s_i=\dfrac{i}{8}\,L,\quad i=0,\ldots,8$};
+\loompath (rules) {
+  \draw[rule,line width=.65bp] (55,163)--(905,163) (55,488)--(905,488);
+};
+\loomnode[label] (curve-title) at (480,187) {EQUAL ARC-LENGTH SAMPLES ON THE TRIMMED CURVE};
+% Native PGF retains the authored cubic. Its runtime path value is reusable.
+\loomgeometry[draw=rule,line width=2bp] (source) {(90,355) .. controls (165,125) and (650,435) .. (860,240)};
+\TLNode{trimmed}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#71DFC2","strokeWidth":3,"lineCap":"round"}}
+\TLNode{resampled}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"style":{"fill":"none","stroke":"#F3CB84","strokeWidth":0.8,"opacity":0.7}}
+\TLNode{reversed}{path}{"d":"M0 0L1 0","geometry":{"contours":[{"id":"placeholder","start":[0,0],"segments":[{"id":"s","kind":"line","to":[1,0]}]}]},"visible":false}
+\loomparameter[unit=1,min=0.45,max=0.96]{end}{0.83}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomcurve[id=extract,mode=parameter,tolerance=0.005]{trimmed}{trim}{
+ {"path":"source","start":"0.10+0.035*sin(0.55rad*time/1s+phase)","end":"end"}
+}
+\loomcurve[id=equal-samples,tolerance=0.005]{resampled}{resample}{{"path":{"operation":"extract","socket":"path"},"count":9}}
+\loomcurve[id=backwards,tolerance=0.005]{reversed}{reverse}{{"path":{"operation":"extract","socket":"path"}}}
+\TLNode{sample-0}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-0}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-0}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-0","a":"sample-0","b":"tip-0"}
+\loomcurvesample[id=sample-0,tangent=tip-0,distance=16,tolerance=0.005]{sample-0}{{"path":{"operation":"extract","socket":"path"},"parameter":0.0}}
+\TLNode{sample-1}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-1}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-1}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-1","a":"sample-1","b":"tip-1"}
+\loomcurvesample[id=sample-1,tangent=tip-1,distance=16,tolerance=0.005]{sample-1}{{"path":{"operation":"extract","socket":"path"},"parameter":0.125}}
+\TLNode{sample-2}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-2}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-2}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-2","a":"sample-2","b":"tip-2"}
+\loomcurvesample[id=sample-2,tangent=tip-2,distance=16,tolerance=0.005]{sample-2}{{"path":{"operation":"extract","socket":"path"},"parameter":0.25}}
+\TLNode{sample-3}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-3}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-3}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-3","a":"sample-3","b":"tip-3"}
+\loomcurvesample[id=sample-3,tangent=tip-3,distance=16,tolerance=0.005]{sample-3}{{"path":{"operation":"extract","socket":"path"},"parameter":0.375}}
+\TLNode{sample-4}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-4}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-4}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-4","a":"sample-4","b":"tip-4"}
+\loomcurvesample[id=sample-4,tangent=tip-4,distance=16,tolerance=0.005]{sample-4}{{"path":{"operation":"extract","socket":"path"},"parameter":0.5}}
+\TLNode{sample-5}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-5}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-5}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-5","a":"sample-5","b":"tip-5"}
+\loomcurvesample[id=sample-5,tangent=tip-5,distance=16,tolerance=0.005]{sample-5}{{"path":{"operation":"extract","socket":"path"},"parameter":0.625}}
+\TLNode{sample-6}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-6}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-6}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-6","a":"sample-6","b":"tip-6"}
+\loomcurvesample[id=sample-6,tangent=tip-6,distance=16,tolerance=0.005]{sample-6}{{"path":{"operation":"extract","socket":"path"},"parameter":0.75}}
+\TLNode{sample-7}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-7}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-7}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-7","a":"sample-7","b":"tip-7"}
+\loomcurvesample[id=sample-7,tangent=tip-7,distance=16,tolerance=0.005]{sample-7}{{"path":{"operation":"extract","socket":"path"},"parameter":0.875}}
+\TLNode{sample-8}{point}{"x":0,"y":0,"r":3.8,"style":{"fill":"#F3CB84","stroke":"#091C27","strokeWidth":1}}
+\TLNode{tip-8}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{tangent-8}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.1,"opacity":0.8}}
+\TLRelation{lineBetween}{"target":"tangent-8","a":"sample-8","b":"tip-8"}
+\loomcurvesample[id=sample-8,tangent=tip-8,distance=16,tolerance=0.005]{sample-8}{{"path":{"operation":"extract","socket":"path"},"parameter":1.0}}
+
+\TLNode{reverse-probe}{point}{"x":0,"y":0,"r":5.5,"style":{"fill":"#EE8D82","stroke":"#091C27","strokeWidth":1.3}}
+\TLNode{reverse-tip}{point}{"x":0,"y":0,"r":0,"visible":false}
+\TLNode{reverse-direction}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#EE8D82","strokeWidth":2}}
+\TLRelation{lineBetween}{"target":"reverse-direction","a":"reverse-probe","b":"reverse-tip"}
+\loomcurvesample[id=reverse-probe,tangent=reverse-tip,distance=28,tolerance=0.005]{reverse-probe}{
+ {"path":{"operation":"backwards","socket":"path"},"parameter":"0.5+0.42*sin(0.7rad*time/1s+phase)"}
+}
+\loomnode[label,text=mint] (trim-legend) at (240,410) {CUBIC TRIM / EXACT SUBCURVE};
+\loomnode[label,text=gold] (sample-legend) at (480,410) {9 SAMPLES / POLYLINE OUTPUT};
+\loomnode[label,text=coral] (reverse-legend) at (740,410) {REVERSE / OPPOSITE TANGENT};
+\loomnode[small] (caption) at (480,451) {Equal distance is not equal cubic parameter. Source segment references survive the chain.};
+\loomnode[small] (footer) at (480,515) {TEXLOOM / TRIM / RESAMPLE / REVERSE / COMPOSABLE PATH VALUES};
+\end{loomscene}
+\end{document}

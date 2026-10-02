@@ -1,6 +1,7 @@
 import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import {validatePathGeometry} from '../path-contract.js';
 import {validatePrimitive} from '../geometry/primitives.js';
+import {assertCurveProvenance} from '../geometry/curves.js';
 
 type RecordValue = Record<string, unknown>;
 const object = (value: unknown): value is RecordValue =>
@@ -123,7 +124,7 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
       errors.push(...validatePrimitive(input.value).map(d=>({...d,path:`${path}.value${d.path?.replace(/^\$\.primitive/,'')??''}`})));
       break;
     case 'path2d':
-      keys(input, ['type', 'space', 'value'], path, errors);
+      keys(input, ['type', 'space', 'value','provenance'], path, errors);
       errors.push(...validateSpaceRef(input.space, `${path}.space`));
       for (const diagnostic of validatePathGeometry(input.value))
         fail(errors, 'LITERAL_PATH', diagnostic.message, `${path}.value${diagnostic.path}`);
@@ -137,6 +138,9 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
             if (object(segment)) keys(segment, segment.kind === 'cubic' ? ['kind', 'id', 'to', 'c1', 'c2'] : ['kind', 'id', 'to'], `${cp}.segments[${j}]`, errors);
           });
         });
+      }
+      if(input.provenance!==undefined)try{assertCurveProvenance(input.value as any,input.provenance);}catch(error){
+        fail(errors,'LITERAL_PATH_PROVENANCE',error instanceof Error?error.message:String(error),path+'.provenance');
       }
       break;
     case 'transform2d':

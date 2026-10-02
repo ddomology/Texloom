@@ -142,7 +142,8 @@ test('registry rejects duplicate versions, invalid socket contracts and executab
 
 test('graph and operator version are exact contracts with no silent fallback', () => {
   invalid({...graph(), version: 2}, bundle(), /version/i);
-  const g = graph(); g.operations[1].version = 2;
+  // sampleCurve@2 is registered with its own sockets; use an absent version.
+  const g = graph(); g.operations[1].version = 999;
   invalid(g, bundle(), /version|operator/i);
   g.operations[1].version = 1; g.operations[1].operator = 'unknownOperator';
   invalid(g, bundle(), /operator/i);
