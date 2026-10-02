@@ -12,6 +12,16 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from compile import compile_scene, CompileDiagnostic, PT_TO_BP
 from intersection_capture import lower_intersections, IntersectionCaptureDiagnostic
 
+PAIR_NODES = r'''
+\TLNode{pair-a}{path}{"d":"M0 -8C33.333333333333336 16 66.66666666666667 -16 100 8","geometry":{"contours":[{"id":"a","start":[0,-8],"segments":[{"id":"a","kind":"cubic","c1":[33.333333333333336,16],"c2":[66.66666666666667,-16],"to":[100,8]}]}]}}
+\TLNode{pair-b}{path}{"d":"M0 0C33.333333333333336 2 66.66666666666667 -2 100 0","geometry":{"contours":[{"id":"b","start":[0,0],"segments":[{"id":"b","kind":"cubic","c1":[33.333333333333336,2],"c2":[66.66666666666667,-2],"to":[100,0]}]}]}}
+'''
+
+NONMATCHING_NODES = r'''
+\TLNode{param-a}{path}{"d":"M0 0C33.333333333333336 0 66.66666666666667 0 100 100","geometry":{"contours":[{"id":"a","start":[0,0],"segments":[{"id":"a","kind":"cubic","c1":[33.333333333333336,0],"c2":[66.66666666666667,0],"to":[100,100]}]}]}}
+\TLNode{param-b}{path}{"d":"M0 100C0 66.66666666666667 0 33.333333333333336 100 0","geometry":{"contours":[{"id":"b","start":[0,100],"segments":[{"id":"b","kind":"cubic","c1":[0,66.66666666666667],"c2":[0,33.333333333333336],"to":[100,0]}]}]}}
+'''
+
 
 def document(body, extra=''):
     return r'''\documentclass{article}
@@ -239,6 +249,127 @@ class IntersectionCompilerTests(unittest.TestCase):
         self.assertNotIn('operationGraph', bundle)
         with self.assertRaisesRegex(CompileDiagnostic, 'unknown_tolerance'):
             self.compile('unknown', r'\loomintersections{hits}{{"a":"line","b":"cubic","positionTolerance":"unknown_tolerance"}}')
+
+    def test_curve_solver_is_explicit_and_archives_exact_budget_expression(self):
+        graphs = []
+        for name, option in [('default-solver', ''), ('basic-solver', '[solver=basic]')]:
+            folder, records, bundle = self.capture(name, '\\loomintersections'+option+'{hits}{{"a":"line","b":"cubic"}}')
+            lower_intersections(records, bundle, folder, folder)
+            graphs.append(bundle['operationGraph'])
+        self.assertEqual(graphs[0], graphs[1])
+        self.assertEqual(graphs[0]['operations'][0]['version'], 1)
+        expression = '\n 65536 + time / 1s\n'
+        payload = json.dumps({'a': 'pair-a', 'b': 'pair-b', 'maxWork': expression}, indent=2)
+        folder, records, bundle = self.capture('curves-capture', '\\loomintersections[solver=curves,max-depth=40]{hits}{'+payload+'}')
+        lower_intersections(records, bundle, folder, folder)
+        operation = bundle['operationGraph']['operations'][0]
+        self.assertEqual(operation['version'], 2)
+        self.assertEqual(operation['inputs']['maxDepth']['value'], {'type': 'scalar', 'unit': '1', 'value': 40})
+        value = operation['inputs']['maxWork']
+        self.assertEqual(value['unit'], '1')
+        self.assertEqual(value['expression'], expression)
+        self.assertEqual((folder/value['sourceSpan']['file']).read_text(encoding='utf8'), expression+'\n')
+        self.assertEqual((folder/operation['sourceSpan']['file']).read_text(encoding='utf8'), payload+'\n')
+
+    def test_curve_solver_budget_authoring_rejects_implicit_or_invalid_limits(self):
+        cases = [
+            ('budget-basic-option', 'max-work=12', '{}', 'require solver=curves'),
+            ('budget-basic-json', 'solver=basic', '{"maxDepth":40}', 'require solver=curves'),
+            ('budget-solver', 'solver=auto', '{}', 'solver must be'),
+            ('budget-zero', 'solver=curves,max-work=0', '{}', 'integer in'),
+            ('budget-fractional', 'solver=curves,max-depth=1.5', '{}', 'integer in'),
+            ('budget-too-deep', 'solver=curves,max-depth=53', '{}', 'integer in'),
+            ('budget-too-much', 'solver=curves,max-work=1048577', '{}', 'integer in'),
+            ('budget-twice', 'solver=curves,max-work=65536', '{"maxWork":100}', 'both options'),
+        ]
+        for name, option, values, message in cases:
+            with self.subTest(name=name):
+                folder, records, bundle = self.capture(name, '\\loomintersections['+option+']{hits}{'+values+'}')
+                with self.assertRaisesRegex(IntersectionCaptureDiagnostic, message):
+                    lower_intersections(records, bundle, folder, folder)
+
+    def test_two_cubic_roots_match_real_pgf_and_hide_reappear_without_history(self):
+        body = r'''
+\TLTrack{pair-b}{transform.translate}{linear}{[[0,[0,0]],[1,[0,1.8]],[2,[0,0]]]}
+\loomintersections[solver=curves,max-work=65536,max-depth=40]{hits}{{"a":"pair-a","b":"pair-b"}}
+\loomintersectionpoint[along=b,index=0,missing=hide]{P}{{"intersections":"hits"}}
+\loomintersectionpoint[along=b,index=1,missing=hide]{Q}{{"intersections":"hits"}}
+\loomintersectionpoint[along=b,index=2,missing=hide]{R}{{"intersections":"hits"}}
+\immediate\openout\ReferenceFile=pgf-reference.txt
+\begin{tikzpicture}[x=1bp,y=1bp]
+  \path[name path=A] (0,-8) .. controls (33.333333333333336,16) and (66.66666666666667,-16) .. (100,8);
+  \path[name path=B] (0,0) .. controls (33.333333333333336,2) and (66.66666666666667,-2) .. (100,0);
+  \path[name intersections={of=A and B,sort by=B,name=hit,total=\Total}]
+    \pgfextra{\immediate\write\ReferenceFile{count:\Total}};
+  \foreach \i in {1,2,3}{
+    \pgfextractx{\ReferenceX}{\pgfpointanchor{hit-\i}{center}}
+    \pgfextracty{\ReferenceY}{\pgfpointanchor{hit-\i}{center}}
+    \immediate\write\ReferenceFile{\the\ReferenceX,\the\ReferenceY}}
+\end{tikzpicture}
+\immediate\closeout\ReferenceFile
+'''
+        output, _ = self.compile('two-cubics', body, PAIR_NODES)
+        results = samples(output/'bundle.json', (0, 1, 2, 0))
+        self.assertTrue(all('frame' in value for value in results), results)
+        frames = [value['frame'] for value in results]
+        self.assertEqual(frames[0], frames[-1])
+        self.assertEqual([len(frame['intersections']['sets']['hits']['result']['points']) for frame in frames], [3, 1, 3, 3])
+        initial = {node['id']: node for node in frames[0]['nodes']}
+        hidden = {node['id']: node for node in frames[1]['nodes']}
+        for name, parameter in [('P', .2), ('Q', .5), ('R', .8)]:
+            self.assertAlmostEqual(initial[name]['x'], 100*parameter, delta=1e-5)
+            self.assertAlmostEqual(initial[name]['y'], 6*parameter*(1-parameter)*(1-2*parameter), delta=1e-7)
+        self.assertEqual(hidden['P']['style']['opacity'], .6)
+        self.assertEqual([hidden['Q']['style']['opacity'], hidden['R']['style']['opacity']], [0, 0])
+        self.assertEqual([hidden['Q']['x'], hidden['Q']['y']], [0, 0])
+        report = frames[0]['intersections']['sets']['hits']['report']
+        self.assertEqual(report['solver'], 'adaptive-cubic-v2')
+        self.assertEqual(report['cubicPairs'], 1)
+        self.assertGreater(report['work'], 0)
+        pgf = next(output.glob('runs/compile-*/source/pgf-reference.txt')).read_text().splitlines()
+        self.assertEqual(pgf[0], 'count:3')
+        for line, parameter in zip(pgf[1:], [.2, .5, .8]):
+            x, y = [float(v.removesuffix('pt'))*PT_TO_BP for v in line.split(',')]
+            # PGF's two-curve subdivision reference is coarse (about 0.1 bp
+            # here). The runtime is checked above against exact analytic roots
+            # at 1e-5 bp; PGF independently checks contact count and order.
+            self.assertAlmostEqual(x, 100*parameter, delta=.15)
+            self.assertAlmostEqual(y, 6*parameter*(1-parameter)*(1-2*parameter), delta=.15)
+
+    def test_curve_solver_handles_nonmatching_parameterizations(self):
+        output, _ = self.compile('nonmatching-cubics', r'''
+\loomintersections[solver=curves]{hits}{{"a":"param-a","b":"param-b"}}
+\loomintersectionpoint[along=a,missing=error]{P}{{"intersections":"hits"}}
+''', NONMATCHING_NODES)
+        result = samples(output/'bundle.json')[0]
+        self.assertNotIn('error', result, result.get('error'))
+        frame = result['frame']
+        # A(t)=(100t,100t^3), B(u)=(100u^3,100(1-u)).
+        # The unique intersection solves u^9+u-1=0, independently by bisection.
+        low, high = 0., 1.
+        for _ in range(80):
+            middle = (low+high)/2
+            if middle**9+middle-1 < 0:
+                low = middle
+            else:
+                high = middle
+        u = (low+high)/2
+        selected = frame['intersections']['selections']['intersection:P']
+        point = next(node for node in frame['nodes'] if node['id']=='P')
+        self.assertAlmostEqual(point['x'], 100*u**3, delta=1e-5)
+        self.assertAlmostEqual(point['y'], 100*(1-u), delta=1e-5)
+        self.assertAlmostEqual(selected['incident']['parameterA'], u**3, delta=1e-8)
+        self.assertAlmostEqual(selected['incident']['parameterB'], u, delta=1e-8)
+
+    def test_curve_solver_budgets_and_legacy_version_are_not_silent_fallbacks(self):
+        output, _ = self.compile('basic-cubic-pair', r'\loomintersections{hits}{{"a":"pair-a","b":"pair-b"}}', PAIR_NODES)
+        self.assertIn('INTERSECTION_UNSUPPORTED', samples(output/'bundle.json')[0]['error'])
+        output, _ = self.compile('exhausted-cubic-pair', r'\loomintersections[solver=curves,max-work=1]{hits}{{"a":"param-a","b":"param-b"}}', NONMATCHING_NODES)
+        self.assertIn('INTERSECTION_BUDGET', samples(output/'bundle.json')[0]['error'])
+        output, _ = self.compile('dynamic-cubic-budget', r'\loomintersections[solver=curves]{hits}{{"a":"pair-a","b":"pair-b","maxWork":"65536+time/2s"}}', PAIR_NODES)
+        results = samples(output/'bundle.json', (0, 1))
+        self.assertIn('frame', results[0], results[0])
+        self.assertIn('INTERSECTION_BUDGET', results[1]['error'])
 
 
 if __name__ == '__main__':

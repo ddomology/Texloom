@@ -1,5 +1,6 @@
 import {OperationValidationError,type DeepReadonly,type LiteralValue,type Operation,type OperatorDefinition,type SpaceRef} from '../ir/operations.js';
-import {intersectPathGeometries,type IntersectionSet} from '../geometry/intersections.js';
+import {intersectPathGeometries,intersectPathGeometriesV2,type AdvancedIntersectionReport,type IntersectionSet} from '../geometry/intersections.js';
+import {orderedIntersectionPoints} from './select-result.js';
 import {sameSpace} from '../geometry/spaces.js';
 import {validateLiteralValue} from './values.js';
 
@@ -11,19 +12,23 @@ export const intersectionOperatorDefinitions:OperatorDefinition[]=[
     inputs:{a:path,b:path,domainA:scalar('1',0),domainB:scalar('1',0),
       positionTolerance:scalar('bp',1e-7),parameterTolerance:scalar('1',1e-9)},
     outputs:{intersections:{type:'intersections2d',space:'space'},count:{type:'scalar',unit:'1'},overlapCount:{type:'scalar',unit:'1'}}},
+  {name:'intersectPaths',version:2,spaces:['space'],pure:true,deterministic:true,
+    inputs:{a:path,b:path,domainA:scalar('1',0),domainB:scalar('1',0),
+      positionTolerance:scalar('bp',1e-7),parameterTolerance:scalar('1',1e-9),maxWork:scalar('1',65536),maxDepth:scalar('1',40)},
+    outputs:{intersections:{type:'intersections2d',space:'space'},count:{type:'scalar',unit:'1'},overlapCount:{type:'scalar',unit:'1'}}},
   {name:'selectIntersection',version:1,spaces:['space'],pure:true,deterministic:true,
     inputs:{intersections:{value:{type:'intersections2d',space:'space'},required:true},along:scalar('1'),index:scalar('1',0),
       missing:scalar('1'),fallback:{value:{type:'vec2',role:'point',space:'space'},required:true},visibleOpacity:scalar('1',1)},
     outputs:{position:{type:'vec2',role:'point',space:'space'},found:{type:'scalar',unit:'1'},opacity:{type:'scalar',unit:'1'},
       parameterA:{type:'scalar',unit:'1'},parameterB:{type:'scalar',unit:'1'}}},
 ];
-const names=new Set(intersectionOperatorDefinitions.map(definition=>definition.name));
-export const isIntersectionOperator=(name:string,version:number)=>version===1&&names.has(name);
+const names=new Set(intersectionOperatorDefinitions.map(definition=>`${definition.name}@${definition.version}`));
+export const isIntersectionOperator=(name:string,version:number)=>names.has(`${name}@${version}`);
 
 type PointResult=IntersectionSet['points'][number];
 type Incident=PointResult['incidents'][number];
 export interface IntersectionEvaluation {
-  sets:Record<string,{space:SpaceRef;result:DeepReadonly<IntersectionSet>}>;
+  sets:Record<string,{space:SpaceRef;result:DeepReadonly<IntersectionSet>;report?:DeepReadonly<AdvancedIntersectionReport>}>;
   selections:Record<string,{space:SpaceRef;along:'a'|'b';index:number;
     selected:DeepReadonly<PointResult>|null;incident:DeepReadonly<Incident>|null}>;
 }
@@ -56,17 +61,6 @@ function binary(op:Authored,inputs:Inputs,name:string):number {
   if(value!==0&&value!==1)fail(op,'INTERSECTION_POLICY',`${name} must be 0 or 1.`,`.inputs.${name}`);
   return value;
 }
-const compareNumber=(a:number,b:number)=>a<b?-1:a>b?1:0;
-const compareText=(a:string,b:string)=>a<b?-1:a>b?1:0;
-function compareSide(a:Incident,b:Incident,side:'a'|'b'):number {
-  const ar=a[side],br=b[side],parameter=side==='a'?'parameterA':'parameterB';
-  return compareNumber(ar.contourIndex,br.contourIndex)||compareNumber(ar.segmentIndex,br.segmentIndex)||
-    compareNumber(a[parameter],b[parameter])||compareText(ar.contourId,br.contourId)||compareText(ar.segmentId,br.segmentId);
-}
-function compareIncident(a:Incident,b:Incident,along:'a'|'b'):number {
-  return compareSide(a,b,along)||compareSide(a,b,along==='a'?'b':'a')||compareText(a.contact,b.contact);
-}
-
 /** Selection is stateless and separate from solving. Overlaps are never points. */
 export function executeIntersectionOperation(op:Authored,inputs:Inputs,metadata?:IntersectionEvaluation):Record<string,LiteralValue>|undefined {
   if(!isIntersectionOperator(op.operator,op.version))return;
@@ -74,11 +68,14 @@ export function executeIntersectionOperation(op:Authored,inputs:Inputs,metadata?
     const s=space(op);
     if(op.operator==='intersectPaths') {
       const a=input(op,inputs,'a','path2d',s),b=input(op,inputs,'b','path2d',s);
-      const result=intersectPathGeometries(a.value,b.value,{
+      const configuration={
         modeA:binary(op,inputs,'domainA')===0?'segment':'line',modeB:binary(op,inputs,'domainB')===0?'segment':'line',
         positionTolerance:number(op,inputs,'positionTolerance','bp'),parameterTolerance:number(op,inputs,'parameterTolerance'),
-      });
-      if(metadata)metadata.sets[op.id]={space:structuredClone(s),result:structuredClone(result)};
+      } as const;
+      const advanced=op.version===2?intersectPathGeometriesV2(a.value,b.value,{...configuration,
+        maxWork:number(op,inputs,'maxWork'),maxDepth:number(op,inputs,'maxDepth')}):undefined;
+      const result=advanced?.intersections??intersectPathGeometries(a.value,b.value,configuration);
+      if(metadata)metadata.sets[op.id]={space:structuredClone(s),result:structuredClone(result),...(advanced?{report:structuredClone(advanced.report)}:{})};
       return {intersections:{type:'intersections2d',space:s,value:structuredClone(result) as IntersectionSet},
         count:{type:'scalar',unit:'1',value:result.points.length},overlapCount:{type:'scalar',unit:'1',value:result.overlaps.length}};
     }
@@ -89,8 +86,7 @@ export function executeIntersectionOperation(op:Authored,inputs:Inputs,metadata?
     if(fallback.role!=='point')fail(op,'OPERATION_RUNTIME_TYPE','Fallback requires a point.','.inputs.fallback');
     if(visibleOpacity<0||visibleOpacity>1)fail(op,'INTERSECTION_OPACITY','Visible opacity must be in [0,1].','.inputs.visibleOpacity');
     if(result.overlaps.length)fail(op,'INTERSECTION_OVERLAP','Overlapping intervals cannot be selected as isolated intersection points.','.inputs.intersections');
-    const candidates=result.points.map(point=>({point,incident:[...point.incidents].sort((a,b)=>compareIncident(a,b,along))[0]}));
-    candidates.sort((a,b)=>compareIncident(a.incident,b.incident,along)||compareNumber(a.point.point[0],b.point.point[0])||compareNumber(a.point.point[1],b.point.point[1]));
+    const candidates=orderedIntersectionPoints(result.points,along);
     const selected=candidates[index];
     if(!selected&&missing===0)fail(op,'INTERSECTION_MISSING',`No isolated intersection at index ${index}.`,'.inputs.index');
     if(metadata)metadata.selections[op.id]={space:structuredClone(s),along,index,

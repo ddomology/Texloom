@@ -56,7 +56,8 @@ def _json(text: str):
 
 def _options(text: str, select: bool) -> dict:
     allowed = ({'id', 'space', 'along', 'index', 'missing', 'visible-opacity'} if select else
-               {'space', 'domain-a', 'domain-b', 'position-tolerance', 'parameter-tolerance'})
+               {'space', 'domain-a', 'domain-b', 'position-tolerance', 'parameter-tolerance',
+                'solver', 'max-work', 'max-depth'})
     result = {}
     for entry in text.split(','):
         if not entry.strip():
@@ -70,7 +71,7 @@ def _options(text: str, select: bool) -> dict:
             raise IntersectionCaptureDiagnostic(f'Duplicate intersection option: {key}')
         if not value:
             raise IntersectionCaptureDiagnostic(f'Intersection option {key} must be nonempty')
-        if key in ('index', 'visible-opacity', 'position-tolerance', 'parameter-tolerance'):
+        if key in ('index', 'visible-opacity', 'position-tolerance', 'parameter-tolerance', 'max-work', 'max-depth'):
             value = _json(value)
             if not _finite(value):
                 raise IntersectionCaptureDiagnostic(f'Intersection {key} must be finite')
@@ -80,6 +81,12 @@ def _options(text: str, select: bool) -> dict:
                 raise IntersectionCaptureDiagnostic('Intersection visible-opacity must be in [0,1]')
             if key.endswith('-tolerance') and value <= 0:
                 raise IntersectionCaptureDiagnostic(f'Intersection {key} must be positive')
+            if key in ('max-work', 'max-depth'):
+                upper = 1048576 if key == 'max-work' else 52
+                if not isinstance(value, int) or not 1 <= value <= upper:
+                    raise IntersectionCaptureDiagnostic(f'Intersection {key} must be an integer in [1,{upper}]')
+        if key == 'solver' and value not in ('basic', 'curves'):
+            raise IntersectionCaptureDiagnostic('Intersection solver must be basic or curves')
         if key in ('domain-a', 'domain-b') and value not in ('segment', 'line'):
             raise IntersectionCaptureDiagnostic(f'Intersection {key} must be segment or line')
         if key == 'along' and value not in ('a', 'b'):
@@ -186,13 +193,20 @@ def lower_intersections(records: list[dict], bundle: dict, execution: Path, outp
         if not isinstance(values, dict):
             raise IntersectionCaptureDiagnostic('Intersection inputs must be a JSON object')
         span = _archive(text, path, output)
+        curves = not select and options.get('solver', 'basic') == 'curves'
+        if not select and not curves and (set(options) & {'max-work', 'max-depth'} or set(values) & {'maxWork', 'maxDepth'}):
+            raise IntersectionCaptureDiagnostic('Intersection maxWork/maxDepth budgets require solver=curves')
         sockets = ({'intersections': 'intersections', 'index': '1', 'visibleOpacity': '1'} if select else
                    {'a': 'path', 'b': 'path', 'positionTolerance': 'bp', 'parameterTolerance': '1'})
+        if curves:
+            sockets.update({'maxWork': '1', 'maxDepth': '1'})
         unexpected = set(values) - set(sockets)
         if unexpected:
             raise IntersectionCaptureDiagnostic(f'Unknown intersection input: {sorted(unexpected)[0]}')
         option_sockets = ({'index': 'index', 'visible-opacity': 'visibleOpacity'} if select else
                           {'position-tolerance': 'positionTolerance', 'parameter-tolerance': 'parameterTolerance'})
+        if curves:
+            option_sockets.update({'max-work': 'maxWork', 'max-depth': 'maxDepth'})
         for option, socket in option_sockets.items():
             if option in options and socket in values:
                 raise IntersectionCaptureDiagnostic(f'Intersection {socket} specified in both options and JSON')
@@ -206,7 +220,7 @@ def lower_intersections(records: list[dict], bundle: dict, execution: Path, outp
             for option, socket in [('domain-a', 'domainA'), ('domain-b', 'domainB')]:
                 if option in options:
                     inputs[socket] = _literal(0 if options[option] == 'segment' else 1)
-            graph['operations'].append({'id': operation_id, 'operator': 'intersectPaths', 'version': 1,
+            graph['operations'].append({'id': operation_id, 'operator': 'intersectPaths', 'version': 2 if curves else 1,
                 'spaces': {'space': space}, 'inputs': inputs, 'sourceSpan': span})
             continue
         target = _metadata(execution, base, 'target')
@@ -240,5 +254,4 @@ def lower_intersections(records: list[dict], bundle: dict, execution: Path, outp
             graph['bindings'].append({'target': target, 'property': 'style.opacity',
                 'value': {'operation': operation_id, 'socket': 'opacity'}, 'sourceSpan': span})
     bundle['version'] = '0.3'
-
 

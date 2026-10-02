@@ -326,6 +326,20 @@ See [path intersections](docs/intersections.md) for finite/infinite domains,
 typed outputs, numerical tolerances, selection, and TeX authoring. Cubic-cubic
 solving is the subsequent PR 12 scope.
 
+## Cubic intersections (PR 12)
+
+Opt into `solver=curves` for cubic-cubic intersection sets. The versioned solver
+uses bounded adaptive subdivision and root refinement, reports unresolved
+contacts explicitly, and shares deterministic branch selection across web,
+SVG and Canvas/video. The default PR 11 solver retains its existing behavior.
+
+```sh
+python tools/build.py examples/cubic-intersections.tex --out build/cubic-intersections --video
+```
+
+See [cubic intersections](docs/cubic-intersections.md) for supported tangencies,
+overlap limits, total work budgets, diagnostics and the v2 core/graph APIs.
+
 ## Core API
 
 ```ts
