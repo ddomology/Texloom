@@ -2,6 +2,14 @@ import { assertBundle, relationSources, type Bundle, type Camera, type EllipseNo
 import { geometryError, inverseMatrix, localMatrix, multiplyMatrix, pathData, pathPoint, pathTangent, transformPath, transformPoint, transformVector, worldMatrix, type Point } from './geometry.js';
 import {geometryPointSlot} from './path-contract.js';
 import {PathGeometryError, pathGeometryData, revealGeometry, sampleGeometry, type PathPoint} from './path-geometry.js';
+import {OperationValidationError} from './ir/operations.js';
+
+/** Graph metadata must never be silently ignored by an older execution engine. */
+function assertExecutable(bundle: Bundle): void {
+  if (bundle.operationGraph && (bundle.operationGraph.operations.length || bundle.operationGraph.bindings.length))
+    throw new OperationValidationError([{severity:'error',code:'OPERATION_EXECUTION_UNSUPPORTED',
+      message:'Operation graphs can be validated and prepared, but executable lowering is not available in this runtime.',path:'$.operationGraph'}]);
+}
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -169,6 +177,7 @@ function evaluateValidated(bundle: Bundle, time: number, ordered: Relation[]): E
 /** Convenience evaluation at an absolute time. Treat returned resources as immutable. */
 export function evaluate(bundle: Bundle, time: number): EvaluatedFrame {
   assertBundle(bundle);
+  assertExecutable(bundle);
   return evaluateValidated(bundle, time, relationOrder(bundle.relations, bundle.nodes));
 }
 function freezeDeep(value: any): void {
@@ -179,6 +188,7 @@ function freezeDeep(value: any): void {
 /** Validate and snapshot once for playback/export; seeking has no playback-history state. */
 export function createEvaluator(bundle: Bundle): (time: number) => EvaluatedFrame {
   assertBundle(bundle);
+  assertExecutable(bundle);
   const snapshot = structuredClone(bundle);
   freezeDeep(snapshot);
   const ordered = relationOrder(snapshot.relations, snapshot.nodes);
