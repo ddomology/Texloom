@@ -28,6 +28,7 @@ from anchor_capture import lower_anchors
 from curve_capture import lower_curves
 from intersection_capture import lower_intersections
 from connector_capture import lower_connectors
+from arrow_capture import lower_arrows
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -168,7 +169,7 @@ def compile_scene(source,out):
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     lower_expressions(records,bundle,execution,out)
     lower_fields(records,bundle,execution,out)
@@ -179,6 +180,7 @@ def compile_scene(source,out):
     lower_curves(records,bundle,execution,out)
     lower_intersections(records,bundle,execution,out)
     lower_connectors(records,bundle,execution,out)
+    lower_arrows(records,bundle,execution,out)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
     targets=[(t['target'],t['property']) for t in bundle['tracks']]

@@ -1,4 +1,5 @@
 import type {PathGeometry} from './path-geometry.js';
+import type {ArrowOptions, ArrowGeometryResult} from './geometry/arrowheads.js';
 import {validatePathGeometry, parseGeometryProperty, geometryPointSlot} from './path-contract.js';
 import type {Diagnostic, OperationGraph, SourceSpan} from './ir/operations.js';
 import {validateOperationGraphInContext} from './operations/validate.js';
@@ -23,7 +24,8 @@ export interface MeasuredAnchorMetrics {kind:'pgf';shape:string;logicalTextBox:[
 export interface GroupNode extends NodeBase { kind: 'group'; anchors?: Record<string, [number, number]>;anchorMetrics?:MeasuredAnchorMetrics }
 export interface ResolvedPath { start: [number, number]; c1: [number, number]; c2: [number, number]; end: [number, number] }
 export interface PathNode extends NodeBase { kind: 'path'; d: string; arrowStart?: boolean; arrowEnd?: boolean; arrowSize?: number; resolvedPath?: ResolvedPath;
-  geometry?: PathGeometry; reveal?: number; revealMode?: 'parameter'|'length'; pathTolerance?: number }
+  geometry?: PathGeometry; reveal?: number; revealMode?: 'parameter'|'length'; pathTolerance?: number;
+  arrows?: ArrowOptions; resolvedArrows?: ArrowGeometryResult }
 export interface EllipseNode extends NodeBase { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
 export interface PointNode extends NodeBase { kind: 'point'; x: number; y: number; r: number; phase?: number; progress?: number }
 export interface LineNode extends NodeBase { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
@@ -73,7 +75,9 @@ const common: Record<string, PropertySpec> = {
   'style.strokeOpacity': { min: 0, max: 1 }, 'style.strokeWidth': { min: 0 }, 'style.miterLimit': { min: 1 },
 };
 const scalarProperties: Record<string, Record<string, PropertySpec>> = {
-  group: {}, path: {reveal:{min:0,max:1}}, ellipse: { cx: {}, cy: {}, rx: { strictMin: 0 }, ry: { strictMin: 0 } },
+  group: {}, path: {reveal:{min:0,max:1},'arrows.start':{min:0,max:2},'arrows.end':{min:0,max:2},
+    'arrows.length':{strictMin:0},'arrows.width':{strictMin:0},'arrows.inset':{min:0},
+    'arrows.shortenStart':{min:0},'arrows.shortenEnd':{min:0},'arrows.tolerance':{strictMin:0}}, ellipse: { cx: {}, cy: {}, rx: { strictMin: 0 }, ry: { strictMin: 0 } },
   point: { x: {}, y: {}, r: { min: 0 }, phase: {}, progress:{min:0,max:1} }, line: { x1: {}, y1: {}, x2: {}, y2: {} },
   tex: { x: {}, y: {}, scale: { strictMin: 0 } }, field: { x: {}, y: {}, width: { strictMin: 0 }, height: { strictMin: 0 } },
   camera: { x: {}, y: {}, zoom: { strictMin: 0 }, rotation: {} },
@@ -229,6 +233,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       }
     }
     for (const [key, spec] of Object.entries(scalarProperties[n.kind])) {
+      if(key.startsWith('arrows.'))continue; // Optional nested profile is validated below.
       if (['phase','scale','progress','reveal'].includes(key) && n[key] === undefined) continue;
       number(n[key], `${path}.${key}`, spec);
     }
@@ -257,6 +262,19 @@ export function validateBundle(input: unknown): Diagnostic[] {
       for (const key of ['arrowStart', 'arrowEnd']) if (n[key] !== undefined && typeof n[key] !== 'boolean') error('ARROW_BOOLEAN', `${key} must be boolean.`, `${path}.${key}`);
       if (n.arrowSize !== undefined) number(n.arrowSize, `${path}.arrowSize`, { strictMin: 0 });
       if (n.resolvedPath !== undefined) error('GENERATED_GEOMETRY', 'resolvedPath is generated during evaluation; author a connect relation.', `${path}.resolvedPath`);
+      if (n.resolvedArrows !== undefined) error('GENERATED_GEOMETRY', 'resolvedArrows is generated during evaluation; author arrows options.', `${path}.resolvedArrows`);
+      if (n.arrows !== undefined) {
+        if (!object(n.arrows)) error('ARROW_OPTIONS','Expected arrow options.',path+'.arrows');
+        else for (const [key,value] of Object.entries(n.arrows)) {
+          const at=path+'.arrows.'+key, spec=propertySpec('path','arrows.'+key);
+          if(key==='collision')choice(value,['error','clamp'],at);
+          else if(spec){number(value,at,spec);if(['start','end'].includes(key)&&![0,1,2].includes(value as number))error('ARROW_KIND','Tip kind must be 0, 1 or 2.',at);}
+          else error('ARROW_OPTIONS','Unknown arrow option.',at);
+        }
+        if(!n.geometry)error('ARROW_GEOMETRY','Explicit arrows require editable geometry.',path+'.arrows');
+        if(n.arrowStart!==undefined||n.arrowEnd!==undefined||n.arrowSize!==undefined)
+          error('ARROW_PROFILE_CONFLICT','Explicit arrows and legacy arrow flags cannot be mixed.',path+'.arrows');
+      }
       if(n.geometry!==undefined){
         if(b.version!=='0.3')error('PATH_VERSION','Structured path geometry requires version 0.3.',path);
         for(const d of validatePathGeometry(n.geometry))error('PATH_GEOMETRY',d.message,path+'.geometry'+d.path);
@@ -427,7 +445,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
       if(!producer||producer.source!==r.source)error('PATH_POINT_SOURCE','Direction point must sample the same path via pointOnPath.',`$.relations[${i}].point`);
     }
   });
-  for (const [id, n] of nodes) if (n.kind === 'path' && (n.arrowStart || n.arrowEnd) && !connectTargets.has(id)) error('ARROW_GEOMETRY', 'Arrowheads require a path generated by a connect relation.', `$.nodes.${id}`);
+  for (const [id, n] of nodes) if (n.kind === 'path' && (n.arrowStart || n.arrowEnd) && !connectTargets.has(id) && !n.geometry) error('ARROW_GEOMETRY', 'Arrowheads require editable geometry or a connect relation.', `$.nodes.${id}`);
   // Every matrix inverted for a connector or label must remain nonsingular.
   // Continuous scale interpolation crossing zero is rejected up front; runtime
   // inversion also checks composed matrices for numerical overflow.

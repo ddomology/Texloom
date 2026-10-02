@@ -1,5 +1,7 @@
 import type {Clip, EvaluatedFrame, Matrix, Node, PaintItem, PathNode, Style, Transform} from './schema.js';
 import {fieldColor} from './render-svg.js';
+import {pathGeometryData} from './path-geometry.js';
+import {legacyArrowPoints} from './geometry/arrowheads.js';
 
 export interface CanvasOptions {
   background?: string;
@@ -104,21 +106,11 @@ function drawPath(ctx: CanvasRenderingContext2D, path: Path2D, paint: PaintState
 function arrowPath(node: PathNode, end: boolean): Path2D {
   const path = node.resolvedPath;
   if (!path) throw new Error(`Arrow path ${node.id} has not been evaluated`);
-  const tip = end ? path.end : path.start;
-  const inner = end ? path.c2 : path.c1;
-  let dx = tip[0] - inner[0], dy = tip[1] - inner[1];
-  if (Math.hypot(dx, dy) < 1e-10) {
-    const opposite = end ? path.start : path.end;
-    dx = tip[0] - opposite[0]; dy = tip[1] - opposite[1];
-  }
-  const length = Math.hypot(dx, dy);
-  if (length < 1e-10) throw new Error(`Arrow path ${node.id} has no direction`);
-  const ux = dx / length, uy = dy / length, size = node.arrowSize ?? 9;
-  const bx = tip[0] - ux * size, by = tip[1] - uy * size;
+  const [tip, left, right] = legacyArrowPoints(path, end, node.arrowSize ?? 9);
   const head = new Path2D();
   head.moveTo(...tip);
-  head.lineTo(bx - uy * size * .42, by + ux * size * .42);
-  head.lineTo(bx + uy * size * .42, by - ux * size * .42);
+  head.lineTo(...left);
+  head.lineTo(...right);
   head.closePath();
   return head;
 }
@@ -255,8 +247,15 @@ export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2
             for (const child of children.get(node.id) ?? []) renderNode(child, surface, paint);
             break;
           case 'path': {
-            drawPath(surface, new Path2D(node.d), paint);
             const headPaint = {...paint, fill: paint.stroke, fillOpacity: paint.strokeOpacity, stroke: 'none'};
+            if (node.resolvedArrows) {
+              drawPath(surface, new Path2D(pathGeometryData(node.resolvedArrows.shaft)), {...paint, fill: 'none', lineCap: 'butt'});
+              for (const geometry of [node.resolvedArrows.startTip, node.resolvedArrows.endTip]) {
+                if (geometry.contours.length) drawPath(surface, new Path2D(pathGeometryData(geometry)), headPaint);
+              }
+              break;
+            }
+            drawPath(surface, new Path2D(node.d), paint);
             if (node.arrowStart) drawPath(surface, arrowPath(node, false), headPaint);
             if (node.arrowEnd) drawPath(surface, arrowPath(node, true), headPaint);
             break;

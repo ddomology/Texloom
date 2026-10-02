@@ -34,3 +34,5 @@ export * from './geometry/intersections-cubic.js';
 export {intersectionOperatorDefinitions,executeIntersectionOperation,type IntersectionEvaluation} from './operations/intersections.js';
 export {connectorOperatorDefinitions,executeConnectorOperation} from './operations/connectors.js';
 export {pathLabelOperatorDefinitions,executePathLabelOperation} from './operations/path-labels.js';
+export * from './geometry/arrowheads.js';
+export {arrowOperatorDefinitions,executeArrowOperation} from './operations/arrows.js';

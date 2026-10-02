@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-arrows}[2026/10/03 Texloom explicit arrow-tip capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLARserial
+\TLARserial=0
+\NewDocumentCommand\loomarrows{O{} m +v}{%
+  \global\advance\TLARserial by 1
+  \edef\TLEbase{\jobname.tl-arrow-\the\TLARserial}%
+  \immediate\write\TLrecords{\string{"type":"arrow-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEwrite{inputs}{#3}}
+\endinput

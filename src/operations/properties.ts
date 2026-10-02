@@ -4,6 +4,7 @@ import type {Unit} from '../fields/ast.js';
 
 /** Units shared by expression destinations and scalar property input reads. */
 export function scalarPropertyUnit(property:string):Unit {
+  if(property.startsWith('arrows.')&&!['arrows.start','arrows.end'].includes(property))return 'bp';
   return ['transform.rotate','rotation','phase'].includes(property)?'rad'
     : ['x','y','cx','cy','x1','x2','y1','y2','rx','ry','r','width','height','style.strokeWidth'].includes(property)?'bp':'1';
 }
