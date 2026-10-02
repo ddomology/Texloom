@@ -22,6 +22,7 @@ from tikz_capture import CAPTURE_PREAMBLE, read_capture, read_soft_path, lower_r
 from expression_capture import lower_expressions
 from field_capture import lower_fields
 from deformation_capture import lower_deformations
+from coordinate_capture import lower_coordinates
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -161,11 +162,12 @@ def compile_scene(source,out):
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     lower_expressions(records,bundle,execution,out)
     lower_fields(records,bundle,execution,out)
     lower_deformations(records,bundle,execution,out)
+    lower_coordinates(records,bundle,execution,out)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
     targets=[(t['target'],t['property']) for t in bundle['tracks']]

@@ -1,0 +1,88 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\usepackage{texloom-coordinates}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  formula/.style={text=ink,font=\fontsize{17}{22}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Geometry, in the right space}]
+\loomnode[heading] (heading) at (480,50) {Geometry, in the right space};
+\loomnode[small] (intro) at (480,85) {A moving triangle. Live coordinates. One explicit Euclidean chart.};
+\loomnode[formula] (formula) at (480,128)
+  {$M=\dfrac{A+B}{2},\qquad F=A+\dfrac{(C-A)\cdot(B-A)}{\|B-A\|^2}(B-A)$};
+\loompath (guides) {
+  \draw[rule,line width=.65bp] (55,163)--(905,163) (55,489)--(905,489);
+  \fill[gold] (155,466) circle[radius=4bp];
+  \node[text=muted,font=\sffamily\fontsize{10}{13}\selectfont,anchor=west] at (168,466) {Midpoint};
+  \fill[coral] (336,466) circle[radius=4bp];
+  \node[text=muted,font=\sffamily\fontsize{10}{13}\selectfont,anchor=west] at (349,466) {Projection onto the line};
+  \draw[ink,line width=1.6bp] (600,466) circle[radius=5bp];
+  \node[text=muted,font=\sffamily\fontsize{10}{13}\selectfont,anchor=west] at (614,466) {Projection onto the segment};
+};
+% Explicit chart: local +y is up; source points remain ordinary typed bp data.
+% Scene copies make legacy lineBetween and text attachment consume one space.
+\TLNode{chart}{group}{"transform":{"translate":[150,415],"scale":[1,-1]}}
+\TLNode{a-local}{point}{"parent":"chart","x":0,"y":0,"r":1,"style":{"opacity":0}}
+\TLNode{b-local}{point}{"parent":"chart","x":560,"y":0,"r":1,"style":{"opacity":0}}
+\TLNode{c-local}{point}{"parent":"chart","x":600,"y":190,"r":1,"style":{"opacity":0}}
+\TLNode{extension}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#31505C","strokeWidth":1.2,"dash":[4,5]}}
+\TLNode{edge-ab}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#E5F1EF","strokeWidth":2,"opacity":0.75}}
+\TLNode{edge-ac}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#71DFC2","strokeWidth":2,"opacity":0.8}}
+\TLNode{edge-bc}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#71DFC2","strokeWidth":2,"opacity":0.8}}
+\TLNode{median}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#F3CB84","strokeWidth":1.4,"opacity":0.65}}
+\TLNode{altitude}{line}{"x1":0,"y1":0,"x2":0,"y2":0,"style":{"stroke":"#EE8D82","strokeWidth":1.8,"dash":[5,5]}}
+\TLNode{A}{point}{"x":0,"y":0,"r":4.5,"style":{"fill":"#E5F1EF"}}
+\TLNode{B}{point}{"x":0,"y":0,"r":4.5,"style":{"fill":"#E5F1EF"}}
+\TLNode{C}{point}{"x":0,"y":0,"r":5.5,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":1.2}}
+\TLNode{M}{point}{"x":0,"y":0,"r":5,"style":{"fill":"#F3CB84"}}
+\TLNode{F}{point}{"x":0,"y":0,"r":4.5,"style":{"fill":"#EE8D82"}}
+\TLNode{S}{point}{"x":0,"y":0,"r":9,"style":{"fill":"none","stroke":"#E5F1EF","strokeWidth":1.5}}
+\TLNode{E}{point}{"x":0,"y":0,"r":1,"style":{"opacity":0}}
+\TLRelation{lineBetween}{"target":"extension","a":"A","b":"E"}
+\TLRelation{lineBetween}{"target":"edge-ab","a":"A","b":"B"}
+\TLRelation{lineBetween}{"target":"edge-ac","a":"A","b":"C"}
+\TLRelation{lineBetween}{"target":"edge-bc","a":"B","b":"C"}
+\TLRelation{lineBetween}{"target":"median","a":"C","b":"M"}
+\TLRelation{lineBetween}{"target":"altitude","a":"C","b":"F"}
+\TLMath{letter-a}{A}
+\TLMath{letter-b}{B}
+\TLMath{letter-c}{C}
+\TLMath{letter-m}{M}
+\TLMath{letter-f}{F}
+\TLNode{label-a}{tex}{"resourceId":"letter-a","x":0,"y":0,"scale":1.2,"style":{"fill":"#E5F1EF"}}
+\TLNode{label-b}{tex}{"resourceId":"letter-b","x":0,"y":0,"scale":1.2,"style":{"fill":"#E5F1EF"}}
+\TLNode{label-c}{tex}{"resourceId":"letter-c","x":0,"y":0,"scale":1.2,"style":{"fill":"#71DFC2"}}
+\TLNode{label-m}{tex}{"resourceId":"letter-m","x":0,"y":0,"scale":1.2,"style":{"fill":"#F3CB84"}}
+\TLNode{label-f}{tex}{"resourceId":"letter-f","x":0,"y":0,"scale":1.2,"style":{"fill":"#EE8D82"}}
+\TLRelation{attach}{"source":"A","target":"label-a","offset":[-19,22]}
+\TLRelation{attach}{"source":"B","target":"label-b","offset":[-5,25]}
+\TLRelation{attach}{"source":"C","target":"label-c","offset":[10,-9]}
+\TLRelation{attach}{"source":"M","target":"label-m","offset":[-5,25]}
+\TLRelation{attach}{"source":"F","target":"label-f","offset":[10,-10]}
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}{0}
+\loomparameter[unit=bp,min=0,max=290]{swing}{290}
+% Scalar x/y bindings write local components. A position binding would be a
+% scene-space sink and would deliberately inverse-transform the whole vector.
+\loomexpr{b-local}{y}{28bp*sin(0.6rad*time/1s + phase)}
+\loomexpr{c-local}{x}{310bp+swing*cos(0.7rad*time/1s + phase)}
+\loomexpr{c-local}{y}{190bp+25bp*sin(0.9rad*time/1s + phase)}
+\loomcoordinate[space=plot:chart]{A}{lerpPoint}{{"a":"a-local","b":"b-local","factor":0}}
+\loomcoordinate[space=plot:chart]{B}{lerpPoint}{{"a":"a-local","b":"b-local","factor":1}}
+\loomcoordinate[space=plot:chart]{C}{midpoint}{{"a":"c-local","b":"c-local"}}
+\loomcoordinate[space=plot:chart]{M}{midpoint}{{"a":"A","b":"B"}}
+\loomcoordinate[space=plot:chart]{F}{projectLine}{{"point":"C","a":"A","b":"B"}}
+\loomcoordinate[space=plot:chart]{S}{projectSegment}{{"point":"C","a":"A","b":"B"}}
+\loomcoordinate[space=plot:chart]{E}{lerpPoint}{{"a":"A","b":"B","factor":"1.2"}}
+\loomnode[small] (footer) at (480,517) {TEXLOOM / LIVE POINT INPUTS / EXPLICIT SPACES / SHARED OPERATION GRAPH};
+\end{loomscene}
+\end{document}

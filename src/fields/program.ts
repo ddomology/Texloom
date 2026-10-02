@@ -8,6 +8,7 @@ import type {CompiledExpression, ExpressionBinding, ExpressionProgram, Expressio
 import {compileExpression, evaluateExpression} from './scalar.js';
 import {validateFieldProgramInContext} from './program-fields.js';
 import {validateDeformationProgramInContext} from '../operations/deform.js';
+import {validateOperationGraphInContext} from '../operations/validate.js';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -61,9 +62,9 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (diagnostics.length) return {diagnostics,bindings};
   if (!object(bundle)) {fail('EXPRESSION_CONTEXT','Expected a scene bundle.','$'); return {diagnostics,bindings};}
   if (!validatedContext) {
-    // Fields consume these parameter declarations; validate them only after the
-    // candidate expression program has been checked, not against a missing one.
-    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,...base} = bundle;
+    // Graph expression inputs, fields and deformations consume these candidate
+    // parameters; defer them until the declarations have been checked.
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,operationGraph:deferredGraph,...base} = bundle;
     diagnostics.push(...validateBundle(base));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
@@ -88,6 +89,10 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   }
   if (!Array.isArray(input.bindings)) fail('EXPRESSION_BINDINGS','Expected expression bindings array.','$.expressions.bindings');
   if (diagnostics.some(d => d.severity === 'error')) return {diagnostics,bindings};
+  if(!validatedContext&&bundle.operationGraph!==undefined){
+    diagnostics.push(...validateOperationGraphInContext(bundle.operationGraph,{...bundle,expressions:input as ExpressionProgram}));
+    if(diagnostics.some(d=>d.severity==='error'))return {diagnostics,bindings};
+  }
   const nodes = new Map(bundle.nodes.map(n => [n.id,n]));
   const writers:{slots:PropertyAccess[];path:string}[] = [
     ...bundle.tracks.map((t,i) => ({slots:[{node:t.target,property:t.property}],path:`$.tracks[${i}]`})),

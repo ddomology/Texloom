@@ -1,4 +1,5 @@
 import type {PathGeometry} from '../path-geometry.js';
+import type {Unit} from '../fields/ast.js';
 
 /** Lines/columns are 1-based; end is exclusive. Columns count Unicode code points. */
 export interface SourceSpan {
@@ -13,22 +14,25 @@ export interface Diagnostic {
 }
 export type ValueType = 'scalar' | 'vec2' | 'path2d' | 'transform2d';
 /** Scene coordinates exclude the camera. Local spaces are distinct even at identity. */
-export type SpaceRef = {kind: 'scene'} | {kind: 'local'; node: string};
+export type SpaceRef = {kind: 'scene'} | {kind: 'local'|'parent'|'plot'; node: string};
 export type Vec2Role = 'point' | 'vector';
 /** Space names in definitions are variables bound by Operation.spaces. */
 export type SocketType =
-  | {type: 'scalar'}
+  | {type: 'scalar'; unit?:Unit}
   | {type: 'vec2'; role: Vec2Role; space: string}
   | {type: 'path2d'; space: string}
   | {type: 'transform2d'; from: string; to: string};
 export type LiteralValue =
-  | {type: 'scalar'; value: number}
+  | {type: 'scalar'; value: number; unit?:Unit}
   | {type: 'vec2'; role: Vec2Role; space: SpaceRef; value: [number, number]}
   | {type: 'path2d'; space: SpaceRef; value: PathGeometry}
   /** SVG affine convention [a,b,c,d,e,f]; maps from -> to, no inverse implied. */
   | {type: 'transform2d'; from: SpaceRef; to: SpaceRef; value: [number, number, number, number, number, number]};
 export interface OutputRef {operation: string; socket: string}
-export type InputRef = {kind: 'literal'; value: LiteralValue} | {kind: 'output'; ref: OutputRef};
+export type InputRef = {kind: 'literal'; value: LiteralValue} | {kind: 'output'; ref: OutputRef}
+  | {kind:'node';node:string;property:'position';space:SpaceRef}
+  | {kind:'expression';expression:string;unit:Unit;sourceSpan?:SourceSpan}
+  | {kind:'spaceTransform';from:SpaceRef;to:SpaceRef};
 export interface InputSocket {value: SocketType; required?: true; default?: LiteralValue}
 /** Metadata only. Implementations, closures and code never travel in the bundle. */
 export interface OperatorDefinition {

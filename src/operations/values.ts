@@ -60,10 +60,10 @@ export function validateSpaceRef(input: unknown, path = '$'): Diagnostic[] {
   if (errors.length) return errors;
   if (!object(input)) { fail(errors, 'SPACE_TYPE', 'Expected a scene or node-local space.', path); return errors; }
   if (input.kind === 'scene') keys(input, ['kind'], path, errors);
-  else if (input.kind === 'local') {
+  else if (['local','parent','plot'].includes(input.kind as string)) {
     keys(input, ['kind', 'node'], path, errors);
-    if (!nonempty(input.node)) fail(errors, 'SPACE_NODE', 'A local space requires a nonempty node ID.', `${path}.node`);
-  } else fail(errors, 'SPACE_KIND', 'Expected scene or local space kind.', `${path}.kind`);
+    if (!nonempty(input.node)) fail(errors, 'SPACE_NODE', 'A node-based space requires a nonempty node ID.', `${path}.node`);
+  } else fail(errors, 'SPACE_KIND', 'Expected scene, local, parent or plot space kind.', `${path}.kind`);
   return errors;
 }
 
@@ -101,8 +101,9 @@ export function validateLiteralValue(input: unknown, path = '$'): Diagnostic[] {
   };
   switch (input.type) {
     case 'scalar':
-      keys(input, ['type', 'value'], path, errors);
+      keys(input, ['type', 'value', 'unit'], path, errors);
       if (!finite(input.value)) fail(errors, 'LITERAL_VALUE', 'Expected a finite scalar.', `${path}.value`);
+      if(input.unit!==undefined&&!['1','bp','s','rad'].includes(input.unit as string))fail(errors,'LITERAL_UNIT','Expected 1, bp, s or rad.',`${path}.unit`);
       break;
     case 'vec2':
       keys(input, ['type', 'role', 'space', 'value'], path, errors);

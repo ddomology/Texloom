@@ -167,6 +167,28 @@ provenance, single-writer dependencies and adaptive topology limitations.
 python tools/build.py examples/curve-deformations.tex --out build/curve-deformations --video
 ```
 
+### Coordinate operations and spaces (PR 07)
+
+Midpoint, interpolation/extrapolation, fixed distance, rotation, line projection
+and segment projection run in the existing typed operation graph. Point inputs
+read live node positions; scalar inputs can use time/parameter expressions.
+
+```tex
+\usepackage{texloom-coordinates}
+\loomcoordinate{M}{midpoint}{{"a":"A","b":"B"}}
+\loomcoordinate[space=plot:chart]{F}{projectLine}{{"point":"C","a":"A","b":"B"}}
+```
+
+The target point must exist. Choose scene, node-local, parent or explicit plot
+coordinates; distance, rotation and projection use that space's Euclidean metric.
+Non-scene results convert through live transforms into the normal scene-position
+binding. See [coordinate operations](docs/coordinates.md) for typed units,
+reflection/scale behavior, exact source spans and real PGF comparison tests.
+
+```sh
+python tools/build.py examples/triangle-coordinates.tex --out build/triangle-coordinates --video
+```
+
 ## Architecture
 
 ```text

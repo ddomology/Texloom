@@ -2,6 +2,8 @@ import {OperationValidationError, type DeepReadonly, type Diagnostic, type Liter
   type Operation, type SpaceRef, type ValueType} from '../../ir/operations.js';
 import {PathGeometryError, sampleGeometry} from '../../path-geometry.js';
 import {validateLiteralValue} from '../values.js';
+import {isCoordinateOperator, executeCoordinateOperation} from '../coordinates.js';
+import {sameSpace} from '../../geometry/spaces.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -31,7 +33,7 @@ function scalar(operation: AuthoredOperation, inputs: Inputs, name: string): num
 }
 
 function validSpace(value: DeepReadonly<SpaceRef> | undefined): value is DeepReadonly<SpaceRef> {
-  return value?.kind === 'scene' || (value?.kind === 'local' && typeof value.node === 'string' && value.node.length > 0);
+  return value?.kind === 'scene' || (!!value&&['local','parent','plot'].includes(value.kind)&&'node' in value&&typeof value.node==='string'&&value.node.length>0);
 }
 
 function boundSpace(operation: AuthoredOperation, name: string): DeepReadonly<SpaceRef> {
@@ -41,12 +43,11 @@ function boundSpace(operation: AuthoredOperation, name: string): DeepReadonly<Sp
 }
 
 function requireSpace(operation: AuthoredOperation, actual: SpaceRef | undefined, expected: DeepReadonly<SpaceRef>, path: string): void {
-  if (!validSpace(actual) || actual.kind !== expected.kind ||
-      (actual.kind === 'local' && expected.kind === 'local' && actual.node !== expected.node))
+  if (!validSpace(actual) || !sameSpace(actual,expected))
     fail(operation, 'OPERATION_RUNTIME_SPACE', 'Input coordinate space does not match the operation binding.', path);
 }
 
-const copySpace = (space: DeepReadonly<SpaceRef>): SpaceRef => space.kind === 'scene' ? {kind: 'scene'} : {kind: 'local', node: space.node};
+const copySpace = (space: DeepReadonly<SpaceRef>): SpaceRef => structuredClone(space) as SpaceRef;
 
 function vector(operation: AuthoredOperation, inputs: Inputs, name: string, role: 'point' | 'vector', space: DeepReadonly<SpaceRef>): [number, number] {
   const value = input(operation, inputs, name, 'vec2');
@@ -110,7 +111,11 @@ const transformPoint: Executor = (operation, inputs) => {
       matrix[1] * point[0] + matrix[3] * point[1] + matrix[5]])};
 };
 
-const scalarValue: Executor = (operation, inputs) => ({value: {type: 'scalar', value: scalar(operation, inputs, 'value')}});
+const scalarValue: Executor = (operation, inputs) => {
+  const literal=input(operation,inputs,'value','scalar');
+  if((literal.unit??'1')!=='1')fail(operation,'OPERATION_RUNTIME_UNIT','scalarValue carries dimensionless values; units cannot be discarded.','.inputs.value');
+  return {value: {type: 'scalar', value: scalar(operation, inputs, 'value')}};
+};
 
 function vec2Value(role: 'point' | 'vector'): Executor {
   return (operation, inputs) => {
@@ -151,6 +156,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isCoordinateOperator(name,version))return;
   if (!implementations.get(name)?.has(version)) throw new OperationValidationError([
     {severity: 'error', code: 'OPERATION_IMPLEMENTATION', message: `No authored implementation for ${name}@${version}.`, path: '$.operator'},
   ]);
@@ -158,6 +164,8 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
 export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs): Record<string, LiteralValue> {
+  const coordinate=executeCoordinateOperation(operation,inputs);
+  if(coordinate)return coordinate;
   const implementation = implementations.get(operation.operator)?.get(operation.version);
   if (!implementation) fail(operation, 'OPERATION_IMPLEMENTATION', 'No authored implementation is registered.', '.operator');
   return implementation(operation, inputs);

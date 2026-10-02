@@ -1,0 +1,18 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-coordinates}[2026/10/02 Texloom typed coordinate declarations]
+\RequirePackage{texloom-expressions}
+\newcount\TLCserial
+\TLCserial=0
+\def\TLCstart{%
+  \global\advance\TLCserial by 1
+  \edef\TLEbase{\jobname.tl-coordinate-\the\TLCserial}%
+  \immediate\write\TLrecords{\string{"type":"coordinate-file","file":"\TLEbase"\string}}}
+% Explicit operator names and literal JSON inputs; this does not parse TikZ calc.
+% Options: space=scene|local:node|parent:node|plot:group, id=optional-operation-id.
+\NewDocumentCommand\loomcoordinate{O{} m m +v}{%
+  \TLCstart
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{target}{#2}%
+  \TLEmetadata{operator}{#3}%
+  \TLEwrite{inputs}{#4}}
+\endinput
