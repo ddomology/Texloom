@@ -4,6 +4,8 @@ import {pathGeometryData, revealGeometry, type PathPoint} from './path-geometry.
 import {prepareExecutionPlan, type ExecutionPlan, type ExecutionMetadata} from './operations/plan.js';
 import {withPathContext} from './operations/builtins/legacy.js';
 import type {ExpressionValue} from './fields/ast.js';
+import {createArrowGeometry,ARROW_DEFAULTS,type ArrowGeometryResult} from './geometry/arrowheads.js';
+import {OperationValidationError} from './ir/operations.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -42,6 +44,10 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   const clamped = Math.max(0, Math.min(bundle.duration, time));
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
   const byId = new Map(nodes.map(n => [n.id, n]));
+  const arrowWriters=new Set([...bundle.tracks,...(bundle.operationGraph?.bindings??[]),...(bundle.expressions?.bindings??[])]
+    .filter(b=>b.property.startsWith('arrows.')).map(b=>b.target));
+  for(const node of nodes)if(node.kind==='path'&&(node.arrows!==undefined||arrowWriters.has(node.id)))
+    node.arrows={...ARROW_DEFAULTS,...node.arrows};
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, trackValue(track, clamped));
   const metadata:ExecutionMetadata={};
   const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters, metadata);
@@ -50,6 +56,29 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
     // mathematical curve, while both renderers receive the same visible prefix.
     node.d=withPathContext(node.id,()=>pathGeometryData(node.reveal===undefined?node.geometry!:
       revealGeometry(node.geometry!,node.reveal,node.revealMode??'parameter',node.pathTolerance??.05)));
+  }
+  for(const node of nodes) if(node.kind==='path'&&(node.arrows!==undefined||node.geometry&&!node.resolvedPath&&(node.arrowStart||node.arrowEnd))) {
+    try {
+      if(!node.geometry)throw new Error('Arrow display requires editable path geometry.');
+      if(node.arrows&&(node.arrowStart!==undefined||node.arrowEnd!==undefined||node.arrowSize!==undefined))
+        throw new Error('Explicit arrows and legacy flags cannot be mixed.');
+      const size=node.arrowSize??9;
+      const options=node.arrows??{start:node.arrowStart?1:0,end:node.arrowEnd?1:0,length:size,width:size*.84,inset:0};
+      const arrows=structuredClone(createArrowGeometry(node.geometry,options)) as ArrowGeometryResult;
+      // Geometry read by labels and graph operations is never shortened. Reveal
+      // affects the displayed shaft; the final tip appears at completed reveal.
+      if(node.reveal!==undefined&&node.reveal<1){
+        arrows.shaft=revealGeometry(arrows.shaft,node.reveal,node.revealMode??'parameter',node.pathTolerance??.05);
+        arrows.endTip={contours:[]};if(node.reveal===0)arrows.startTip={contours:[]};
+      }
+      node.resolvedArrows=arrows;
+    }catch(error){
+      const source=bundle.operationGraph?.bindings.find(b=>b.target===node.id&&b.property.startsWith('arrows.')&&b.sourceSpan)?.sourceSpan
+        ??bundle.expressions?.bindings.find(b=>b.target===node.id&&b.property.startsWith('arrows.')&&b.sourceSpan)?.sourceSpan;
+      throw new OperationValidationError([{severity:'error',code:(error as {code?:string})?.code??'ARROW_DISPLAY',
+        message:`Arrow path ${node.id}: ${error instanceof Error?error.message:String(error)}`,path:`$.nodes[${JSON.stringify(node.id)}].arrows`,
+        ...(source?{sourceSpan:structuredClone(source)}:{})}]);
+    }
   }
   for (const node of nodes) if (node.kind === 'field') (node as FieldNode).values = sampleField(bundle.resources[node.resourceId] as ScalarFieldResource, clamped);
   // Resources are immutable shared data; frame-local geometry and camera are independent.

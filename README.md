@@ -354,6 +354,20 @@ python tools/build.py examples/connector-labels.tex --out build/connector-labels
 See [connections and labels](docs/connectors.md) for coordinate spaces, baseline
 metrics, reflection rules, typed graph APIs and explicit limits.
 
+## Arrow tips and shortening (PR 14)
+
+`texloom-arrows` adds triangle/stealth tips, independent endpoint shortening,
+and an explicit error/clamp policy for short paths. Tip dimensions and kinds can
+follow expressions or graph outputs. Both renderers consume the same derived
+geometry; labels and samplers retain the complete logical path.
+
+```sh
+python tools/build.py examples/arrowheads.tex --out build/arrowheads --video
+```
+
+See [arrow authoring](docs/arrows.md) for the local-space contract, PGF comparison,
+legacy compatibility, and graph APIs.
+
 ## Core API
 
 ```ts

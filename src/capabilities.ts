@@ -56,17 +56,19 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     paint(node);
     if (node.kind === 'path') {
       features.add('path.2d');
-      if (node.arrowStart || node.arrowEnd) features.add('path.arrowheads');
+      if (node.arrowStart || node.arrowEnd || node.arrows) features.add('path.arrowheads');
     } else if (node.kind === 'tex') features.add('tex.outlines');
     else if (node.kind === 'field') features.add('field.scalar-grid.2d');
     else if (node.kind !== 'group') features.add('primitive.2d');
   }
   for (const resource of Object.values(bundle.resources)) if (resource.kind === 'vector') vector(resource.items);
   for (const track of bundle.tracks) {
+    if (track.property.startsWith('arrows.')) features.add('path.arrowheads');
     if (track.property.startsWith('transform.')) features.add('transform.affine.2d');
     if (['style.opacity', 'style.fillOpacity', 'style.strokeOpacity'].includes(track.property)) features.add('paint.opacity');
   }
   for (const binding of [...(bundle.operationGraph?.bindings ?? []),...(bundle.expressions?.bindings ?? []),...(bundle.fields?.bindings ?? [])]) {
+    if (binding.property.startsWith('arrows.')) features.add('path.arrowheads');
     if (binding.property === 'transform' || binding.property.startsWith('transform.')) features.add('transform.affine.2d');
     if (['style.opacity','style.fillOpacity','style.strokeOpacity'].includes(binding.property)) features.add('paint.opacity');
   }

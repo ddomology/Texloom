@@ -6,6 +6,7 @@ import {curveOperatorDefinitions} from './curves.js';
 import {intersectionOperatorDefinitions} from './intersections.js';
 import {connectorOperatorDefinitions} from './connectors.js';
 import {pathLabelOperatorDefinitions} from './path-labels.js';
+import {arrowOperatorDefinitions} from './arrows.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -108,6 +109,7 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
   ...intersectionOperatorDefinitions,
   ...connectorOperatorDefinitions,
   ...pathLabelOperatorDefinitions,
+  ...arrowOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

@@ -1,4 +1,6 @@
 import type { EvaluatedFrame, Node, PaintItem, PathNode, Style } from './index.js';
+import {pathGeometryData} from './path-geometry.js';
+import {legacyArrowPoints} from './geometry/arrowheads.js';
 
 export interface SvgOptions {
   background?: string;
@@ -140,19 +142,7 @@ export function renderSvg(frame: EvaluatedFrame, options: SvgOptions = {}): stri
   const arrowHead = (node: PathNode, end: boolean): string => {
     const p = node.resolvedPath;
     if (!p) throw new Error(`Arrow path ${node.id} has not been evaluated`);
-    const tip = end ? p.end : p.start;
-    const inner = end ? p.c2 : p.c1;
-    let dx = tip[0] - inner[0], dy = tip[1] - inner[1];
-    if (Math.hypot(dx, dy) < 1e-10) {
-      const opposite = end ? p.start : p.end;
-      dx = tip[0] - opposite[0]; dy = tip[1] - opposite[1];
-    }
-    const length = Math.hypot(dx, dy);
-    if (length < 1e-10) throw new Error(`Arrow path ${node.id} has no direction`);
-    const ux = dx / length, uy = dy / length;
-    const size = node.arrowSize ?? 9;
-    const bx = tip[0] - ux * size, by = tip[1] - uy * size;
-    const points = [tip, [bx - uy * size * .42, by + ux * size * .42], [bx + uy * size * .42, by - ux * size * .42]];
+    const points = legacyArrowPoints(p, end, node.arrowSize ?? 9);
     const paint = inheritedStroke(node);
     return `<polygon data-arrow="${end ? 'end' : 'start'}" points="${points.map(p => p.map(number).join(',')).join(' ')}" fill="${escapeXml(paint.color)}" fill-opacity="${number(paint.opacity)}" stroke="none"/>`;
   };
@@ -170,6 +160,15 @@ export function renderSvg(frame: EvaluatedFrame, options: SvgOptions = {}): stri
     switch (node.kind) {
       case 'group': return `<g${attrs}>${descendants}</g>`;
       case 'path': {
+        if (node.resolvedArrows) {
+          const paint = inheritedStroke(node);
+          const tip = (end: boolean): string => {
+            const geometry = end ? node.resolvedArrows!.endTip : node.resolvedArrows!.startTip;
+            if (!geometry.contours.length) return '';
+            return `<path data-arrow="${end ? 'end' : 'start'}" d="${escapeXml(pathGeometryData(geometry))}" fill="${escapeXml(paint.color)}" fill-opacity="${number(paint.opacity)}" stroke="none"/>`;
+          };
+          return `<g${attrs}><path d="${escapeXml(pathGeometryData(node.resolvedArrows.shaft))}" fill="none" stroke-linecap="butt"/>${tip(false)}${tip(true)}</g>`;
+        }
         if (!node.arrowStart && !node.arrowEnd) return `<path d="${escapeXml(node.d)}"${attrs}/>`;
         return `<g${attrs}><path d="${escapeXml(node.d)}"/>${node.arrowStart ? arrowHead(node, false) : ''}${node.arrowEnd ? arrowHead(node, true) : ''}</g>`;
       }
