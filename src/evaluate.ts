@@ -14,6 +14,7 @@ import {prepareSpace3DSampler} from './ir/scene3d.js';
 import {prepareSurfaceProgram} from './operations/surface.js';
 import {prepareCurveProgram3D} from './operations/curve3d.js';
 import {prepareMeshAttributeProgram} from './operations/mesh-attributes.js';
+import {prepareInstanceProgram} from './operations/instances.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -139,18 +140,21 @@ function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvalua
   const surfaces=snapshot.surfaces?prepareSurfaceProgram(snapshot.surfaces,snapshot):undefined;
   const curves=snapshot.curves3d?prepareCurveProgram3D(snapshot.curves3d,snapshot):undefined;
   const attributes=snapshot.meshAttributes?prepareMeshAttributeProgram(snapshot.meshAttributes,snapshot,{...surfaces?.baseResources,...curves?.baseResources}):undefined;
-  const spatialResources=surfaces||curves||attributes?{...snapshot.resources,...surfaces?.baseResources,...curves?.baseResources,...attributes?.baseResources} as Bundle['resources']:snapshot.resources;
-  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,spatialResources,{viewport:snapshot.viewport,duration:snapshot.duration},[...(surfaces?.resourceIds??[]),...(curves?.resourceIds??[]),...(attributes?.resourceIds??[])],curves?.baseTransforms):undefined;
+  const instances=snapshot.instances?prepareInstanceProgram(snapshot.instances,snapshot,{...surfaces?.baseResources,...curves?.baseResources,...attributes?.baseResources}):undefined;
+  const spatialResources=surfaces||curves||attributes||instances?{...snapshot.resources,...surfaces?.baseResources,...curves?.baseResources,...attributes?.baseResources,...instances?.baseResources} as Bundle['resources']:snapshot.resources;
+  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,spatialResources,{viewport:snapshot.viewport,duration:snapshot.duration},[...(surfaces?.resourceIds??[]),...(curves?.resourceIds??[]),...(attributes?.resourceIds??[]),...(instances?.resourceIds??[])],curves?.baseTransforms,instances?.baseInstanceSets):undefined;
   return (time,parameters) => {
     const frame=evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
     const generated=surfaces?.sample(frame.time,parameters);
     const generatedCurves=curves?.sample(frame.time,parameters);
     const generatedAttributes=attributes?.sample(frame.time,parameters,{...generated?.resources,...generatedCurves?.resources});
-    if(generated||generatedCurves||generatedAttributes)frame.resources=Object.freeze({...snapshot.resources,...generated?.resources,...generatedCurves?.resources,...generatedAttributes?.resources}) as Bundle['resources'];
+    const generatedInstances=instances?.sample(frame.time,parameters,{...generated?.resources,...generatedCurves?.resources,...generatedAttributes?.resources});
+    if(generated||generatedCurves||generatedAttributes||generatedInstances)frame.resources=Object.freeze({...snapshot.resources,...generated?.resources,...generatedCurves?.resources,...generatedAttributes?.resources,...generatedInstances?.resources}) as Bundle['resources'];
     if(generated)frame.surfaces=generated.surfaces;
     if(generatedCurves)frame.curves3d=generatedCurves.curves3d;
     if(generatedAttributes)frame.meshAttributes=generatedAttributes.meshAttributes;
-    if(space3d)frame.space3d=space3d(frame.time,generated||generatedCurves||generatedAttributes?Object.fromEntries(Object.entries({...generated?.resources,...generatedCurves?.resources,...generatedAttributes?.resources}).map(([id,r])=>[id,{bounds:r.bounds,topologyRevision:r.topologyRevision}])):undefined,generatedCurves?.transforms);
+    if(generatedInstances)frame.instanceSets=generatedInstances.instanceSets;
+    if(space3d)frame.space3d=space3d(frame.time,generated||generatedCurves||generatedAttributes||generatedInstances?Object.fromEntries(Object.entries({...generated?.resources,...generatedCurves?.resources,...generatedAttributes?.resources,...generatedInstances?.resources}).map(([id,r])=>[id,{bounds:r.bounds,topologyRevision:r.topologyRevision}])):undefined,generatedCurves?.transforms,generatedInstances?.instanceSets);
     return frame;
   };
 }

@@ -1,4 +1,4 @@
-import {BufferGeometry,BufferAttribute,Mesh,MeshBasicMaterial,Line,LineBasicMaterial,Scene,Camera,WebGLRenderer,Plane,Vector3,Matrix4,
+import {BufferGeometry,BufferAttribute,InstancedBufferAttribute,InstancedMesh,Mesh,MeshBasicMaterial,Line,LineBasicMaterial,Scene,Camera,WebGLRenderer,Plane,Vector3,Matrix4,
   Color,DoubleSide,FrontSide,NoToneMapping,SRGBColorSpace} from 'three';
 import type {EvaluatedFrame} from '../../schema.js';
 import type {MeshResource} from '../../ir/mesh.js';
@@ -7,6 +7,7 @@ import type {DeepReadonly} from '../../ir/operations.js';
 import {GpuRenderError,validateGpuSize,validateGpuColor,validateGpuMatrix,finiteFloat32,prepareGpuGeometry,
   gpuBufferSize,gpuWireBufferSize,validateGpuTransformBounds,validateGpuOrientation,MAX_GPU_BUFFER_BYTES,MAX_GPU_TRIANGLES} from './data.js';
 import {gpuCurveBufferSize,prepareGpuCurveGeometry} from './curve-data.js';
+import {prepareGpuInstanceRuns,GPU_INSTANCE_BYTES} from './instances.js';
 export {GpuRenderError} from './data.js';
 
 export interface GpuRendererOptions {canvas?:HTMLCanvasElement;antialias?:boolean}
@@ -53,6 +54,7 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
   // Three camera auto-updates remove camera scale. Texloom's evaluated affine view is authoritative.
   scene.matrixAutoUpdate=false;scene.matrixWorldAutoUpdate=false;camera.matrixAutoUpdate=false;camera.matrixWorldAutoUpdate=false;
   const geometries=new Map<GeometryKey,GeometryEntry>(),materials=new Map<string,MeshBasicMaterial|LineBasicMaterial>(),meshes=new Map<string,Mesh>(),lines=new Map<string,Line>();
+  const batches=new Map<string,InstancedMesh>();
   let geometryKeys=new WeakMap<GeometryResource,Map<string,GeometryKey>>();
   const geometryKey=(resource:GeometryResource,colorAttribute?:string):GeometryKey=>{
     let variants=geometryKeys.get(resource);if(!variants){variants=new Map();geometryKeys.set(resource,variants);}
@@ -60,8 +62,8 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
   };
   const modelViews=new WeakMap<Mesh|Line,readonly number[]>();
   let state:GpuRendererStats['state']='ready',renders=0,generation=1,forceResize=true,width=0,height=0,drawCalls=0,triangles=0,segments=0;
-  function clearCaches(){for(const entry of geometries.values())entry.geometry.dispose();for(const material of materials.values())material.dispose();
-    geometries.clear();geometryKeys=new WeakMap();materials.clear();meshes.clear();lines.clear();scene.clear();drawCalls=0;triangles=0;segments=0;}
+  function clearCaches(){for(const batch of batches.values())batch.dispose();for(const entry of geometries.values())entry.geometry.dispose();for(const material of materials.values())material.dispose();
+    geometries.clear();geometryKeys=new WeakMap();materials.clear();meshes.clear();lines.clear();batches.clear();scene.clear();drawCalls=0;triangles=0;segments=0;}
   const lost=(event:Event)=>{event.preventDefault();if(state==='disposed')return;state='lost';clearCaches();};
   const restored=()=>{if(state==='disposed')return;clearCaches();generation++;forceResize=true;state='ready';};
   canvas.addEventListener('webglcontextlost',lost);canvas.addEventListener('webglcontextrestored',restored);
@@ -78,7 +80,9 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       if(!space||!view?.projectionMatrix)throw new GpuRenderError('GPU_PROJECTION','An evaluated 3D camera with projection is required.');
       const projection=view.projectionMatrix;
       validateGpuMatrix(projection,'projection');validateGpuMatrix(view.worldMatrix,'camera world');validateGpuMatrix(view.viewMatrix,'view');
-      if(space.instances.length+space.curves.length>4096)throw new GpuRenderError('GPU_BUDGET','At most 4096 mesh and curve instances are supported.');
+      const instanceBatches=space.instanceBatches??[];
+      if(!Array.isArray(instanceBatches)||instanceBatches.length>4096||space.instances.length+space.curves.length+instanceBatches.reduce((n,b)=>n+(Array.isArray(b?.instances)?b.instances.length:4097),0)>4096)
+        throw new GpuRenderError('GPU_BUDGET','At most 4096 mesh, curve and sampled instance records are supported.');
       const neededGeometry=new Set<GeometryKey>(),neededWire=new Set<GeometryKey>(),neededMaterials=new Set<string>(),ids=new Set<string>();let drawnTriangles=0,drawnSegments=0;
       const draws=space.instances.filter(instance=>instance.visible).map(instance=>{
         if(ids.has(instance.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(instance.id);
@@ -100,6 +104,21 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         const materialKey=`${material.color.toLowerCase()}:${material.side}:${material.wireframe}:${material.colorAttribute!==undefined}`;neededMaterials.add(materialKey);
         return {instance,resource,material,materialKey,key};
       });
+      const batchDraws=instanceBatches.filter(batch=>batch.visible).flatMap(batch=>{
+        if(ids.has(batch.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(batch.id);
+        const resource=frame.resources[batch.prototypeResourceId];
+        if(!resource||resource.kind!=='mesh')throw new GpuRenderError('GPU_RESOURCE',`Missing instance prototype ${batch.prototypeResourceId}.`);
+        if(!immutableMesh(resource))throw new GpuRenderError('GPU_RESOURCE_MUTABLE','Render an evaluated frame with immutable mesh resources.');
+        const material=batch.material;validateGpuColor(material?.color);
+        if(material.kind!=='unlit'||!['front','double'].includes(material.side)||typeof material.wireframe!=='boolean')throw new GpuRenderError('GPU_MATERIAL','Only opaque unlit front/double materials with boolean wireframe are supported.');
+        gpuBufferSize(resource,material.colorAttribute);
+        const runs=prepareGpuInstanceRuns(batch,resource,projection);if(!runs.length)return [];
+        const key=geometryKey(resource,material.colorAttribute);neededGeometry.add(key);if(material.wireframe)neededWire.add(key);
+        drawnTriangles+=resource.indices.count/3*runs.reduce((n,r)=>n+r.count,0);
+        if(drawnTriangles>MAX_GPU_TRIANGLES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds one million drawn triangles.');
+        const materialKey=`instances:${material.color.toLowerCase()}:${material.side}:${material.wireframe}:${material.colorAttribute!==undefined}`;neededMaterials.add(materialKey);
+        return runs.map((run,i)=>({id:JSON.stringify([batch.id,i]),run,key,material,materialKey}));
+      });
       const curveDraws=space.curves.filter(instance=>instance.visible).map(instance=>{
         if(ids.has(instance.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(instance.id);
         const resource=frame.resources[instance.resourceId];
@@ -112,7 +131,7 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         const materialKey=`line:${instance.color.toLowerCase()}`;neededMaterials.add(materialKey);const key=geometryKey(resource);neededGeometry.add(key);
         return {instance,resource,materialKey,key};
       });
-      const bytes=[...neededGeometry].reduce((total,key)=>{const r=key.resource;return total+(r.kind==='curve3d'?gpuCurveBufferSize(r):gpuBufferSize(r,key.colorAttribute)+(neededWire.has(key)?gpuWireBufferSize(r,key.colorAttribute):geometries.get(key)?.wireBytes??0));},0);
+      const bytes=[...neededGeometry].reduce((total,key)=>{const r=key.resource;return total+(r.kind==='curve3d'?gpuCurveBufferSize(r):gpuBufferSize(r,key.colorAttribute)+(neededWire.has(key)?gpuWireBufferSize(r,key.colorAttribute):geometries.get(key)?.wireBytes??0));},0)+batchDraws.reduce((n,d)=>n+d.run.count*GPU_INSTANCE_BYTES,0);
       if(bytes>MAX_GPU_BUFFER_BYTES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds 128 MiB vertex/index uploads including derived wireframe indices.');
       if(space.clippingPlanes.length>8)throw new GpuRenderError('GPU_CLIPPING','At most eight world clipping planes are supported.');
       const planes=space.clippingPlanes.map(p=>new Plane(new Vector3(...p.normal.map((n,i)=>finiteFloat32(n,`clip normal ${i}`)) as [number,number,number]),finiteFloat32(p.constant,'clip constant')));
@@ -133,6 +152,8 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       for(const [key,entry] of geometries)if(!neededGeometry.has(key)){entry.geometry.dispose();geometries.delete(key);}
       for(const [key,material] of materials)if(!neededMaterials.has(key)){material.dispose();materials.delete(key);}
       const meshIds=new Set(draws.map(d=>d.instance.id)),curveIds=new Set(curveDraws.map(d=>d.instance.id));
+      const batchIds=new Set(batchDraws.map(d=>d.id));
+      for(const [id,batch] of batches)if(!batchIds.has(id)){scene.remove(batch);batch.dispose();batches.delete(id);}
       for(const [id,mesh] of meshes)if(!meshIds.has(id)){scene.remove(mesh);meshes.delete(id);}
       for(const [id,line] of lines)if(!curveIds.has(id)){scene.remove(line);lines.delete(id);}
       for(const key of neededWire)geometries.get(key)!.wireBytes=gpuWireBufferSize(key.resource as DeepReadonly<MeshResource>,key.colorAttribute);
@@ -149,6 +170,23 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         mesh.geometry=geometries.get(key)!.geometry;mesh.material=materials.get(materialKey)!;mesh.matrixWorld.fromArray(instance.worldMatrix);
         modelViews.set(mesh,instance.modelViewMatrix!);
       }
+      for(const {id,run,key,material,materialKey} of batchDraws){
+        if(!materials.has(materialKey)){
+          const value=new MeshBasicMaterial({color:material.color,side:material.side==='double'?DoubleSide:FrontSide,
+            toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true,wireframe:material.wireframe,vertexColors:material.colorAttribute!==undefined});
+          value.onBeforeRender=(_renderer,_scene,_camera,_geometry,object)=>object.modelViewMatrix.fromArray(modelViews.get(object as Mesh)!);
+          materials.set(materialKey,value);
+        }
+        let batch=batches.get(id);
+        if(batch&&batch.count!==run.count){scene.remove(batch);batch.dispose();batches.delete(id);batch=undefined;}
+        if(!batch){batch=new InstancedMesh(geometries.get(key)!.geometry,materials.get(materialKey)! as MeshBasicMaterial,run.count);
+          batch.matrixAutoUpdate=false;batch.matrixWorldAutoUpdate=false;batch.frustumCulled=false;
+          batch.instanceColor=new InstancedBufferAttribute(new Float32Array(run.count*3),3);batches.set(id,batch);scene.add(batch);}
+        batch.geometry=geometries.get(key)!.geometry;batch.material=materials.get(materialKey)! as MeshBasicMaterial;
+        batch.matrixWorld.makeScale(run.reflected?-1:1,1,1);modelViews.set(batch,batch.matrixWorld.elements.slice());
+        batch.instanceMatrix.array.set(run.matrices);batch.instanceMatrix.needsUpdate=true;
+        batch.instanceColor!.array.set(run.colors);batch.instanceColor!.needsUpdate=true;
+      }
       for(const {instance,key,materialKey} of curveDraws){
         if(!materials.has(materialKey)){
           const value=new LineBasicMaterial({color:instance.color,toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true});
@@ -161,15 +199,15 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         modelViews.set(line,instance.modelViewMatrix!);
       }
       // Preserve frame instance order for deterministic equal-depth ties after arbitrary prior renders.
-      scene.children=[...draws.map(d=>meshes.get(d.instance.id)!),...curveDraws.map(d=>lines.get(d.instance.id)!)];
+      scene.children=[...draws.map(d=>meshes.get(d.instance.id)!),...batchDraws.map(d=>batches.get(d.id)!),...curveDraws.map(d=>lines.get(d.instance.id)!)];
       renderer.clippingPlanes=planes;
       if(forceResize||width!==output.width||height!==output.height){renderer.setSize(output.width,output.height,false);width=output.width;height=output.height;forceResize=false;}
       renderer.setClearColor(new Color(background==='transparent'?'#000000':background),background==='transparent'?0:1);
       renderer.render(scene,camera);renders++;drawCalls=renderer.info.render.calls;triangles=renderer.info.render.triangles;segments=renderer.info.render.lines;
       if(context.isContextLost())throw new GpuRenderError('GPU_CONTEXT_LOST','Context was lost during rendering.');
     },
-    stats(){return Object.freeze({state,width,height,geometries:geometries.size,materials:materials.size,instances:meshes.size+lines.size,
-      bufferBytes:[...geometries.values()].reduce((n,e)=>n+e.bytes+e.wireBytes,0),renders,drawCalls,triangles,segments,contextGeneration:generation});},
+    stats(){return Object.freeze({state,width,height,geometries:geometries.size,materials:materials.size,instances:meshes.size+lines.size+[...batches.values()].reduce((n,b)=>n+b.count,0),
+      bufferBytes:[...geometries.values()].reduce((n,e)=>n+e.bytes+e.wireBytes,0)+[...batches.values()].reduce((n,b)=>n+b.count*GPU_INSTANCE_BYTES,0),renders,drawCalls,triangles,segments,contextGeneration:generation});},
     dispose(){if(state==='disposed')return;state='disposed';canvas.removeEventListener('webglcontextlost',lost);canvas.removeEventListener('webglcontextrestored',restored);
       clearCaches();renderer.dispose();renderer.forceContextLoss();},
   });

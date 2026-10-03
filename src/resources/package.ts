@@ -5,6 +5,7 @@ import {freezeSnapshot} from '../operations/values.js';
 import {surfaceResourceDeclarations} from '../operations/surface.js';
 import {curveResourceDeclarations} from '../operations/curve3d.js';
 import {meshAttributeResourceDeclarations} from '../operations/mesh-attributes.js';
+import {instanceResourceDeclarations} from '../operations/instances.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -193,7 +194,33 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(sourceKind!=='mesh'){error(out,'ASSET_KIND','Mesh attribute operations require a mesh source.',`${path}.source`);continue;}
     generated.set(declaration.resourceId,'mesh');
   }
+  // Instance prototypes and sampled sources are ordered mesh dependencies.
+  // Only explicit realization creates a transport-independent mesh output.
+  const instanceDeclarations=instanceResourceDeclarations(scene.instances),instanceSets=new Set<string>();
+  if(scene.instances!==undefined){
+    const program=scene.instances;
+    if(!object(program)||program.version!==1||!Array.isArray(program.operations)||instanceDeclarations.length!==program.operations.length)
+      error(out,'ASSET_GENERATOR','Expected valid ordered instance prototype/source/output declarations.','$.scene.instances');
+  }
+  for(const [index,declaration] of instanceDeclarations.entries()){
+    const path=`$.scene.instances.operations[${index}]`;let valid=true;
+    if(instanceSets.has(declaration.id)){error(out,'ASSET_DUPLICATE','Instance set IDs must be unique.',`${path}.id`);valid=false;}
+    if(declaration.resourceId!==undefined&&(generated.has(declaration.resourceId)||entries.has(declaration.resourceId))){
+      error(out,'ASSET_DUPLICATE','Realized mesh IDs must be unique and cannot replace a manifest or generated asset.',`${path}.realize.resourceId`);valid=false;
+    }
+    for(const [resourceId,where] of [[declaration.prototype,`${path}.prototype`],...(declaration.source.kind==='mesh'?[[declaration.source.resourceId,`${path}.source.resourceId`]]:[])]){
+      const kind=entries.get(resourceId)?.kind??generated.get(resourceId);
+      if(!kind){error(out,'ASSET_REFERENCE','Instances require a manifest mesh, generated surface, attribute result or earlier realized mesh; forward references and cycles are unsupported.',where);valid=false;}
+      else if(kind!=='mesh'){error(out,'ASSET_KIND','Instance prototypes and mesh-domain sources require mesh resources.',where);valid=false;}
+    }
+    instanceSets.add(declaration.id);
+    if(valid&&declaration.resourceId!==undefined)generated.set(declaration.resourceId,'mesh');
+  }
   if(object(scene.space3d)&&Array.isArray(scene.space3d.nodes))scene.space3d.nodes.forEach((node,i)=>{
+    if(object(node)&&node.kind==='instances'){
+      if(typeof node.instanceSetId!=='string'||!instanceSets.has(node.instanceSetId))error(out,'ASSET_REFERENCE','Expected an existing generated instance set ID.',`$.scene.space3d.nodes[${i}].instanceSetId`);
+      return;
+    }
     if(!object(node)||!['mesh','curve'].includes(node.kind as string))return;
     const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
     const kind=asset?.kind??generated.get(node.resourceId as string),expected=node.kind==='mesh'?'mesh':'curve3d';

@@ -3,6 +3,7 @@ import {type Diagnostic,type DeepReadonly,OperationValidationError} from './oper
 import {validateJsonData,freezeSnapshot} from '../operations/values.js';
 import {validateMeshResource,type MeshUnit,type MeshResource} from './mesh.js';
 import {validateCurve3DResource,type Curve3DResource} from './curve3d.js';
+import {validateInstanceSet3D,type InstanceSet3D} from './instances.js';
 import {composeTransform3D,identityMatrix4,multiplyMatrix4,inverseMatrix4,normalMatrix3D,
   orientationMatrix4,transformBounds3D,transformPoint3D,normalizeQuaternion,normalizeVec3,validateTransform3D,
   type Transform3D,type Matrix4,type Matrix3,type Bounds3D,type Vec3,type Quaternion} from '../geometry/matrix4.js';
@@ -14,7 +15,8 @@ export interface Group3D extends SpatialNode {kind:'group'}
 export interface UnlitMaterial3D {kind:'unlit';color:string;side?:'front'|'double';wireframe?:boolean;colorAttribute?:string}
 export interface MeshInstance3D extends SpatialNode {kind:'mesh';resourceId:string;visible?:boolean;material?:UnlitMaterial3D}
 export interface CurveInstance3D extends SpatialNode {kind:'curve';resourceId:string;visible?:boolean;color?:string}
-export type SceneNode3D=Group3D|MeshInstance3D|CurveInstance3D;
+export interface InstanceBatchNode3D extends SpatialNode {kind:'instances';instanceSetId:string;visible?:boolean;material?:UnlitMaterial3D}
+export type SceneNode3D=Group3D|MeshInstance3D|CurveInstance3D|InstanceBatchNode3D;
 /** Camera local forward -Z, up +Y. Projection uses the logical Bundle viewport aspect. */
 export interface Camera3D extends SpatialNode {projection?:Projection3D}
 /** World half-space: keep dot(normal, point) + constant >= 0. */
@@ -39,10 +41,16 @@ export interface EvaluatedCurveInstance3D {
   id:string;resourceId:string;visible:boolean;color:string;topologyRevision:string;
   worldMatrix:Readonly<Matrix4>;modelViewMatrix:Readonly<Matrix4>|null;worldBounds:DeepReadonly<Bounds3D>|null;
 }
+export interface EvaluatedInstanceBatch3D {
+  id:string;setId:string;prototypeResourceId:string;visible:boolean;material:EvaluatedMeshInstance3D['material'];
+  instances:{id:string;selected:boolean;color:Readonly<Vec3>;worldMatrix:Readonly<Matrix4>;modelViewMatrix:Readonly<Matrix4>|null;orientation:-1|0|1;worldBounds:DeepReadonly<Bounds3D>|null}[];
+  worldBounds:DeepReadonly<Bounds3D>|null;
+}
 export interface Space3DEvaluation {
   version:1;units:MeshUnit;handedness:'right';upAxis:'z';
   groups:{id:string;worldMatrix:Readonly<Matrix4>}[];instances:EvaluatedMeshInstance3D[];
   curves:EvaluatedCurveInstance3D[];
+  instanceBatches?:EvaluatedInstanceBatch3D[];
   camera:{id:string;worldMatrix:Readonly<Matrix4>;viewMatrix:Readonly<Matrix4>;forwardAxis:'-z';upAxis:'y';
     projection:Projection3D|null;projectionMatrix:Readonly<Matrix4>|null;viewProjectionMatrix:Readonly<Matrix4>|null;aspect:number|null}|null;
   clippingPlanes:ClippingPlane3D[];overlays:EvaluatedOverlay3D[];diagnostics:Diagnostic[];
@@ -57,8 +65,9 @@ const tuple=(v:unknown,length:number):v is number[]=>Array.isArray(v)&&v.length=
 const hasErrors=(d:readonly Diagnostic[])=>d.some(x=>x.severity==='error');
 const range=(v:readonly number[])=>{if(v.some(n=>!Number.isFinite(n)))throw new OperationValidationError([{severity:'error',code:'SPACE3D_RANGE',message:'Spatial arithmetic exceeded the finite numeric range.',path:'$.space3d'}]);};
 
-function inspect(input:unknown,resources:Record<string,Resource>,path:string,inContext:boolean,context:Space3DContext):Diagnostic[] {
+function inspect(input:unknown,resources:Record<string,Resource>,path:string,inContext:boolean,context:Space3DContext,instanceSets:DeepReadonly<Record<string,InstanceSet3D>>):Diagnostic[] {
   const diagnostics=validateJsonData(input,path);if(!inContext)diagnostics.push(...validateJsonData(resources,'$.resources'));
+  diagnostics.push(...validateJsonData(instanceSets,'$.instanceSets'));
   diagnostics.push(...validateJsonData(context,'$.context'));if(hasErrors(diagnostics))return diagnostics;
   const error=(code:string,message:string,at=path)=>diagnostics.push({severity:'error',code,message,path:at});
   const keys=(v:Record<string,unknown>,allowed:readonly string[],at:string)=>{for(const key of Object.keys(v))if(!allowed.includes(key))error('SPACE3D_FIELD',`Unknown property ${key}.`,at+'.'+key);};
@@ -67,6 +76,7 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
   if(context.duration!==undefined&&(!finite(context.duration)||context.duration<0))error('SPACE3D_DURATION','Duration must be finite and nonnegative.','$.context.duration');
   if(!object(input)||input.version!==1||!Array.isArray(input.nodes)){error('SPACE3D_PROGRAM','Expected version 1 and a nodes array.');return diagnostics;}
   if(!object(resources)){error('SPACE3D_RESOURCES','Expected a resource dictionary.');return diagnostics;}
+  if(!object(instanceSets)){error('SPACE3D_INSTANCE_SETS','Expected an instance set dictionary.');return diagnostics;}
   keys(input,['version','units','handedness','upAxis','nodes','camera','clippingPlanes','overlays','tracks'],path);
   if(!['unit','m','cm','mm'].includes(input.units))error('SPACE3D_UNITS','Expected explicit unit, m, cm or mm. No bp conversion is implicit.',path+'.units');
   if(input.handedness!=='right'||input.upAxis!=='z')error('SPACE3D_BASIS','Version 1 uses a right-handed, Z-up world basis.');
@@ -74,18 +84,22 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
   const byId=new Map<string,SceneNode3D|Camera3D>(),checkedResources=new Set<string>();
   const check=(node:unknown,at:string,camera=false)=>{
     if(!object(node)){error('SPACE3D_NODE','Expected a spatial object.',at);return;}
-    keys(node,camera?['id','parent','transform','projection']:node.kind==='mesh'?['kind','id','parent','transform','resourceId','visible','material']:node.kind==='curve'?['kind','id','parent','transform','resourceId','visible','color']:['kind','id','parent','transform'],at);
+    keys(node,camera?['id','parent','transform','projection']:node.kind==='instances'?['kind','id','parent','transform','instanceSetId','visible','material']:node.kind==='mesh'?['kind','id','parent','transform','resourceId','visible','material']:node.kind==='curve'?['kind','id','parent','transform','resourceId','visible','color']:['kind','id','parent','transform'],at);
     if(!name(node.id)||byId.has(node.id))error('SPACE3D_ID','IDs must be unique, nonempty and at most 256 characters.',at+'.id');else byId.set(node.id,node as SceneNode3D);
-    if(!camera&&!['group','mesh','curve'].includes(node.kind))error('SPACE3D_KIND','Expected group, mesh or curve.',at+'.kind');
+    if(!camera&&!['group','mesh','curve','instances'].includes(node.kind))error('SPACE3D_KIND','Expected group, mesh, curve or instances.',at+'.kind');
     if(node.parent!==undefined&&!name(node.parent))error('SPACE3D_PARENT','Expected a parent group ID.',at+'.parent');
     if(node.transform!==undefined)diagnostics.push(...validateTransform3D(node.transform,at+'.transform'));
     if(camera&&node.projection!==undefined){diagnostics.push(...validateProjection3D(node.projection,at+'.projection'));if(context.viewport===undefined)error('SPACE3D_VIEWPORT','Projected cameras require a logical viewport.',at+'.projection');}
-    if(!camera&&node.kind==='mesh'){
+    if(!camera&&(node.kind==='mesh'||node.kind==='instances')){
       if(node.visible!==undefined&&typeof node.visible!=='boolean')error('SPACE3D_VISIBLE','visible must be boolean.',at+'.visible');
-      const r=resourceName(node.resourceId)&&Object.hasOwn(resources,node.resourceId)?resources[node.resourceId]:undefined;
+      const set=node.kind==='instances'&&resourceName(node.instanceSetId)&&Object.hasOwn(instanceSets,node.instanceSetId)?instanceSets[node.instanceSetId]:undefined;
+      if(node.kind==='instances'&&!set)error('SPACE3D_INSTANCE_SET','Expected an existing instance set ID.',at+'.instanceSetId');
+      const resourceId=node.kind==='instances'?set?.prototypeResourceId:node.resourceId;
+      const r=resourceName(resourceId)&&Object.hasOwn(resources,resourceId)?resources[resourceId]:undefined;
       if(!r||r.kind!=='mesh')error('SPACE3D_RESOURCE','Mesh instances require an existing mesh resource ID of at most 512 characters.',at+'.resourceId');
       else {if(r.units!==input.units)error('SPACE3D_UNIT_MISMATCH','Mesh and world units must match exactly.',at+'.resourceId');
-        if(!inContext&&!checkedResources.has(node.resourceId)){diagnostics.push(...validateMeshResource(r,`$.resources.${node.resourceId}`));checkedResources.add(node.resourceId);}}
+        if(set)diagnostics.push(...validateInstanceSet3D(set,r,`$.instanceSets.${node.instanceSetId}`));
+        if(!inContext&&!checkedResources.has(resourceId)){diagnostics.push(...validateMeshResource(r,`$.resources.${resourceId}`));checkedResources.add(resourceId);}}
       if(node.material!==undefined){if(!object(node.material))error('SPACE3D_MATERIAL','Expected an unlit material.',at+'.material');
         else {keys(node.material,['kind','color','side','wireframe','colorAttribute'],at+'.material');if(node.material.kind!=='unlit'||!color(node.material.color)||node.material.side!==undefined&&!['front','double'].includes(node.material.side)||node.material.wireframe!==undefined&&typeof node.material.wireframe!=='boolean')error('SPACE3D_MATERIAL','Expected kind unlit, #rrggbb color, front/double side and optional boolean wireframe.',at+'.material');
           if(node.material.colorAttribute!==undefined){const n=node.material.colorAttribute;
@@ -140,17 +154,20 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
       });if(count>SPACE3D_MAX_KEYS)error('SPACE3D_TRACK_BUDGET',`At most ${SPACE3D_MAX_KEYS} total keyframes are supported.`,path+'.tracks');}
   }
   if(hasErrors(diagnostics))return diagnostics;
-  try{diagnostics.push(...evaluateValidated(input as Space3D,metadata(input as Space3D,resources),context,0).diagnostics);}catch(cause){const e=cause as {code?:string;message?:string;diagnostics?:readonly Diagnostic[]};if(e.diagnostics)diagnostics.push(...e.diagnostics);else error(e.code??'SPACE3D_EVALUATION',e.message??String(cause));}
+  try{diagnostics.push(...evaluateValidated(input as Space3D,metadata(input as Space3D,resources,instanceSets),context,0,{},instanceSets).diagnostics);}catch(cause){const e=cause as {code?:string;message?:string;diagnostics?:readonly Diagnostic[]};if(e.diagnostics)diagnostics.push(...e.diagnostics);else error(e.code??'SPACE3D_EVALUATION',e.message??String(cause));}
   return diagnostics;
 }
-export function validateSpace3D(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={}):Diagnostic[]{return inspect(input,resources,path,false,context);}
-export function validateSpace3DInContext(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={}):Diagnostic[]{return inspect(input,resources,path,true,context);}
+export function validateSpace3D(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={},instanceSets:DeepReadonly<Record<string,InstanceSet3D>>={}):Diagnostic[]{return inspect(input,resources,path,false,context,instanceSets);}
+export function validateSpace3DInContext(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={},instanceSets:DeepReadonly<Record<string,InstanceSet3D>>={}):Diagnostic[]{return inspect(input,resources,path,true,context,instanceSets);}
 export interface MeshFrameMetadata3D {bounds:Bounds3D|null;topologyRevision:string}
 /** Local translation and rotation supplied by a prepared geometric constraint. Scale stays authored. */
 export interface FrameTransform3D {translation:Vec3;rotation:Quaternion}
 type MeshMetadata=Record<string,MeshFrameMetadata3D>;
-function metadata(program:Space3D,resources:Record<string,Resource>):MeshMetadata {
-  const result:MeshMetadata={};for(const node of program.nodes)if(node.kind!=='group'&&!Object.hasOwn(result,node.resourceId)){const r=resources[node.resourceId] as MeshResource|Curve3DResource;Object.defineProperty(result,node.resourceId,{value:{bounds:structuredClone(r.bounds),topologyRevision:r.topologyRevision},enumerable:true});}return result;
+function metadata(program:Space3D,resources:Record<string,Resource>,sets:DeepReadonly<Record<string,InstanceSet3D>>={}):MeshMetadata {
+  const result:MeshMetadata={};for(const node of program.nodes)if(node.kind!=='group'){
+    const id=node.kind==='instances'?sets[node.instanceSetId].prototypeResourceId:node.resourceId;
+    if(!Object.hasOwn(result,id)){const r=resources[id] as MeshResource|Curve3DResource;Object.defineProperty(result,id,{value:{bounds:structuredClone(r.bounds),topologyRevision:r.topologyRevision},enumerable:true});}
+  }return result;
 }
 function interpolate(track:TransformTrack3D,time:number):Vec3|Quaternion {
   const keys=track.keys;if(time<=keys[0][0])return [...keys[0][1]] as Vec3|Quaternion;if(time>=keys.at(-1)![0])return [...keys.at(-1)![1]] as Vec3|Quaternion;
@@ -171,7 +188,9 @@ function planeContains(p:ClippingPlane3D,point:readonly number[]):boolean {
   // Closed half-spaces tolerate arithmetic roundoff only, relative to the actual plane terms.
   return sum>=-8*Number.EPSILON*scaled.reduce((s,n)=>s+Math.abs(n),0);
 }
-function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3DContext,time:number,frameTransforms:DeepReadonly<Record<string,FrameTransform3D>>={}):Space3DEvaluation {
+function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3DContext,time:number,frameTransforms:DeepReadonly<Record<string,FrameTransform3D>>={},sets:DeepReadonly<Record<string,InstanceSet3D>>={}):Space3DEvaluation {
+  const recordCount=program.nodes.reduce((n,node)=>n+(node.kind==='group'?0:node.kind==='instances'?sets[node.instanceSetId].instances.length:1),0);
+  if(recordCount>4096)throw new OperationValidationError([{severity:'error',code:'SPACE3D_INSTANCE_BUDGET',message:'At most 4096 expanded mesh, curve and sampled instance records are supported per frame.',path:'$.space3d.nodes'}]);
   const objects:(SceneNode3D|Camera3D)[]=[...program.nodes,...(program.camera?[program.camera]:[])],byId=new Map(objects.map(n=>[n.id,n])),transforms=new Map(objects.map(n=>[n.id,structuredClone(n.transform??{})]));
   for(const track of program.tracks??[])Object.assign(transforms.get(track.target)!,{[track.property]:interpolate(track,time)});
   for(const [id,value] of Object.entries(frameTransforms))Object.assign(transforms.get(id)!,{translation:[...value.translation],rotation:[...value.rotation]});
@@ -180,8 +199,19 @@ function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3
     while(pending.length){const next=pending.pop()!;world.set(next.id,multiplyMatrix4(next.parent?world.get(next.parent)!:identityMatrix4(),composeTransform3D(transforms.get(next.id))));}}
   let camera:Space3DEvaluation['camera']=null;if(program.camera){const worldMatrix=world.get(program.camera.id)!,viewMatrix=inverseMatrix4(worldMatrix),projection=program.camera.projection??null,projectionMatrix=projection?projectionMatrix3D(projection,context.viewport!):null;
     camera={id:program.camera.id,worldMatrix,viewMatrix,forwardAxis:'-z',upAxis:'y',projection:projection?structuredClone(projection):null,projectionMatrix,viewProjectionMatrix:projectionMatrix?viewProjectionMatrix3D(projectionMatrix,viewMatrix):null,aspect:projection?context.viewport!.width/context.viewport!.height:null};}
-  const diagnostics:Diagnostic[]=[],instances:EvaluatedMeshInstance3D[]=[],curves:EvaluatedCurveInstance3D[]=[],groups:Space3DEvaluation['groups']=[];
+  const diagnostics:Diagnostic[]=[],instances:EvaluatedMeshInstance3D[]=[],curves:EvaluatedCurveInstance3D[]=[],groups:Space3DEvaluation['groups']=[],instanceBatches:EvaluatedInstanceBatch3D[]=[];
   for(const node of program.nodes){const worldMatrix=world.get(node.id)!;if(node.kind==='group'){groups.push({id:node.id,worldMatrix});continue;}
+    if(node.kind==='instances'){
+      const set=sets[node.instanceSetId],r=resources[set.prototypeResourceId];let bounds:Bounds3D|null=null;
+      const elements:EvaluatedInstanceBatch3D['instances']=set.instances.map(item=>{
+        const matrix=multiplyMatrix4(worldMatrix,composeTransform3D(item.transform)),orientation=orientationMatrix4(matrix),selected=item.selected!==false;
+        const worldBounds=r.bounds?transformBounds3D(matrix,r.bounds):null;
+        if(selected&&worldBounds){if(!bounds)bounds={min:[...worldBounds.min],max:[...worldBounds.max]};else for(let k=0;k<3;k++){bounds.min[k]=Math.min(bounds.min[k],worldBounds.min[k]);bounds.max[k]=Math.max(bounds.max[k],worldBounds.max[k]);}}
+        return {id:item.id,selected,color:[...(item.color??[1,1,1])] as Vec3,worldMatrix:matrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,matrix):null,orientation,worldBounds};
+      });
+      instanceBatches.push({id:node.id,setId:node.instanceSetId,prototypeResourceId:set.prototypeResourceId,visible:node.visible!==false,
+        material:{kind:'unlit',color:node.material?.color??'#ffffff',side:node.material?.side??'front',wireframe:node.material?.wireframe??false,...(node.material?.colorAttribute!==undefined?{colorAttribute:node.material.colorAttribute}:{})},instances:elements,worldBounds:bounds});continue;
+    }
     if(node.kind==='curve'){const r=resources[node.resourceId];curves.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,color:node.color??'#d4d9e2',topologyRevision:r.topologyRevision,worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});continue;}
     const r=resources[node.resourceId],orientation=orientationMatrix4(worldMatrix);let normalMatrix:Readonly<Matrix3>|null=null;
     if(orientation===0)diagnostics.push({severity:'warning',code:'SPACE3D_SINGULAR_NORMAL',message:`${node.id}: singular transform has no normal matrix or winding.`,path:`$.space3d.nodes[${program.nodes.indexOf(node)}].transform`});else normalMatrix=normalMatrix3D(worldMatrix);
@@ -191,16 +221,16 @@ function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3
     const position=projected?.position?[projected.position[0]+(overlay.offset?.[0]??0),projected.position[1]+(overlay.offset?.[1]??0)] as [number,number]:null;if(position)range(position);
     const parent=overlay.parent?byId.get(overlay.parent):undefined,hidden=parent&&'kind' in parent&&parent.kind!=='group'&&parent.visible===false;
     return {id:overlay.id,resourceId:overlay.resourceId,worldPosition,position,ndc:projected?.ndc?[...projected.ndc]:null,visible:!hidden&&!!projected?.visible&&clippingPlanes.every(p=>planeContains(p,worldPosition)),scale:overlay.scale??1,color:overlay.color??'#ffffff'};});
-  return {version:1,units:program.units,handedness:'right',upAxis:'z',groups,instances,curves,camera,clippingPlanes,overlays,diagnostics};
+  return {version:1,units:program.units,handedness:'right',upAxis:'z',groups,instances,curves,...(instanceBatches.length?{instanceBatches}:{}),camera,clippingPlanes,overlays,diagnostics};
 }
 /** Static time-zero preparation remains available for existing numeric consumers. */
-export function prepareSpace3D(program:Space3D,resources:Record<string,Resource>,context:Space3DContext={}):DeepReadonly<Space3DEvaluation>{
-  const diagnostics=validateSpace3D(program,resources,'$.space3d',context);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);return freezeSnapshot(evaluateValidated(program,metadata(program,resources),context,0));
+export function prepareSpace3D(program:Space3D,resources:Record<string,Resource>,context:Space3DContext={},instanceSets:DeepReadonly<Record<string,InstanceSet3D>>={}):DeepReadonly<Space3DEvaluation>{
+  const diagnostics=validateSpace3D(program,resources,'$.space3d',context,instanceSets);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);return freezeSnapshot(evaluateValidated(program,metadata(program,resources,instanceSets),context,0,{},instanceSets));
 }
 /** Snapshot declarations and mesh metadata, without copying or retaining caller-owned vertex buffers. */
-export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Resource>,context:{viewport:Viewport3D;duration:number},dynamicResourceIds:readonly string[]=[],initialTransforms:DeepReadonly<Record<string,FrameTransform3D>>={}):(time:number,dynamicMeshes?:DeepReadonly<Record<string,MeshFrameMetadata3D>>,frameTransforms?:DeepReadonly<Record<string,FrameTransform3D>>)=>DeepReadonly<Space3DEvaluation>{
+export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Resource>,context:{viewport:Viewport3D;duration:number},dynamicResourceIds:readonly string[]=[],initialTransforms:DeepReadonly<Record<string,FrameTransform3D>>={},initialInstanceSets:DeepReadonly<Record<string,InstanceSet3D>>={}):(time:number,dynamicMeshes?:DeepReadonly<Record<string,MeshFrameMetadata3D>>,frameTransforms?:DeepReadonly<Record<string,FrameTransform3D>>,instanceSets?:DeepReadonly<Record<string,InstanceSet3D>>)=>DeepReadonly<Space3DEvaluation>{
   if(context===undefined)throw new OperationValidationError([{severity:'error',code:'SPACE3D_CONTEXT',message:'Sampler requires viewport and finite nonnegative duration.'}]);
-  const diagnostics=validateSpace3D(program,resources,'$.space3d',context);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);
+  const diagnostics=validateSpace3D(program,resources,'$.space3d',context,initialInstanceSets);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);
   if(!finite(context.duration)||context.duration<0||!context.viewport)throw new OperationValidationError([{severity:'error',code:'SPACE3D_CONTEXT',message:'Sampler requires viewport and finite nonnegative duration.'}]);
   const idsDiagnostics=validateJsonData(dynamicResourceIds,'$.dynamicResourceIds');if(idsDiagnostics.length)throw new OperationValidationError(idsDiagnostics);
   if(!Array.isArray(dynamicResourceIds)||dynamicResourceIds.length>4096||new Set(dynamicResourceIds).size!==dynamicResourceIds.length||dynamicResourceIds.some(id=>!resourceName(id)||!Object.hasOwn(resources,id)||!['mesh','curve3d'].includes(resources[id].kind)))throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_RESOURCE',message:'Dynamic IDs must be distinct declared mesh or curve resources.'}]);
@@ -217,11 +247,18 @@ export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Re
     }
     return freezeSnapshot(input as Record<string,FrameTransform3D>);
   };
-  const initial=validateTransforms(initialTransforms),targets=Object.freeze(Object.keys(initial)),ids=Object.freeze([...dynamicResourceIds]),meshes=metadata(snapshot,resources);
+  const initial=validateTransforms(initialTransforms),targets=Object.freeze(Object.keys(initial)),ids=Object.freeze([...dynamicResourceIds]),initialSets=freezeSnapshot(initialInstanceSets),setIds=Object.keys(initialSets),meshes=metadata(snapshot,resources,initialSets);
+  const validateSets=(input:unknown):DeepReadonly<Record<string,InstanceSet3D>>=>{
+    const ds=validateJsonData(input,'$.instanceSets');if(ds.length)throw new OperationValidationError(ds);
+    if(!object(input)||Object.keys(input).length!==setIds.length||Object.keys(input).some(id=>!setIds.includes(id)))throw new OperationValidationError([{severity:'error',code:'SPACE3D_INSTANCE_SETS',message:'Supply exactly the declared instance set IDs.',path:'$.instanceSets'}]);
+    for(const id of setIds){const set=input[id];const errors=validateInstanceSet3D(set);if(errors.some(d=>d.severity==='error'))throw new OperationValidationError(errors);
+      if(set.prototypeResourceId!==initialSets[id].prototypeResourceId||set.units!==initialSets[id].units)throw new OperationValidationError([{severity:'error',code:'SPACE3D_INSTANCE_SETS',message:'Sampled set prototype and units must match preparation.',path:`$.instanceSets.${id}`}]);}
+    return freezeSnapshot(input as Record<string,InstanceSet3D>);
+  };
   // Validate real initial generated bounds and constraint transforms before publishing readiness.
-  const initialFrame=freezeSnapshot(evaluateValidated(snapshot,meshes,ctx,0,initial));
-  const constant=snapshot.tracks?.length||ids.length||targets.length?undefined:initialFrame;
-  return (time,dynamicMeshes,frameTransforms)=>{
+  const initialFrame=freezeSnapshot(evaluateValidated(snapshot,meshes,ctx,0,initial,initialSets));
+  const constant=snapshot.tracks?.length||ids.length||targets.length||setIds.length?undefined:initialFrame;
+  return (time,dynamicMeshes,frameTransforms,instanceSets)=>{
     if(!finite(time))throw new RangeError('Spatial sample time must be finite.');let sampled=meshes;
     if(ids.length||dynamicMeshes!==undefined){
       const ds=validateJsonData(dynamicMeshes,'$.dynamicMeshes');if(ds.length)throw new OperationValidationError(ds);
@@ -231,6 +268,7 @@ export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Re
         Object.defineProperty(sampled,id,{enumerable:true,value:structuredClone(r)});}
     }
     const transforms=targets.length||frameTransforms!==undefined?validateTransforms(frameTransforms,targets):initial;
-    return constant??freezeSnapshot(evaluateValidated(snapshot,sampled,ctx,Math.max(0,Math.min(ctx.duration,time)),transforms));
+    const sets=instanceSets===undefined?initialSets:validateSets(instanceSets);
+    return constant??freezeSnapshot(evaluateValidated(snapshot,sampled,ctx,Math.max(0,Math.min(ctx.duration,time)),transforms,sets));
   };
 }

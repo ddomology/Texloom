@@ -21,7 +21,8 @@ export interface SceneManifest {
   /** Metadata only: no transport URI, inline payload, object URL or GPU handle. */
   readonly assets?: readonly DeepReadonly<Omit<AssetEntry, 'source'>>[];
   /** Evaluated frame resources, with no asset transport or fixed bounds. */
-  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh'|'curve3d';producer:'surface'|'curve3d'|'mesh-attributes';operationId:string;units:MeshUnit}>[];
+  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh'|'curve3d';producer:'surface'|'curve3d'|'mesh-attributes'|'instances';operationId:string;units:MeshUnit}>[];
+  readonly instanceSets?:readonly Readonly<{id:string;prototypeResourceId:string;units:MeshUnit}>[];
 }
 export interface SceneRuntime {
   readonly manifest: SceneManifest;
@@ -47,10 +48,12 @@ function sceneManifest(bundle: Bundle, assets?: readonly AssetEntry[]): SceneMan
     features: Object.freeze(sceneFeatures(bundle)),
     ...(bundle.timeline ? {timeline:freezeSnapshot(bundle.timeline)} : {}),
     ...(assets ? {assets:freezeSnapshot(assets.map(({source: _source, ...metadata}) => metadata))} : {}),
-    ...(bundle.surfaces||bundle.curves3d||bundle.meshAttributes ? {generatedResources:freezeSnapshot([
+    ...(bundle.instances ? {instanceSets:freezeSnapshot(bundle.instances.operations.map(o=>({id:o.id,prototypeResourceId:o.prototype,units:o.units})))} : {}),
+    ...(bundle.surfaces||bundle.curves3d||bundle.meshAttributes||bundle.instances?.operations.some(o=>o.realize) ? {generatedResources:freezeSnapshot([
       ...(bundle.surfaces?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'surface' as const,operationId:o.id,units:o.units})),
       ...(bundle.curves3d?.operations??[]).map(o=>({id:o.resourceId,kind:'curve3d' as const,producer:'curve3d' as const,operationId:o.id,units:o.units})),
       ...(bundle.meshAttributes?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'mesh-attributes' as const,operationId:o.id,units:o.units})),
+      ...(bundle.instances?.operations??[]).flatMap(o=>o.realize?[{id:o.realize.resourceId,kind:'mesh' as const,producer:'instances' as const,operationId:o.id,units:o.units}]:[]),
     ])} : {}),
   });
 }

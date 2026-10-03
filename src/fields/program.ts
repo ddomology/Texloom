@@ -14,6 +14,8 @@ import {validateOperationGraphInContext} from '../operations/validate.js';
 import {surfaceValidationResources,validateSurfaceProgramInContext} from '../operations/surface.js';
 import {curveValidationResources,validateCurveProgram3DInContext} from '../operations/curve3d.js';
 import {meshAttributeValidationResources,validateMeshAttributeProgramInContext} from '../operations/mesh-attributes.js';
+import {instanceValidationResources,instanceValidationSets,validateInstanceProgramInContext} from '../operations/instances.js';
+import {validateSpace3DInContext} from '../ir/scene3d.js';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -68,8 +70,10 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (!validatedContext) {
     // Graph expression inputs, fields and deformations consume these candidate
     // parameters; defer them until the declarations have been checked.
-    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,surfaces:deferredSurfaces,curves3d:deferredCurves,meshAttributes:deferredAttributes,...base} = bundle;
-    diagnostics.push(...validateBundle({...base,resources:object(base.resources)?meshAttributeValidationResources(deferredAttributes,curveValidationResources(deferredCurves,surfaceValidationResources(deferredSurfaces,base.resources))):base.resources}));
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,surfaces:deferredSurfaces,curves3d:deferredCurves,meshAttributes:deferredAttributes,instances:deferredInstances,space3d:deferredSpace,...base} = bundle;
+    const resources=object(base.resources)?instanceValidationResources(deferredInstances,meshAttributeValidationResources(deferredAttributes,curveValidationResources(deferredCurves,surfaceValidationResources(deferredSurfaces,base.resources)))):base.resources;
+    diagnostics.push(...validateBundle({...base,resources}));
+    if(deferredSpace!==undefined&&!diagnostics.some(d=>d.severity==='error'))diagnostics.push(...validateSpace3DInContext(deferredSpace,resources,'$.space3d',{viewport:base.viewport,duration:base.duration},instanceValidationSets(deferredInstances)));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
   if (diagnostics.some(d => d.severity === 'error')) return {diagnostics,bindings};
@@ -147,6 +151,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
     diagnostics.push(...validateCurveProgram3DInContext(bundle.curves3d,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.meshAttributes !== undefined && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateMeshAttributeProgramInContext(bundle.meshAttributes,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.instances !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateInstanceProgramInContext(bundle.instances,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "sampled-instances",
+      "source": "examples/sampled-instances.tex",
+      "inputs": [
+        "examples/sampled-instances.tex"
+      ],
+      "tests": [
+        "tests/instance_capture_test.py",
+        "tests/instance_player_test.py"
+      ]
+    }
+  ]
+}

@@ -31,10 +31,10 @@ class GpuRendererTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        report = {'success':len(cls.reports)==8 and not cls.browser_errors, 'browser':cls.browser.version,
+        report = {'success':len(cls.reports)==9 and not cls.browser_errors, 'browser':cls.browser.version,
             'browserErrors':cls.browser_errors, 'checks':cls.reports,
             'files':{name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in
-                ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','src/renderers/gpu/curve-data.ts','tests/gpu-browser.ts',
+                ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','src/renderers/gpu/curve-data.ts','src/renderers/gpu/instances.ts','tests/gpu-browser.ts','tests/gpu-instances-browser.ts',
                  'tests/gpu-reference.ts','tests/gpu_renderer_test.py','src/ir/scene3d.ts',
                  'src/geometry/projection3d.ts','package-lock.json')}}
         folder = ROOT/'build/gpu-conformance'
@@ -85,6 +85,30 @@ class GpuRendererTests(unittest.TestCase):
         self.assertEqual(report['dimensions'], [96,64])
         self.assertTrue(report['restoredSizeSame'])
         self.reports['historyAndResize'] = report
+
+    def test_sampled_instances_share_geometry_and_match_independent_draws(self):
+        report=self.page.evaluate('gpuQa.instances()')
+        for item in report['records']:
+            self.assertEqual(item['changed'],0,item)
+            self.assertEqual(item['stats']['geometries'],1)
+            self.assertEqual(item['stats']['instances'],3)
+            self.assertEqual(item['stats']['drawCalls'],3 if item['mode'] in ('mixed-reflection','equal-depth') else 1)
+        modes={item['mode']:item for item in report['records']}
+        self.assertEqual(modes['camera-reflection']['painted'],0)
+        self.assertEqual(modes['backface']['painted'],0)
+        self.assertGreater(modes['mixed-reflection']['painted'],0)
+        self.assertEqual(report['shared']['bufferBytes'],42+3*76)
+        self.assertEqual(report['shared']['drawCalls'],1)
+        for parity in (0,1):
+            sizes=[v['buffers'] for v in report['cycles'][parity::2]]
+            self.assertEqual(len(set(sizes)),1,report)
+        self.assertTrue(report['reverse'] and report['restoredSame'] and report['prototypeChanged'] and report['sourceUnchanged'])
+        for stage in ('pruned','lostStats','disposed'):
+            self.assertEqual(report[stage]['bufferBytes'],0)
+            self.assertEqual(report[stage]['instances'],0)
+        self.assertEqual(report['buffersAfterPrune'],0)
+        self.assertEqual(report['buffersAfterDispose'],0)
+        self.reports['sampledInstances']=report
 
     def test_attribute_variants_on_one_mesh_remain_distinct_across_prune_and_restore(self):
         report=self.page.evaluate('gpuQa.attributes()')

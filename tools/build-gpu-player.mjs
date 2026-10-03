@@ -10,8 +10,8 @@ export async function buildGpuPlayer(input,output){
   const core=await build({entryPoints:[resolve(root,'src/index.ts')],bundle:true,platform:'node',format:'esm',write:false});
   const api=await import('data:text/javascript;base64,'+Buffer.from(core.outputFiles[0].text).toString('base64'));
   api.assertBundle(bundle);const frame=api.prepareScene(bundle).sample(0);
-  if(!(frame.space3d?.instances.length||frame.space3d?.curves.length)||!bundle.space3d?.camera?.projection)
-    throw new Error('GPU_PLAYER_SCENE: a scene with mesh or curve instances and an explicit camera projection is required.');
+  if(!(frame.space3d?.instances.length||frame.space3d?.curves.length||frame.space3d?.instanceBatches?.length)||!bundle.space3d?.camera?.projection)
+    throw new Error('GPU_PLAYER_SCENE: a scene with mesh, curve or shared instances and an explicit camera projection is required.');
   const license=await readFile(resolve(root,'node_modules/three/LICENSE'),'utf8');
   const js=await build({entryPoints:[resolve(root,'web/gpu-player.ts')],bundle:true,platform:'browser',format:'iife',target:'es2022',write:false,minify:true,
     banner:{js:'/*! Three.js — MIT license\n'+license.replace(/\*\//g,'* /')+'\n*/'}});

@@ -27,6 +27,29 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Sampled instances and shared prototypes (PR34)
+
+`\usepackage{texloom-instances}` adds `\loominstances{set-id}|JSON|`.
+One mesh prototype supplies geometry for an immutable set of identified elements;
+position, quaternion rotation, scale, linear RGB and selection are optional field
+expressions. Mesh vertex/face/corner domains and explicit identified points are
+supported. A declared seed and stable element ID determine the random lanes.
+
+The native demonstration samples 256 positions on a generated wavy surface. Its
+arrows share one prototype, update orientation/length/color with source time, and
+retain the same element IDs when the density slider changes selection. Explicit
+`realize` options create owned mesh buffers when requested; attribute conflicts
+and allocation limits are checked before publication.
+
+```sh
+python tools/compile.py examples/sampled-instances.tex --out build/sampled-instances
+node tools/build-gpu-player.mjs build/sampled-instances/bundle.json build/sampled-instances/player.html
+```
+
+The [PR34 PortSpec](docs/ports/features/pr34-sampled-instances.json) records the
+supported subset and pinned conceptual references. Full Blender instance graphs
+and arbitrary topology correspondence are outside this contract.
+
 ### Mesh fields and explicit attribute domains (PR33)
 
 `\usepackage{texloom-attributes}` adds `\loomattributes{output-resource}|{...}|`.
