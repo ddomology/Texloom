@@ -1,5 +1,9 @@
 # Shared runtime and renderer contract, M0
 
+For current asynchronous packages, shared resource ownership, cancellation and
+disposal, see [the asset lifecycle contract](assets.md). The synchronous API
+described here remains available for existing inline bundles.
+
 Implemented in this milestone; scene schemas remain 0.1/0.2. This is the first
 foundation in [the roadmap](ROADMAP.md), not full M1 or 3D compatibility.
 

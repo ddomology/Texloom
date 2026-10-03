@@ -1,0 +1,48 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-relations}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{24}{30}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=720,height=450,duration=8,title={A circle becomes a wave}]
+\loomnode[heading] (heading) at (360,45) {A circle becomes a wave};
+\loomnode[small] (subtitle) at (360,78) {The same angle connects a point and its vertical projection.};
+\loompath (guides) {
+  \draw[rule,line width=.8bp] (45,110)--(675,110) (45,377)--(675,377);
+  \draw[rule,line width=.8bp] (75,243)--(303,243) (188,139)--(188,347);
+  \draw[rule,line width=1bp] (188,243) circle[radius=80bp];
+  \draw[rule,line width=.8bp] (354,243)--(654,243) (354,145)--(354,345);
+};
+\loomparameter[unit=rad,min=0,max=6.283185307179586]{phase}|0|
+\TLNode{wave-trace}{path}{"d":"M0 0","style":{"fill":"none","stroke":"#71DFC2","strokeWidth":2.6,"lineCap":"round"}}
+\TLNode{P}{point}{"x":268,"y":243,"r":5,"style":{"fill":"#F3CB84","stroke":"#E5F1EF","strokeWidth":1.2}}
+\TLNode{Q}{point}{"x":360,"y":243,"r":5,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":1.2}}
+\loomexpr{P}{position}|vec2(188bp+80bp*cos(phase+2*pi*1rad*time/8s),243bp-80bp*sin(phase+2*pi*1rad*time/8s))|
+\loomexpr{Q}{position}|vec2(360bp+280bp*time/8s,243bp-80bp*sin(phase+2*pi*1rad*time/8s))|
+\TLNode{projection}{line}{"x1":268,"y1":243,"x2":360,"y2":243,"style":{"stroke":"#91ACB5","strokeWidth":0.7,"dash":[3,4],"opacity":0.7}}
+\loomexpr{projection}{start}|vec2(188bp+80bp*cos(phase+2*pi*1rad*time/8s),243bp-80bp*sin(phase+2*pi*1rad*time/8s))|
+\loomexpr{projection}{end}|vec2(360bp+280bp*time/8s,243bp-80bp*sin(phase+2*pi*1rad*time/8s))|
+\loomtrace{wave-trace}|{"source":{"kind":"node","node":"Q","property":"position","space":{"kind":"scene"}},"domain":[0,8],"step":0.2,"tolerance":0.15,"maxSamples":4096}|
+% One native TeX resource is referenced by both labels. Separate hosted scene
+% runtimes then lease the exact same resource bytes from their shared store.
+\TLMath{angle-label}{\theta}
+\TLNode{circle-angle}{tex}{"resourceId":"angle-label","x":0,"y":0,"scale":1.3,"style":{"fill":"#F3CB84"}}
+\TLNode{wave-angle}{tex}{"resourceId":"angle-label","x":0,"y":0,"scale":1.3,"style":{"fill":"#71DFC2"}}
+\loomfollow{circle-angle}|{"point":"P","offset":[9,-9]}|
+\loomfollow{wave-angle}|{"point":"Q","offset":[9,-9]}|
+\TLMath{sine-formula}{y=\sin\theta}
+\TLNode{circle-formula}{tex}{"resourceId":"sine-formula","x":139,"y":412,"scale":1.5,"style":{"fill":"#F3CB84"}}
+\TLNode{wave-formula}{tex}{"resourceId":"sine-formula","x":455,"y":412,"scale":1.5,"style":{"fill":"#71DFC2"}}
+% A hidden resource is still part of the complete published asset inventory.
+\TLMath{hidden-identity}{\sin^2\theta+\cos^2\theta=1}
+\TLNode{hidden-note}{tex}{"resourceId":"hidden-identity","x":0,"y":0,"visible":false}
+\end{loomscene}
+\end{document}

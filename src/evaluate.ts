@@ -101,6 +101,30 @@ export function createEvaluator(bundle: Bundle): (time: number, parameters?:Read
   assertBundle(bundle);
   const snapshot = structuredClone(bundle);
   freezeDeep(snapshot);
+  return evaluatorFromSnapshot(snapshot);
+}
+
+/** Internal preparation boundary. AssetStore already owns and deeply freezes
+ * these validated resources; retain their identity across independent scenes.
+ * This is deliberately not part of the package's public exports. */
+export function createEvaluatorWithSharedResources(bundle: Bundle): ReturnType<typeof createEvaluator> {
+  assertBundle(bundle);
+  const seen = new Set<object>();
+  const deeplyFrozen = (value: unknown): boolean => {
+    if (value === null || typeof value !== 'object' || seen.has(value)) return true;
+    if (!Object.isFrozen(value)) return false;
+    seen.add(value);
+    return Object.values(value).every(deeplyFrozen);
+  };
+  if (!deeplyFrozen(bundle.resources))
+    throw new Error('ASSET_OWNERSHIP: shared resources must be owned immutable snapshots.');
+  const {resources, ...scene} = bundle;
+  const snapshot: Bundle = {...structuredClone(scene), resources};
+  freezeDeep(snapshot);
+  return evaluatorFromSnapshot(snapshot);
+}
+
+function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvaluator> {
   const {traces:input,...base}=snapshot;
   const plan=prepareExecutionPlan(base);
   const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
