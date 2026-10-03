@@ -22,6 +22,9 @@ class GpuCompositeTests(unittest.TestCase):
     def test_curve_frames_share_exact_pixels_and_source_clock_with_board(self):
         self.assert_scene_composites('curve-frames.tex')
 
+    def test_mesh_attributes_share_exact_pixels_and_source_clock_with_board(self):
+        self.assert_scene_composites('mesh-attributes.tex')
+
     def assert_scene_composites(self, source):
         with tempfile.TemporaryDirectory() as temporary:
             folder=Path(temporary)

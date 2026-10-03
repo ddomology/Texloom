@@ -27,6 +27,27 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Mesh fields and explicit attribute domains (PR33)
+
+`\usepackage{texloom-attributes}` adds `\loomattributes{output-resource}|{...}|`.
+Each operation derives a mesh from an existing source through ordered named
+captures, explicit domain transfers and optional set-position steps. Attributes
+declare their vertex, face or corner domain and scalar, vector or linear-RGB
+type. Their exact topology identity is retained with the immutable buffers.
+
+```sh
+python tools/compile.py examples/mesh-attributes.tex --out build/mesh-attributes
+node tools/build-gpu-player.mjs build/mesh-attributes/bundle.json build/mesh-attributes/player.html
+```
+
+The eight-second example captures height and color on a generated sphere, then
+explicitly averages the captured color onto faces. The two rotating instances
+compare vertex interpolation with a constant color per triangle. Both regenerate
+from the same time and radius parameter; there are no authored RGB buffers.
+`material.colorAttribute` names the color consumed by the GPU renderer.
+TeX bodies, exact step ranges and decoded expressions are archived. See the
+[pinned attribute PortSpec](docs/ports/features/pr33-mesh-attributes.json).
+
 ### Spatial curves and transported frames (PR32)
 
 `\usepackage{texloom-curve3d}` adds `\loomspatialcurve{resource-id}|{...}|`

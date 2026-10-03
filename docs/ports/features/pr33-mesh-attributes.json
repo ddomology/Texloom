@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "pr33-mesh-attributes",
+  "title": "Typed captured mesh fields, explicit domain transfer and linear color consumption",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": [
+      "Versioned immutable scalar/vec2/vec3/color mesh attributes on explicit vertex, face and corner domains",
+      "Topology-bound attribute data with exact ordered index/vertex-count/revision identity; detached copies for consumers",
+      "Bundle0.3 meshAttributes operations deriving resource outputs through ordered capture, explicit transfer and set-position steps",
+      "Shared-time scalar expressions with bounded parameters; explicit linear-sRGB color attribute material selection in the GPU consumer"
+    ],
+    "excluded": [
+      "Arbitrary Blender fields, automatic domain coercion, edge/instance/spline domains and anonymous attribute propagation",
+      "Topology edits, remeshing, interpolation across unrelated meshes and automatic normals reconstruction after deformation",
+      "Textures, lighting, alpha-blended attributes, arbitrary shaders or a full material-node system",
+      "Complete Blender output equivalence and identical raster bytes across GPUs/browsers"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc",
+      "symbols": [
+        "blender::nodes::node_geo_attribute_capture_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc"
+      ],
+      "role": "Capturing field results makes their values belong to the produced geometry. Texloom uses explicit persistent names and immutable buffers, rather than importing Blender anonymous-attribute graph machinery.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and execution symbol inspected for conceptual scope. No implementation is copied or translated; later source adaptation requires a separate file-level license review."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_evaluate_on_domain.cc",
+      "symbols": [
+        "blender::nodes::node_geo_evaluate_on_domain_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_evaluate_on_domain.cc"
+      ],
+      "role": "Attribute domain is part of field evaluation context. Texloom exposes a small explicit transfer registry and does not silently perform every Blender domain adaptation.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and execution symbol inspected for conceptual scope. No implementation is copied or translated; later source adaptation requires a separate file-level license review."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "An existing authored or generated source mesh, unique output resource ID and explicit units matching the source",
+      "Named capture steps with explicit domain and scalar/vector/color type; dimensionless coordinate expressions and typed source time",
+      "Named transfer steps specifying target domain and a registered method; no implicit conversion",
+      "Optional set-position triples with normalPolicy drop; fixed topology and prior captured values remain unchanged",
+      "At most16 operations,32 steps per operation,128 total steps; ordinary mesh and attribute storage budgets remain enforced"
+    ],
+    "outputs": [
+      "Generated resources are evaluated in dependency order; declarations remain portable and authored resources are not mutated",
+      "Attribute buffer counts match explicit domain sizes, with topology revision, vertex count and complete ordered converted index snapshot",
+      "Linear RGB colors remain in[0,1]; selected vertex colors interpolate, face colors repeat over the three rendered corners",
+      "Original operation JSON, exact original step ranges and decoded component expressions are archived with source spans"
+    ],
+    "coordinates": [
+      "Mesh coordinates stay object-local in explicit units; node/camera transforms and output color encoding are downstream consumer concerns",
+      "Vertex-to-face mean is the arithmetic average of the triangle's three referenced vertex values in their stored numeric/color space",
+      "Set-position changes positions and bounds, removes stale normals explicitly and retains already captured attribute arrays",
+      "Native TeX overlays and both comparison meshes use the common absolute scene clock"
+    ],
+    "errorPolicy": [
+      "Reject unsupported domain/method pairs, missing names, source cycles, duplicate output IDs and mismatched units",
+      "Reject nonfinite field values, invalid color ranges, type/count mismatches, invalid buffers and topology changes under captured attributes",
+      "Unreferenced/zero-area aggregation behavior must follow explicit supported orphan and zero-area policies",
+      "Literal capture rejects duplicate JSON keys, nonfinite values, reserved source metadata, unsafe sidecar paths and size/step budgets before bundle publication"
+    ]
+  },
+  "fixtures": [
+    "mesh-attributes"
+  ],
+  "verification": {
+    "command": "python -m unittest tests.attribute_port_spec_test tests.attribute_capture_test tests.attribute_player_test -v; npm test",
+    "claims": [
+      "Real TeX derives smooth vertex-colored and explicit face-mean-colored spheres from one generated source without authored RGB buffers",
+      "Independent tests compute every captured scalar/color and triangle mean from source coordinates and time",
+      "Browser tests independently project visible triangle interiors and compare linear interpolation versus flat face color after sRGB encoding",
+      "Same-browser reverse PNGs, radius regeneration, mobile layout and untouched authored source are checked",
+      "The feature-specific PortSpec registry leaves historical2D raster goldens unchanged"
+    ],
+    "notEstablished": [
+      "Execution or numeric equivalence of Blender's complete field/domain conversion system",
+      "All nonlinear field singularities outside sampled vertices or faces",
+      "Automatic interpolation correctness after topology changes or arbitrary mesh correspondence",
+      "Cross-browser, cross-device or cross-driver pixel identity"
+    ]
+  }
+}

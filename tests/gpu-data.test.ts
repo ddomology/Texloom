@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {prepareGpuGeometry,validateGpuSize,validateGpuColor,validateGpuMatrix,validateGpuTransformBounds,validateGpuOrientation,GpuRenderError} from '../src/renderers/gpu/data.ts';
+import {prepareGpuGeometry,gpuBufferSize,gpuWireBufferSize,validateGpuSize,validateGpuColor,validateGpuMatrix,validateGpuTransformBounds,validateGpuOrientation,GpuRenderError} from '../src/renderers/gpu/data.ts';
+import {attachMeshAttributes} from '../src/ir/attributes.ts';
+import {validateSpace3D} from '../src/ir/scene3d.ts';
 import {createGpuRenderer} from '../src/renderers/gpu/index.ts';
 import {snapshotMeshResource,type MeshResource} from '../src/ir/mesh.ts';
 
@@ -10,6 +12,31 @@ const triangle=(positions:number[]=[-1,-1,0,1,-1,0,0,1,0]):MeshResource=>({kind:
   bounds:{min:[0,1,2].map(k=>Math.min(...[0,1,2].map(i=>positions[i*3+k]))) as [number,number,number],
     max:[0,1,2].map(k=>Math.max(...[0,1,2].map(i=>positions[i*3+k]))) as [number,number,number]}});
 const hasCode=(code:string)=>(e:unknown)=>e instanceof GpuRenderError&&e.code===code;
+
+test('color upload respects explicit vertex, face and corner domains and preserves shared seams',()=>{
+  const base=triangle([-1,-1,0,1,-1,0,0,1,0]);base.indices.data=[0,1,2,2,1,0];base.indices.count=6;
+  const buffer=(data:number[])=>({version:1 as const,componentType:'float64' as const,components:3 as const,count:data.length/3,byteOffset:0,byteStride:24,data});
+  const resource=attachMeshAttributes(base,{
+    vertex:{domain:'vertex',valueType:'color',buffer:buffer([1,0,0,0,1,0,0,0,1])},
+    face:{domain:'face',valueType:'color',buffer:buffer([1,0,0,0,0,1])},
+    corner:{domain:'corner',valueType:'color',buffer:buffer([1,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,0,1])},
+  }),before=JSON.stringify(resource);
+  const vertex=prepareGpuGeometry(resource,'vertex'),face=prepareGpuGeometry(resource,'face'),corner=prepareGpuGeometry(resource,'corner');
+  assert.equal(vertex.positions.length,9);assert.deepEqual([...vertex.indices],[0,1,2,2,1,0]);
+  assert.deepEqual([...face.indices],[0,1,2,3,4,5]);assert.equal(face.positions.length,18);
+  assert.deepEqual(face.colors,corner.colors);assert.deepEqual([...face.positions.slice(9)],[0,1,0,1,-1,0,-1,-1,0]);
+  assert.deepEqual([...corner.colors!.slice(6,12)],[1,0,0,0,0,1]);
+  for(const [name,data] of [['vertex',vertex],['face',face],['corner',corner]] as const){assert.equal(data.bytes,gpuBufferSize(resource,name));assert.equal(gpuWireBufferSize(resource,name),24);}
+  corner.colors![0]=.5;corner.positions[0]=100;corner.indices[0]=5;assert.equal(JSON.stringify(resource),before);
+  assert.equal(prepareGpuGeometry(resource,'corner').colors![0],1);
+  assert.throws(()=>prepareGpuGeometry(resource,'missing'),hasCode('GPU_COLOR_ATTRIBUTE'));
+});
+
+test('mesh material selects an existing color attribute and rejects scalar names',()=>{
+  const mesh=attachMeshAttributes(triangle(),{height:{domain:'vertex',valueType:'scalar',buffer:{version:1,componentType:'float64',components:1,count:3,byteOffset:0,byteStride:8,data:[0,0,1]}}});
+  const space={version:1,units:'unit',handedness:'right',upAxis:'z',nodes:[{kind:'mesh',id:'m',resourceId:'mesh',material:{kind:'unlit',color:'#ffffff',colorAttribute:'height'}}]};
+  for(const name of ['height','missing','']){space.nodes[0].material.colorAttribute=name;assert.ok(validateSpace3D(space,{mesh:mesh as MeshResource}).some(d=>d.code==='SPACE3D_COLOR_ATTRIBUTE'));}
+});
 
 test('GPU modules import without DOM and construction fails with a specific browser diagnostic',()=>{
   assert.throws(()=>createGpuRenderer(),hasCode('GPU_BROWSER'));

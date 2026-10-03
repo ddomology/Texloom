@@ -70,3 +70,7 @@ export * from './ir/curve3d.js';
 export * from './geometry/curve3d.js';
 export * from './geometry/frames3d.js';
 export * from './operations/curve3d.js';
+export * from './ir/attributes.js';
+export * from './fields/mesh-context.js';
+export * from './operations/domain-transfer.js';
+export * from './operations/mesh-attributes.js';

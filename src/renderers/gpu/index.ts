@@ -5,7 +5,7 @@ import type {MeshResource} from '../../ir/mesh.js';
 import type {Curve3DResource} from '../../ir/curve3d.js';
 import type {DeepReadonly} from '../../ir/operations.js';
 import {GpuRenderError,validateGpuSize,validateGpuColor,validateGpuMatrix,finiteFloat32,prepareGpuGeometry,
-  gpuBufferSize,validateGpuTransformBounds,validateGpuOrientation,MAX_GPU_BUFFER_BYTES,MAX_GPU_TRIANGLES} from './data.js';
+  gpuBufferSize,gpuWireBufferSize,validateGpuTransformBounds,validateGpuOrientation,MAX_GPU_BUFFER_BYTES,MAX_GPU_TRIANGLES} from './data.js';
 import {gpuCurveBufferSize,prepareGpuCurveGeometry} from './curve-data.js';
 export {GpuRenderError} from './data.js';
 
@@ -22,11 +22,11 @@ export interface GpuRenderer {
 }
 type GeometryEntry={geometry:BufferGeometry;bytes:number;wireBytes:number};
 type GeometryResource=DeepReadonly<MeshResource|Curve3DResource>;
-// Three retains a derived edge index until geometry disposal. Reserve its upper bound
-// even when a later frame uses the same geometry with a filled material.
-const wireBufferSize=(r:DeepReadonly<MeshResource>)=>r.indices.count*2*(r.positions.count>=65535?4:2);
+type GeometryKey={resource:GeometryResource;colorAttribute?:string};
 const immutableMesh=(r:DeepReadonly<MeshResource>)=>Object.isFrozen(r)&&Object.isFrozen(r.positions)&&Object.isFrozen(r.positions.data)&&
-  Object.isFrozen(r.indices)&&Object.isFrozen(r.indices.data)&&(!r.normals||Object.isFrozen(r.normals)&&Object.isFrozen(r.normals.data));
+  Object.isFrozen(r.indices)&&Object.isFrozen(r.indices.data)&&(!r.normals||Object.isFrozen(r.normals)&&Object.isFrozen(r.normals.data))&&
+  (!r.attributes||Object.isFrozen(r.attributes)&&Object.isFrozen(r.attributes.values)&&Object.isFrozen(r.attributes.topology)&&Object.isFrozen(r.attributes.topology.indices)&&
+    Object.values(r.attributes.values).every(a=>Object.isFrozen(a)&&Object.isFrozen(a.buffer)&&Object.isFrozen(a.buffer.data)));
 const immutableCurve=(r:DeepReadonly<Curve3DResource>)=>Object.isFrozen(r)&&Object.isFrozen(r.positions)&&Object.isFrozen(r.positions.data);
 
 /** Browser-only construction; importing this module does not access DOM or create a context. */
@@ -52,11 +52,16 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
   const scene=new Scene(),camera=new Camera();
   // Three camera auto-updates remove camera scale. Texloom's evaluated affine view is authoritative.
   scene.matrixAutoUpdate=false;scene.matrixWorldAutoUpdate=false;camera.matrixAutoUpdate=false;camera.matrixWorldAutoUpdate=false;
-  const geometries=new Map<GeometryResource,GeometryEntry>(),materials=new Map<string,MeshBasicMaterial|LineBasicMaterial>(),meshes=new Map<string,Mesh>(),lines=new Map<string,Line>();
+  const geometries=new Map<GeometryKey,GeometryEntry>(),materials=new Map<string,MeshBasicMaterial|LineBasicMaterial>(),meshes=new Map<string,Mesh>(),lines=new Map<string,Line>();
+  let geometryKeys=new WeakMap<GeometryResource,Map<string,GeometryKey>>();
+  const geometryKey=(resource:GeometryResource,colorAttribute?:string):GeometryKey=>{
+    let variants=geometryKeys.get(resource);if(!variants){variants=new Map();geometryKeys.set(resource,variants);}
+    const name=colorAttribute??'';let key=variants.get(name);if(!key){key={resource,...(colorAttribute===undefined?{}:{colorAttribute})};variants.set(name,key);}return key;
+  };
   const modelViews=new WeakMap<Mesh|Line,readonly number[]>();
   let state:GpuRendererStats['state']='ready',renders=0,generation=1,forceResize=true,width=0,height=0,drawCalls=0,triangles=0,segments=0;
   function clearCaches(){for(const entry of geometries.values())entry.geometry.dispose();for(const material of materials.values())material.dispose();
-    geometries.clear();materials.clear();meshes.clear();lines.clear();scene.clear();drawCalls=0;triangles=0;segments=0;}
+    geometries.clear();geometryKeys=new WeakMap();materials.clear();meshes.clear();lines.clear();scene.clear();drawCalls=0;triangles=0;segments=0;}
   const lost=(event:Event)=>{event.preventDefault();if(state==='disposed')return;state='lost';clearCaches();};
   const restored=()=>{if(state==='disposed')return;clearCaches();generation++;forceResize=true;state='ready';};
   canvas.addEventListener('webglcontextlost',lost);canvas.addEventListener('webglcontextrestored',restored);
@@ -74,7 +79,7 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       const projection=view.projectionMatrix;
       validateGpuMatrix(projection,'projection');validateGpuMatrix(view.worldMatrix,'camera world');validateGpuMatrix(view.viewMatrix,'view');
       if(space.instances.length+space.curves.length>4096)throw new GpuRenderError('GPU_BUDGET','At most 4096 mesh and curve instances are supported.');
-      const neededGeometry=new Set<GeometryResource>(),neededWire=new Set<DeepReadonly<MeshResource>>(),neededMaterials=new Set<string>(),ids=new Set<string>();let drawnTriangles=0,drawnSegments=0;
+      const neededGeometry=new Set<GeometryKey>(),neededWire=new Set<GeometryKey>(),neededMaterials=new Set<string>(),ids=new Set<string>();let drawnTriangles=0,drawnSegments=0;
       const draws=space.instances.filter(instance=>instance.visible).map(instance=>{
         if(ids.has(instance.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(instance.id);
         const resource=frame.resources[instance.resourceId];
@@ -87,11 +92,13 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         validateGpuTransformBounds(resource.bounds,instance.modelViewMatrix,projection);
         const material=instance.material;validateGpuColor(material?.color);
         if(material.kind!=='unlit'||!['front','double'].includes(material.side)||typeof material.wireframe!=='boolean')throw new GpuRenderError('GPU_MATERIAL','Only opaque unlit front/double materials with boolean wireframe are supported.');
-        neededGeometry.add(resource);if(material.wireframe)neededWire.add(resource);
+        // Validate the selection before caching a variant, including untrusted evaluated frames.
+        gpuBufferSize(resource,material.colorAttribute);
+        const key=geometryKey(resource,material.colorAttribute);neededGeometry.add(key);if(material.wireframe)neededWire.add(key);
         drawnTriangles+=resource.indices.count/3;
         if(drawnTriangles>MAX_GPU_TRIANGLES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds one million drawn triangles.');
-        const materialKey=`${material.color.toLowerCase()}:${material.side}:${material.wireframe}`;neededMaterials.add(materialKey);
-        return {instance,resource,material,materialKey};
+        const materialKey=`${material.color.toLowerCase()}:${material.side}:${material.wireframe}:${material.colorAttribute!==undefined}`;neededMaterials.add(materialKey);
+        return {instance,resource,material,materialKey,key};
       });
       const curveDraws=space.curves.filter(instance=>instance.visible).map(instance=>{
         if(ids.has(instance.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(instance.id);
@@ -102,10 +109,10 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
         validateGpuTransformBounds(resource.bounds,instance.modelViewMatrix,projection);validateGpuColor(instance.color);
         drawnSegments+=Math.max(0,resource.positions.count-1);
         if(drawnSegments>1_000_000)throw new GpuRenderError('GPU_BUDGET','Frame exceeds one million drawn line segments.');
-        const materialKey=`line:${instance.color.toLowerCase()}`;neededMaterials.add(materialKey);neededGeometry.add(resource);
-        return {instance,resource,materialKey};
+        const materialKey=`line:${instance.color.toLowerCase()}`;neededMaterials.add(materialKey);const key=geometryKey(resource);neededGeometry.add(key);
+        return {instance,resource,materialKey,key};
       });
-      const bytes=[...neededGeometry].reduce((total,r)=>total+(r.kind==='curve3d'?gpuCurveBufferSize(r):gpuBufferSize(r)+(neededWire.has(r)?wireBufferSize(r):geometries.get(r)?.wireBytes??0)),0);
+      const bytes=[...neededGeometry].reduce((total,key)=>{const r=key.resource;return total+(r.kind==='curve3d'?gpuCurveBufferSize(r):gpuBufferSize(r,key.colorAttribute)+(neededWire.has(key)?gpuWireBufferSize(r,key.colorAttribute):geometries.get(key)?.wireBytes??0));},0);
       if(bytes>MAX_GPU_BUFFER_BYTES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds 128 MiB vertex/index uploads including derived wireframe indices.');
       if(space.clippingPlanes.length>8)throw new GpuRenderError('GPU_CLIPPING','At most eight world clipping planes are supported.');
       const planes=space.clippingPlanes.map(p=>new Plane(new Vector3(...p.normal.map((n,i)=>finiteFloat32(n,`clip normal ${i}`)) as [number,number,number]),finiteFloat32(p.constant,'clip constant')));
@@ -114,41 +121,43 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       // Validate Three's view-space clipping uniforms before any upload.
       for(const p of planes){const projected=p.clone().applyMatrix4(camera.matrixWorldInverse);
         [projected.normal.x,projected.normal.y,projected.normal.z,projected.constant].forEach(n=>finiteFloat32(n,'view clipping plane'));}
-      const added:GeometryResource[]=[];
-      try{for(const resource of neededGeometry)if(!geometries.has(resource)){
-        const data:{positions:Float32Array;bytes:number;indices?:Uint16Array|Uint32Array}=resource.kind==='mesh'?prepareGpuGeometry(resource):prepareGpuCurveGeometry(resource),geometry=new BufferGeometry();
+      const added:GeometryKey[]=[];
+      try{for(const key of neededGeometry)if(!geometries.has(key)){
+        const resource=key.resource;
+        const data:{positions:Float32Array;bytes:number;indices?:Uint16Array|Uint32Array;colors?:Float32Array}=resource.kind==='mesh'?prepareGpuGeometry(resource,key.colorAttribute):prepareGpuCurveGeometry(resource),geometry=new BufferGeometry();
         geometry.setAttribute('position',new BufferAttribute(data.positions,3));
+        if(data.colors)geometry.setAttribute('color',new BufferAttribute(data.colors,3));
         if(data.indices)geometry.setIndex(new BufferAttribute(data.indices,1));
-        geometries.set(resource,{geometry,bytes:data.bytes,wireBytes:0});added.push(resource);
+        geometries.set(key,{geometry,bytes:data.bytes,wireBytes:0});added.push(key);
       }}catch(cause){for(const resource of added){geometries.get(resource)!.geometry.dispose();geometries.delete(resource);}throw cause;}
       for(const [key,entry] of geometries)if(!neededGeometry.has(key)){entry.geometry.dispose();geometries.delete(key);}
       for(const [key,material] of materials)if(!neededMaterials.has(key)){material.dispose();materials.delete(key);}
       const meshIds=new Set(draws.map(d=>d.instance.id)),curveIds=new Set(curveDraws.map(d=>d.instance.id));
       for(const [id,mesh] of meshes)if(!meshIds.has(id)){scene.remove(mesh);meshes.delete(id);}
       for(const [id,line] of lines)if(!curveIds.has(id)){scene.remove(line);lines.delete(id);}
-      for(const resource of neededWire)geometries.get(resource)!.wireBytes=wireBufferSize(resource);
-      for(const {instance,resource,material,materialKey} of draws){
+      for(const key of neededWire)geometries.get(key)!.wireBytes=gpuWireBufferSize(key.resource as DeepReadonly<MeshResource>,key.colorAttribute);
+      for(const {instance,key,material,materialKey} of draws){
         if(!materials.has(materialKey)){
           const value=new MeshBasicMaterial({color:material.color,side:material.side==='double'?DoubleSide:FrontSide,
-            toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true,wireframe:material.wireframe});
+            toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true,wireframe:material.wireframe,vertexColors:material.colorAttribute!==undefined});
           // Three computes this before the material hook. Use the evaluated matrix for the actual uniform.
           value.onBeforeRender=(_renderer,_scene,_camera,_geometry,object)=>object.modelViewMatrix.fromArray(modelViews.get(object as Mesh)!);
           materials.set(materialKey,value);
         }
         let mesh=meshes.get(instance.id);
-        if(!mesh){mesh=new Mesh(geometries.get(resource)!.geometry,materials.get(materialKey)!);mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;mesh.frustumCulled=false;meshes.set(instance.id,mesh);scene.add(mesh);}
-        mesh.geometry=geometries.get(resource)!.geometry;mesh.material=materials.get(materialKey)!;mesh.matrixWorld.fromArray(instance.worldMatrix);
+        if(!mesh){mesh=new Mesh(geometries.get(key)!.geometry,materials.get(materialKey)!);mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;mesh.frustumCulled=false;meshes.set(instance.id,mesh);scene.add(mesh);}
+        mesh.geometry=geometries.get(key)!.geometry;mesh.material=materials.get(materialKey)!;mesh.matrixWorld.fromArray(instance.worldMatrix);
         modelViews.set(mesh,instance.modelViewMatrix!);
       }
-      for(const {instance,resource,materialKey} of curveDraws){
+      for(const {instance,key,materialKey} of curveDraws){
         if(!materials.has(materialKey)){
           const value=new LineBasicMaterial({color:instance.color,toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true});
           value.onBeforeRender=(_renderer,_scene,_camera,_geometry,object)=>object.modelViewMatrix.fromArray(modelViews.get(object as Line)!);
           materials.set(materialKey,value);
         }
         let line=lines.get(instance.id);
-        if(!line){line=new Line(geometries.get(resource)!.geometry,materials.get(materialKey)!);line.matrixAutoUpdate=false;line.matrixWorldAutoUpdate=false;line.frustumCulled=false;lines.set(instance.id,line);scene.add(line);}
-        line.geometry=geometries.get(resource)!.geometry;line.material=materials.get(materialKey)!;line.matrixWorld.fromArray(instance.worldMatrix);
+        if(!line){line=new Line(geometries.get(key)!.geometry,materials.get(materialKey)!);line.matrixAutoUpdate=false;line.matrixWorldAutoUpdate=false;line.frustumCulled=false;lines.set(instance.id,line);scene.add(line);}
+        line.geometry=geometries.get(key)!.geometry;line.material=materials.get(materialKey)!;line.matrixWorld.fromArray(instance.worldMatrix);
         modelViews.set(line,instance.modelViewMatrix!);
       }
       // Preserve frame instance order for deterministic equal-depth ties after arbitrary prior renders.

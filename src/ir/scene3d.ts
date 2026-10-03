@@ -11,7 +11,7 @@ import {projectionMatrix3D,viewProjectionMatrix3D,projectPoint3D,validateProject
 
 interface SpatialNode {id:string;parent?:string;transform?:Transform3D}
 export interface Group3D extends SpatialNode {kind:'group'}
-export interface UnlitMaterial3D {kind:'unlit';color:string;side?:'front'|'double';wireframe?:boolean}
+export interface UnlitMaterial3D {kind:'unlit';color:string;side?:'front'|'double';wireframe?:boolean;colorAttribute?:string}
 export interface MeshInstance3D extends SpatialNode {kind:'mesh';resourceId:string;visible?:boolean;material?:UnlitMaterial3D}
 export interface CurveInstance3D extends SpatialNode {kind:'curve';resourceId:string;visible?:boolean;color?:string}
 export type SceneNode3D=Group3D|MeshInstance3D|CurveInstance3D;
@@ -27,7 +27,7 @@ export interface Space3D {
 }
 export interface Space3DContext {viewport?:Viewport3D;duration?:number}
 export interface EvaluatedMeshInstance3D {
-  id:string;resourceId:string;visible:boolean;topologyRevision:string;material:{kind:'unlit';color:string;side:'front'|'double';wireframe:boolean};
+  id:string;resourceId:string;visible:boolean;topologyRevision:string;material:{kind:'unlit';color:string;side:'front'|'double';wireframe:boolean;colorAttribute?:string};
   worldMatrix:Readonly<Matrix4>;modelViewMatrix:Readonly<Matrix4>|null;
   /** World inverse-transpose, separate from the winding/reflection sign. */
   normalMatrix:Readonly<Matrix3>|null;orientation:-1|0|1;worldWinding:'ccw'|'cw'|null;worldBounds:DeepReadonly<Bounds3D>|null;
@@ -87,7 +87,10 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
       else {if(r.units!==input.units)error('SPACE3D_UNIT_MISMATCH','Mesh and world units must match exactly.',at+'.resourceId');
         if(!inContext&&!checkedResources.has(node.resourceId)){diagnostics.push(...validateMeshResource(r,`$.resources.${node.resourceId}`));checkedResources.add(node.resourceId);}}
       if(node.material!==undefined){if(!object(node.material))error('SPACE3D_MATERIAL','Expected an unlit material.',at+'.material');
-        else {keys(node.material,['kind','color','side','wireframe'],at+'.material');if(node.material.kind!=='unlit'||!color(node.material.color)||node.material.side!==undefined&&!['front','double'].includes(node.material.side)||node.material.wireframe!==undefined&&typeof node.material.wireframe!=='boolean')error('SPACE3D_MATERIAL','Expected kind unlit, #rrggbb color, front/double side and optional boolean wireframe.',at+'.material');}}
+        else {keys(node.material,['kind','color','side','wireframe','colorAttribute'],at+'.material');if(node.material.kind!=='unlit'||!color(node.material.color)||node.material.side!==undefined&&!['front','double'].includes(node.material.side)||node.material.wireframe!==undefined&&typeof node.material.wireframe!=='boolean')error('SPACE3D_MATERIAL','Expected kind unlit, #rrggbb color, front/double side and optional boolean wireframe.',at+'.material');
+          if(node.material.colorAttribute!==undefined){const n=node.material.colorAttribute;
+            if(!resourceName(n)||r?.kind!=='mesh'||!Object.hasOwn(r.attributes?.values??{},n)||r.attributes!.values[n]?.valueType!=='color')
+              error('SPACE3D_COLOR_ATTRIBUTE','colorAttribute must name a color attribute on this mesh.',at+'.material.colorAttribute');}}}
     }
     if(!camera&&node.kind==='curve'){
       if(node.visible!==undefined&&typeof node.visible!=='boolean')error('SPACE3D_VISIBLE','visible must be boolean.',at+'.visible');
@@ -182,7 +185,7 @@ function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3
     if(node.kind==='curve'){const r=resources[node.resourceId];curves.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,color:node.color??'#d4d9e2',topologyRevision:r.topologyRevision,worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});continue;}
     const r=resources[node.resourceId],orientation=orientationMatrix4(worldMatrix);let normalMatrix:Readonly<Matrix3>|null=null;
     if(orientation===0)diagnostics.push({severity:'warning',code:'SPACE3D_SINGULAR_NORMAL',message:`${node.id}: singular transform has no normal matrix or winding.`,path:`$.space3d.nodes[${program.nodes.indexOf(node)}].transform`});else normalMatrix=normalMatrix3D(worldMatrix);
-    instances.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,topologyRevision:r.topologyRevision,material:{kind:'unlit',color:node.material?.color??'#d4d9e2',side:node.material?.side??'front',wireframe:node.material?.wireframe??false},worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,normalMatrix,orientation,worldWinding:orientation===0?null:orientation===1?'ccw':'cw',worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});}
+    instances.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,topologyRevision:r.topologyRevision,material:{kind:'unlit',color:node.material?.color??'#d4d9e2',side:node.material?.side??'front',wireframe:node.material?.wireframe??false,...(node.material?.colorAttribute!==undefined?{colorAttribute:node.material.colorAttribute}:{})},worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,normalMatrix,orientation,worldWinding:orientation===0?null:orientation===1?'ccw':'cw',worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});}
   const clippingPlanes=(program.clippingPlanes??[]).map(normalizedPlane),overlays=(program.overlays??[]).map((overlay):EvaluatedOverlay3D=>{
     const worldPosition=[...transformPoint3D(overlay.parent?world.get(overlay.parent)!:identityMatrix4(),overlay.position)] as Vec3,projected=camera?.viewProjectionMatrix?projectPoint3D(worldPosition,camera.viewProjectionMatrix,context.viewport!):null;
     const position=projected?.position?[projected.position[0]+(overlay.offset?.[0]??0),projected.position[1]+(overlay.offset?.[1]??0)] as [number,number]:null;if(position)range(position);

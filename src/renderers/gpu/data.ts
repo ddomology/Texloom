@@ -1,4 +1,5 @@
 import {copyMeshBuffers,type MeshResource} from '../../ir/mesh.js';
+import type {MeshAttribute} from '../../ir/attributes.js';
 import type {DeepReadonly} from '../../ir/operations.js';
 import {orientationMatrix4,type Matrix4} from '../../geometry/matrix4.js';
 
@@ -34,8 +35,21 @@ export function validateGpuOrientation(matrix:readonly number[],orientation:-1|0
   if(orientationMatrix4(converted)!==orientation)
     throw new GpuRenderError('GPU_PRECISION','Float32 conversion changes the transform orientation or rank.');
 }
-export function gpuBufferSize(resource:DeepReadonly<MeshResource>):number {
-  return resource.positions.count*3*4+resource.indices.count*(resource.indices.componentType==='uint16'?2:4);
+function colorSelection(resource:DeepReadonly<MeshResource>,name?:string):DeepReadonly<MeshAttribute>|undefined {
+  if(name===undefined)return;
+  const attribute=typeof name==='string'&&Object.hasOwn(resource.attributes?.values??{},name)?resource.attributes!.values[name]:undefined;
+  if(!attribute||attribute.valueType!=='color')throw new GpuRenderError('GPU_COLOR_ATTRIBUTE','colorAttribute must name an explicit linear RGB color attribute.');
+  return attribute;
+}
+export function gpuBufferSize(resource:DeepReadonly<MeshResource>,colorAttribute?:string):number {
+  const attribute=colorSelection(resource,colorAttribute),expanded=attribute&&attribute.domain!=='vertex';
+  const count=expanded?resource.indices.count:resource.positions.count;
+  return count*3*4*(attribute?2:1)+resource.indices.count*(expanded?(count>=65535?4:2):(resource.indices.componentType==='uint16'?2:4));
+}
+/** Three retains its derived edge index until geometry disposal. */
+export function gpuWireBufferSize(resource:DeepReadonly<MeshResource>,colorAttribute?:string):number {
+  const attribute=colorSelection(resource,colorAttribute),count=attribute&&attribute.domain!=='vertex'?resource.indices.count:resource.positions.count;
+  return resource.indices.count*2*(count>=65535?4:2);
 }
 /** Conservative float32 interval arithmetic bounds both shader stages, including intermediate products. */
 export function validateGpuTransformBounds(bounds:DeepReadonly<MeshResource['bounds']>,modelView:readonly number[],projection:readonly number[]):void {
@@ -53,7 +67,7 @@ export function validateGpuTransformBounds(bounds:DeepReadonly<MeshResource['bou
   points.push([1,1]);multiply(projection,multiply(modelView,points));
 }
 /** An owned float32 upload copy; no renderer can mutate a shared JSON resource. */
-export function prepareGpuGeometry(resource:DeepReadonly<MeshResource>):{positions:Float32Array;indices:Uint16Array|Uint32Array;bytes:number} {
+export function prepareGpuGeometry(resource:DeepReadonly<MeshResource>,colorAttribute?:string):{positions:Float32Array;indices:Uint16Array|Uint32Array;colors?:Float32Array;bytes:number} {
   const owned=copyMeshBuffers(resource),positions=new Float32Array(owned.positions.length),authoredDegenerate=new Set(owned.degenerateTriangles);
   for(let i=0;i<positions.length;i++)positions[i]=finiteFloat32(owned.positions[i],`positions[${i}]`);
   for(let i=0;i<owned.indices.length;i+=3){
@@ -63,5 +77,19 @@ export function prepareGpuGeometry(resource:DeepReadonly<MeshResource>):{positio
     if(Math.hypot(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])===0)
       throw new GpuRenderError('GPU_PRECISION',`Triangle ${i/3} collapses during float32 conversion.`);
   }
-  return {positions,indices:owned.indices,bytes:positions.byteLength+owned.indices.byteLength};
+  const attribute=colorSelection(resource,colorAttribute);
+  if(!attribute)return {positions,indices:owned.indices,bytes:positions.byteLength+owned.indices.byteLength};
+  const values=owned.attributes![colorAttribute!].values,expanded=attribute.domain!=='vertex';
+  const count=expanded?owned.indices.length:positions.length/3,colors=new Float32Array(count*3);
+  const uploadPositions=expanded?new Float32Array(count*3):positions;
+  const indices=expanded?(count>=65535?new Uint32Array(count):new Uint16Array(count)):owned.indices;
+  for(let i=0;i<count;i++){
+    const source=attribute.domain==='face'?Math.floor(i/3):i;
+    for(let axis=0;axis<3;axis++){
+      colors[i*3+axis]=finiteFloat32(values[source*3+axis],`color ${colorAttribute}[${source*3+axis}]`);
+      if(expanded)uploadPositions[i*3+axis]=positions[owned.indices[i]*3+axis];
+    }
+    if(expanded)indices[i]=i;
+  }
+  return {positions:uploadPositions,indices,colors,bytes:uploadPositions.byteLength+indices.byteLength+colors.byteLength};
 }

@@ -1,0 +1,288 @@
+\documentclass{article}
+\usepackage{texloom-surface}
+\usepackage{texloom-attributes}
+\begin{document}
+\TLScene{A field, two domains}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\loomparameter[unit=1,min=0.75,max=1.25]{radius}|1|
+\TLText{scene-title}{A field, two domains}
+\TLText{scene-subtitle}{The same mesh and captured RGB field, with an explicit domain transfer}
+\TLText{vertex-caption}{VERTEX / INTERPOLATED COLOR}
+\TLText{face-caption}{FACE / EXPLICIT MEAN}
+\TLMath{vertex-formula}{c(p)=\left(c_r(x,t),c_g(y,t),c_b(z,t)\right)}
+\TLMath{face-formula}{\overline c_f=\frac{c(v_0)+c(v_1)+c(v_2)}{3}}
+\TLMath{vertex-symbol}{c_v}
+\TLMath{face-symbol}{\overline c_f}
+\TLNode{title}{tex}{"resourceId":"scene-title","x":42,"y":45,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{subtitle}{tex}{"resourceId":"scene-subtitle","x":42,"y":76,"scale":0.95,"style":{"fill":"#a6c1af"}}
+\TLNode{vertex-caption}{tex}{"resourceId":"vertex-caption","x":140,"y":434,"scale":1.05,"style":{"fill":"#91d5b3"}}
+\TLNode{face-caption}{tex}{"resourceId":"face-caption","x":540,"y":434,"scale":1.05,"style":{"fill":"#e6bc79"}}
+\TLNode{vertex-equation}{tex}{"resourceId":"vertex-formula","x":115,"y":480,"scale":1.4,"style":{"fill":"#b5cdbb"}}
+\TLNode{face-equation}{tex}{"resourceId":"face-formula","x":530,"y":480,"scale":1.55,"style":{"fill":"#d0c6ae"}}
+
+% One generated low-resolution sphere. No hand-authored color or geometry buffers.
+\loomsurface{sphere}|{
+  "units": "m",
+  "domain": {
+    "u": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "v": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ]
+  },
+  "segments": {
+    "u": 16,
+    "v": 8
+  },
+  "position": [
+    "radius*cos(v)*cos(u)",
+    "radius*cos(v)*sin(u)",
+    "radius*sin(v)"
+  ],
+  "normals": {
+    "kind": "analytic",
+    "dU": [
+      "-radius*cos(v)*sin(u)",
+      "radius*cos(v)*cos(u)",
+      "0"
+    ],
+    "dV": [
+      "-radius*sin(v)*cos(u)",
+      "-radius*sin(v)*sin(u)",
+      "radius*cos(v)"
+    ]
+  },
+  "orientation": "uv",
+  "seams": {
+    "u": "weld",
+    "v": "open"
+  },
+  "collapsedBoundaries": [
+    "v-min",
+    "v-max"
+  ],
+  "seamTolerance": 1e-9
+}|
+
+% Capture once on the vertex domain. Scalar height is retained beside linear RGB.
+\loomattributes{vertex-sphere}|{
+  "source": "sphere",
+  "units": "m",
+  "steps": [
+    {
+      "kind": "capture",
+      "name": "height",
+      "domain": "vertex",
+      "valueType": "scalar",
+      "expression": "z"
+    },
+    {
+      "kind": "capture",
+      "name": "chroma",
+      "domain": "vertex",
+      "valueType": "color",
+      "expression": [
+        "0.5+0.45*cos(3*x+2*pi*time/8s)",
+        "0.5+0.45*sin(3*y-2*pi*time/8s)",
+        "0.5+0.45*sin(3*z+pi*time/8s)"
+      ]
+    }
+  ]
+}|
+
+% Domain changes are authored explicitly; this stores one color per triangle.
+\loomattributes{face-sphere}|{
+  "source": "vertex-sphere",
+  "units": "m",
+  "steps": [
+    {
+      "kind": "transfer",
+      "source": "chroma",
+      "name": "face-chroma",
+      "domain": "face",
+      "method": "mean"
+    }
+  ]
+}|
+
+\loomspace|{
+  "version": 1,
+  "units": "m",
+  "handedness": "right",
+  "upAxis": "z",
+  "nodes": [
+    {
+      "id": "vertex-instance",
+      "kind": "mesh",
+      "resourceId": "vertex-sphere",
+      "transform": {
+        "translation": [
+          -1.6,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#ffffff",
+        "side": "front",
+        "colorAttribute": "chroma"
+      }
+    },
+    {
+      "id": "face-instance",
+      "kind": "mesh",
+      "resourceId": "face-sphere",
+      "transform": {
+        "translation": [
+          1.6,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#ffffff",
+        "side": "front",
+        "colorAttribute": "face-chroma"
+      }
+    }
+  ],
+  "camera": {
+    "id": "view",
+    "transform": {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0.39391929857916763,
+        0.9191450300180578,
+        0,
+        0,
+        -0.9191450300180578,
+        0.39391929857916763,
+        0,
+        0,
+        -7,
+        3,
+        1
+      ]
+    },
+    "projection": {
+      "kind": "orthographic",
+      "height": 4.5,
+      "near": 0.1,
+      "far": 100
+    }
+  },
+  "overlays": [
+    {
+      "id": "vertex-label",
+      "resourceId": "vertex-symbol",
+      "parent": "vertex-instance",
+      "position": [
+        0,
+        0,
+        1.3
+      ],
+      "offset": [
+        -8,
+        -12
+      ],
+      "scale": 1.3,
+      "color": "#d8e6da"
+    },
+    {
+      "id": "face-label",
+      "resourceId": "face-symbol",
+      "parent": "face-instance",
+      "position": [
+        0,
+        0,
+        1.3
+      ],
+      "offset": [
+        -8,
+        -12
+      ],
+      "scale": 1.3,
+      "color": "#ead6b6"
+    }
+  ],
+  "tracks": [
+    {
+      "target": "vertex-instance",
+      "property": "rotation",
+      "keys": [
+        [
+          0,
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        [
+          4,
+          [
+            0,
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          8,
+          [
+            0,
+            0,
+            0,
+            -1
+          ]
+        ]
+      ],
+      "interpolation": "linear"
+    },
+    {
+      "target": "face-instance",
+      "property": "rotation",
+      "keys": [
+        [
+          0,
+          [
+            0,
+            0,
+            0,
+            1
+          ]
+        ],
+        [
+          4,
+          [
+            0,
+            0,
+            1,
+            0
+          ]
+        ],
+        [
+          8,
+          [
+            0,
+            0,
+            0,
+            -1
+          ]
+        ]
+      ],
+      "interpolation": "linear"
+    }
+  ]
+}|
+\end{document}

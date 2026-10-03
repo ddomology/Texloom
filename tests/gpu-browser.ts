@@ -2,6 +2,7 @@ import {createGpuRenderer,type GpuRenderer} from '../src/renderers/gpu/index.js'
 import {createEvaluator} from '../src/evaluate.js';
 import type {Bundle,EvaluatedFrame} from '../src/schema.js';
 import type {MeshResource} from '../src/ir/mesh.js';
+import {attachMeshAttributes} from '../src/ir/attributes.js';
 import {renderRawReference,type ReferenceDraw} from './gpu-reference.js';
 
 function resource(z=-2,extent=.5):MeshResource {
@@ -47,6 +48,29 @@ async function hash(bytes:Uint8Array):Promise<string>{return [...new Uint8Array(
 function withRenderer<T>(run:(r:GpuRenderer)=>T):T {const r=createGpuRenderer({antialias:false});try{return run(r);}finally{r.dispose();}}
 
 (window as any).gpuQa={fixture,
+ async attributes(){const r=createGpuRenderer({antialias:false});try{
+  const bundle=fixture(),base=resource(-2,.5);
+  const buffer=(data:number[])=>({version:1 as const,componentType:'float64' as const,components:3 as const,count:data.length/3,byteOffset:0,byteStride:24,data});
+  bundle.resources.triangle=attachMeshAttributes(base,{
+   red:{domain:'vertex',valueType:'color',buffer:buffer([1,0,0,1,0,0,1,0,0])},
+   blue:{domain:'face',valueType:'color',buffer:buffer([0,0,1])},
+   green:{domain:'corner',valueType:'color',buffer:buffer([0,1,0,0,1,0,0,1,0])},
+  }) as MeshResource;
+  bundle.space3d!.nodes=['red','blue','green',undefined].map((name,index)=>({kind:'mesh',id:String(index),resourceId:'triangle',transform:{translation:[(index-1.5)*.45,0,0],scale:[.4,.4,.4]},material:{kind:'unlit',color:'#ffffff',side:'double',...(name?{colorAttribute:name}:{})}}));
+  // Uniform z translation keeps the scaled fixture within the clipping interval.
+  for(const node of bundle.space3d!.nodes)(node.transform as any).translation[2]=-1.2;
+  const frame=createEvaluator(bundle)(0),source=JSON.stringify(frame.resources);
+  r.render(frame,{width:128,height:128});const image=pixels(r),stats=r.stats(),first=await hash(image);
+  const centers=[21,50,78,107].map(x=>pixel(image,x,61));
+  const one=structuredClone(bundle);one.space3d!.nodes=one.space3d!.nodes.slice(0,1);r.render(createEvaluator(one)(0),{width:128,height:128});const pruned=r.stats();
+  r.render(frame,{width:128,height:128});const reverse=first===await hash(pixels(r));
+  const ext=r.canvas.getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+  const lost=new Promise<void>(yes=>r.canvas.addEventListener('webglcontextlost',()=>yes(),{once:true}));ext.loseContext();await lost;const lostStats=r.stats();
+  const restored=new Promise<void>(yes=>r.canvas.addEventListener('webglcontextrestored',()=>yes(),{once:true}));await new Promise(yes=>setTimeout(yes,50));ext.restoreContext();await restored;
+  r.render(frame,{width:128,height:128});const restoredSame=first===await hash(pixels(r));
+  const wire=structuredClone(bundle);for(const node of wire.space3d!.nodes)(node as any).material.wireframe=true;r.render(createEvaluator(wire)(0),{width:128,height:128});const wireStats=r.stats();
+  r.dispose();return {stats,centers,pruned,reverse,lostStats,restoredSame,wireStats,disposed:r.stats(),sourceUnchanged:JSON.stringify(frame.resources)===source};
+ }finally{r.dispose();}},
  async curves(){const r=createGpuRenderer({antialias:false});try{
   const bundle=fixture('depth');bundle.resources.path={kind:'curve3d',version:1,primitive:'line-strip',units:'unit',coordinateSpace:'object',topologyRevision:'line-1',closed:false,
    positions:{version:1,componentType:'float64',components:3,count:3,byteOffset:0,byteStride:24,data:[-.9,0,-3,0,0,-3,.9,0,-3]},bounds:{min:[-.9,0,-3],max:[.9,0,-3]}};

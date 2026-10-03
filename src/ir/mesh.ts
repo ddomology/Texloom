@@ -3,6 +3,7 @@ import type {Bounds3D, Vec3} from '../geometry/matrix4.js';
 import {freezeSnapshot} from '../operations/values.js';
 import {validateAssetJson} from '../resources/package.js';
 import {copyNumericBuffer,validateNumericBuffer,type NumericBuffer} from '../resources/buffers.js';
+import {copyMeshAttributeCollection,validateMeshAttributeCollection,type MeshAttributeCollection,type OwnedMeshAttribute} from './attributes.js';
 
 export type MeshBounds=Bounds3D;
 export type MeshUnit='unit'|'m'|'cm'|'mm';
@@ -11,6 +12,7 @@ export interface MeshResource {
   /** Authored topology identity, not a substitute for hashing the resource payload. */
   topologyRevision:string;
   positions:NumericBuffer;indices:NumericBuffer;normals?:NumericBuffer;
+  attributes?:MeshAttributeCollection;
   /** Exact extrema of all converted positions; null only for a mesh with no vertices or indices. */
   bounds:Bounds3D|null;
   provenance?:Record<string,unknown>;
@@ -19,6 +21,7 @@ export interface OwnedMeshBuffers {
   positions:Float32Array|Float64Array;
   indices:Uint16Array|Uint32Array;
   normals?:Float32Array|Float64Array;
+  attributes?:Record<string,OwnedMeshAttribute>;
   bounds:DeepReadonly<Bounds3D>|null;
   triangleCount:number;
   /** Numerically degenerate triangles remain present in the buffers. */
@@ -42,7 +45,7 @@ function inspect(input:unknown,path:string):{diagnostics:Diagnostic[];buffers?:O
   const out=validateAssetJson(input,path);if(out.length)return {diagnostics:out};
   const fail=(code:string,message:string,where=path)=>out.push({severity:'error',code,message,path:where});
   if(!object(input)){fail('MESH_TYPE','Expected a mesh resource.');return {diagnostics:out};}
-  for(const key of Object.keys(input))if(!['kind','version','primitive','units','coordinateSpace','winding','topologyRevision','positions','indices','normals','bounds','provenance'].includes(key))
+  for(const key of Object.keys(input))if(!['kind','version','primitive','units','coordinateSpace','winding','topologyRevision','positions','indices','normals','attributes','bounds','provenance'].includes(key))
     fail('MESH_PROPERTY',`Unsupported property ${key}.`,`${path}.${key}`);
   if(input.kind!=='mesh'||input.version!==1)fail('MESH_VERSION','Expected kind mesh and version 1.');
   if(input.primitive!=='triangles')fail('MESH_PRIMITIVE','Only indexed triangles are supported.',`${path}.primitive`);
@@ -97,6 +100,10 @@ function inspect(input:unknown,path:string):{diagnostics:Diagnostic[];buffers?:O
     fail('MESH_INDEX_RANGE','A triangle index is outside the position buffer.',`${path}.indices.data`);break;
   }
   if(fatal(out))return {diagnostics:out};
+  const topology={revision:resource.topologyRevision,vertexCount:resource.positions.count,indices:Array.from(indices)};
+  if(resource.attributes!==undefined)out.push(...validateMeshAttributeCollection(resource.attributes,topology,`${path}.attributes`));
+  if(fatal(out))return {diagnostics:out};
+  const attributes=resource.attributes?copyMeshAttributeCollection(resource.attributes,topology):undefined;
   const degenerateTriangles:number[]=[];
   for(let i=0;i<indices.length;i+=3){
     const a=indices[i]*3,b=indices[i+1]*3,c=indices[i+2]*3;
@@ -115,7 +122,7 @@ function inspect(input:unknown,path:string):{diagnostics:Diagnostic[];buffers?:O
   }
   if(degenerateTriangles.length)out.push({severity:'warning',code:'MESH_DEGENERATE',
     message:`${degenerateTriangles.length} numerically degenerate triangle(s) remain in the mesh.`,path:`${path}.indices`});
-  return {diagnostics:out,buffers:Object.freeze({positions,indices,...(normals?{normals}:{}),
+  return {diagnostics:out,buffers:Object.freeze({positions,indices,...(normals?{normals}:{}),...(attributes?{attributes}:{}),
     bounds:bounds?freezeSnapshot(bounds):null,triangleCount:indices.length/3,degenerateTriangles:Object.freeze(degenerateTriangles)})};
 }
 

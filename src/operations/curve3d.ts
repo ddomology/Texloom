@@ -13,6 +13,7 @@ import {freezeSnapshot,validateJsonData,validateSourceSpan} from './values.js';
 import {surfaceResourceDeclarations} from './surface.js';
 import {surfaceValidationResources} from './surface.js';
 import {validateSpace3DInContext,type FrameTransform3D} from '../ir/scene3d.js';
+import {meshAttributeValidationResources} from './mesh-attributes.js';
 
 export interface CurveOperation3D {
   id:string;resourceId:string;units:MeshUnit;domain:[number,number];segments:number;position:[string,string,string];
@@ -95,7 +96,7 @@ function inspect(input:unknown,bundle:Bundle,inContext=false):{diagnostics:Diagn
     if(diagnostics.length===before)entries.push({operation:freezeSnapshot(raw as CurveOperation3D),path,expressions:expressions as CompiledExpression[],options:structuredClone(options)});
   });
   if(segments>CURVE3D_MAX_SEGMENTS)error('CURVE3D_BUDGET','At most32768 segments are supported across the curve program.','$.curves3d.operations');
-  if(bundle.space3d!==undefined&&!hasErrors(diagnostics))diagnostics.push(...validateSpace3DInContext(bundle.space3d,curveValidationResources(input,surfaceValidationResources(bundle.surfaces,bundle.resources)),'$.space3d',{viewport:bundle.viewport,duration:bundle.duration}));
+  if(bundle.space3d!==undefined&&!hasErrors(diagnostics))diagnostics.push(...validateSpace3DInContext(bundle.space3d,meshAttributeValidationResources(bundle.meshAttributes,curveValidationResources(input,surfaceValidationResources(bundle.surfaces,bundle.resources))),'$.space3d',{viewport:bundle.viewport,duration:bundle.duration}));
   if(hasErrors(diagnostics))return result();
   const nodes=new Map(bundle.space3d?.nodes.map(n=>[n.id,n])??[]),curves=new Map(entries.map(e=>[e.operation.resourceId,e.operation.id])),targets=new Set<string>();
   input.followers.forEach((raw:unknown,index:number)=>{
