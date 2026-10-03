@@ -212,3 +212,15 @@ export function displaceMeshAlongNormals(source:DeepReadonly<MeshResource>,raw:r
   const output=snapshotMeshResource({...rest,positions:numericBuffer(positions),bounds,...(recomputed?{normals:numericBuffer(recomputed.normals)}:{})});
   return freezeSnapshot({mesh:output,normalOrigin:recomputed?(recomputed.fallbacks.length?'recomputed-with-source-fallback':'recomputed'):'none',sourceNormalFallbacks:recomputed?.fallbacks??[]});
 }
+
+/** Replace absolute object-space positions while retaining exact topology and named attributes. */
+export function replaceMeshPositions(source:DeepReadonly<MeshResource>,positions:readonly number[],options:DeepReadonly<Omit<NormalDisplacementOptions,'amplitude'>>):DeepReadonly<DisplacedFieldMesh>{
+  const mesh=snapshotMeshResource(source);data(positions,'$.positions');data(options,'$.options');keys(options,['normalPolicy','degenerateNormalPolicy'],'$.options');
+  if(!Array.isArray(positions)||positions.length!==mesh.positions.count*3||positions.length>MAX_BUFFER_COMPONENTS||!positions.every(finite))fail('FIELD_SAMPLE_COUNT','Absolute positions require exactly three finite components per source vertex.','$.positions');
+  if(!['drop','recompute'].includes(options.normalPolicy)||!['error','source'].includes(options.degenerateNormalPolicy))fail('FIELD_DISPLACEMENT_NORMAL','Explicit normal and degenerate-normal policies are required.','$.options');
+  const input=copyMeshBuffers(mesh),values=[...positions];let bounds:Bounds3D|null=values.length?{min:[Infinity,Infinity,Infinity],max:[-Infinity,-Infinity,-Infinity]}:null;
+  for(let i=0;i<values.length;i++){const axis=i%3;bounds!.min[axis]=Math.min(bounds!.min[axis],values[i]);bounds!.max[axis]=Math.max(bounds!.max[axis],values[i]);}
+  const recomputed=options.normalPolicy==='recompute'?recomputeNormals(values,input.indices,input.normals??new Float64Array(),options.degenerateNormalPolicy):undefined;
+  const {normals:ignored,...rest}=mesh,output=snapshotMeshResource({...rest,positions:numericBuffer(values),bounds,...(recomputed?{normals:numericBuffer(recomputed.normals)}:{})});
+  return freezeSnapshot({mesh:output,normalOrigin:recomputed?(recomputed.fallbacks.length?'recomputed-with-source-fallback':'recomputed'):'none',sourceNormalFallbacks:recomputed?.fallbacks??[]});
+}

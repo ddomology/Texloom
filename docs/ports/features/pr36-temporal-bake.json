@@ -1,0 +1,31 @@
+{
+  "schemaVersion":1,
+  "id":"pr36-temporal-bake",
+  "title":"Portable fixed-topology external time samples and deterministic interpolation",
+  "implementation":{
+    "mode":"independent-implementation",
+    "supportedProfile":["Strict external JSON sample import into typed little-endian chunks with SHA-256","Nonuniform fixed-topology scalar/vector/position channels with explicit linear/step and outside policies","Native TeX local chunk hydration, immutable sampled attributes and downstream color visualization"],
+    "excluded":["Blender private bake cache interchange or execution of external solver code","Changing topology, adaptive time integration and general PDE correctness","Universal raster identity across devices or undocumented channel conversions"]
+  },
+  "upstream":[{
+    "project":"blender/blender",
+    "revision":"8931427c0a55f25a462c8bc657a9a1a31a746266",
+    "path":"source/blender/blenkernel/intern/bake_items_serialize.cc",
+    "symbols":["blender::bke::bake::BlobSlice::serialize","blender::bke::bake::DiskBlobReader::read"],
+    "documentation":["https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/blenkernel/intern/bake_items_serialize.cc","https://docs.blender.org/manual/id/5.0/modeling/geometry_nodes/baking.html"],
+    "role":"Conceptual comparison: structured metadata can identify selected binary ranges. Texloom defines an independent public manifest with fixed vertex topology, explicit time samples and exact payload SHA-256; it does not read Blender cache files.",
+    "license":{"status":"review-required","note":"Pinned source symbols inspected only for conceptual scope. No implementation is copied or translated. Any later source adaptation requires separate file-level license review."}
+  }],
+  "contract":{
+    "inputs":["Fixed mesh topology revision, exact ordered indices, units, finite strict sample times, seed and producer metadata","Declared scalar/vector/position channel kind and float32/float64 stored precision; frame-major channel-order LE bytes","Inline canonical base64 or explicit external URI/range with selected byteLength and SHA-256"],
+    "outputs":["A portable manifest, deterministic binary chunks and canonical emitted-manifest hash report","New immutable sampled mesh resources retaining raw scalar/vector attributes and optional sampled positions","Original native declarations, external manifest and selected binary payload archives with hashes and source spans"],
+    "coordinates":["Sample time is seconds; all vertex positions use explicit mesh units and no implicit conversion","Exact knots select one frame; intervals linearly blend decoded values or use the declared step policy","Interpolation keeps the exact topology snapshot, and field visualization reads sampled attributes rather than re-evaluating the producer formula"],
+    "errorPolicy":["Reject malformed JSON, duplicate keys, nonfinite data, float32 overflow, unknown fields and bounded input violations","Reject channel/count/topology/unit mismatch, missing chunks, invalid ranges and integrity failures before publication","Preserve existing importer output; native compile failures remove a stale published bundle","No previous-frame accumulation, silent topology correspondence, transport fallback or invented missing values"]
+  },
+  "fixtures":["temporal-samples"],
+  "verification":{
+    "command":"python -m unittest tests.import_samples_test tests.sampled_field_capture_test tests.sampled_field_player_test tests.sampled_field_port_spec_test -v; npm test",
+    "claims":["Mixed precision byte layout and canonical hashes are checked independently with Python struct/hashlib","Actual TeX imports seven nonuniform knots in four chunks and retains verified portable inline payloads","Original JSON independently supplies every expected scalar/vector/position at exact knots and cross-chunk intervals","Reverse PNG seeks, 30/60 fps histories, native GPU color interpolation and actual mobile controls are checked","Malformed paths, JSON, channel/topology references and corrupt bytes prevent publication"],
+    "notEstablished":["Accuracy of a PDE solver or the producer formula between time knots","Equivalence with Blender simulation zones or private cache encodings","Topology-changing interpolation or general scientific storage formats","Identical pixels across browsers and GPU drivers"]
+  }
+}

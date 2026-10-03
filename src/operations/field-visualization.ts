@@ -13,11 +13,12 @@ import {freezeSnapshot,validateSourceSpan} from './values.js';
 import {prepareSurfaceProgram,surfaceValidationResources} from './surface.js';
 import {curveValidationResources} from './curve3d.js';
 import {prepareMeshAttributeProgram,meshAttributeValidationResources} from './mesh-attributes.js';
+import {prepareSampledFieldProgram,sampledFieldValidationResources} from './sampled-field.js';
 import {mapScalarColors,orientFieldVector,displaceMeshAlongNormals,type ScalarColorOptions} from './field-visualization-data.js';
 
 export interface FieldVisualizationOperation {
   id:string;source:string;resourceId:string;units:MeshUnit;
-  scalar?:string;vector?:[string,string,string];mask?:string;invalidPolicy:'error'|'mask';
+  scalar?:string|{attribute:string};vector?:[string,string,string]|{attribute:string};mask?:string;invalidPolicy:'error'|'mask';
   color?:ScalarColorOptions & {attribute:string};
   displacement?:{amplitude:string;normalPolicy:'drop'|'recompute';degenerateNormalPolicy:'error'|'source'};
   arrows?:{instanceSetId:string;prototype:string;up:Vec3;lengthScale:string;zeroPolicy:'hide'|'identity';color?:Vec3};
@@ -81,7 +82,7 @@ export function fieldVisualizationValidationResources(input:unknown,resources:Re
     Object.defineProperty(result,d.resourceId,{value:mesh,enumerable:true,configurable:true});
   }return result;
 }
-function upstreamResources(bundle:Bundle):Record<string,Resource>{return meshAttributeValidationResources(bundle.meshAttributes,curveValidationResources(bundle.curves3d,surfaceValidationResources(bundle.surfaces,bundle.resources)));}
+function upstreamResources(bundle:Bundle):Record<string,Resource>{return sampledFieldValidationResources(bundle.sampledFields,meshAttributeValidationResources(bundle.meshAttributes,curveValidationResources(bundle.curves3d,surfaceValidationResources(bundle.surfaces,bundle.resources))),bundle.bakes);}
 function located(cause:unknown,path:string,span?:DeepReadonly<SourceSpan>):OperationValidationError{
   const ds=(cause as {diagnostics?:readonly Diagnostic[]})?.diagnostics??[{severity:'error' as const,code:'FIELD_VISUALIZATION_EVALUATION',message:String(cause)}];
   return new OperationValidationError(ds.map(d=>({...d,path:d.path?.startsWith('$.fieldVisualization')?d.path:path,...(d.sourceSpan?{}:span?{sourceSpan:structuredClone(span)}:{})})));
@@ -157,6 +158,12 @@ function inspect(input:unknown,bundle:Bundle,inContext=false):{diagnostics:Diagn
     const texts={scalar:raw.scalar,vector:raw.vector,mask:raw.mask,amplitude:raw.displacement?.amplitude,lengthScale:raw.arrows?.lengthScale};
     for(const key of ['scalar','vector','mask','amplitude','lengthScale'] as const){
       const text=texts[key],spans=raw.expressionSpans?.[key],count=key==='vector'?3:1;
+      if((key==='scalar'||key==='vector')&&object(text)){
+        keys(text,['attribute'],path+'.'+key);const attribute=source?.kind==='mesh'&&typeof text.attribute==='string'?source.attributes?.values[text.attribute]:undefined;
+        if(!attributeName(text.attribute)||!attribute||attribute.domain!=='vertex'||attribute.valueType!==(key==='scalar'?'scalar':'vec3'))error('FIELD_VISUALIZATION_ATTRIBUTE','Field selectors require an existing vertex scalar or vec3 attribute of matching type.',path+'.'+key,span);
+        if(spans!==undefined)error('FIELD_VISUALIZATION_SPAN','An attribute selector has no expression source span.',path+'.expressionSpans.'+key,span);
+        continue;
+      }
       if(spans!==undefined){if(text===undefined)error('FIELD_VISUALIZATION_SPAN','A source span requires its expression.',path+'.expressionSpans.'+key,span);
         const list=key==='vector'?spans:[spans];if(!Array.isArray(list)||list.length!==count)error('FIELD_VISUALIZATION_SPAN','Source span shape must match the expression.',path+'.expressionSpans.'+key,span);else list.forEach((s:unknown,j:number)=>diagnostics.push(...validateSourceSpan(s,`${path}.expressionSpans.${key}[${j}]`)));}
       if(text===undefined){if(key==='amplitude'&&raw.displacement!==undefined||key==='lengthScale'&&raw.arrows!==undefined)error('FIELD_VISUALIZATION_EXPRESSION','Expected an explicit uniform scalar expression.',path+'.'+key,span);continue;}
@@ -186,25 +193,29 @@ export function prepareFieldVisualizationProgram(input:FieldVisualizationProgram
   const supplied=(value:unknown):Readonly<Record<string,DeepReadonly<Resource>>>=>{const ds=validateAssetJson(value,'$.generatedResources');if(hasErrors(ds))throw new OperationValidationError(ds);if(!object(value))fail('FIELD_VISUALIZATION_CONTEXT','Expected a generated resource dictionary.');return value as Readonly<Record<string,DeepReadonly<Resource>>>;};
   const defaults=freezeSnapshot(supplied(generatedResources??{})),surfaces=generatedResources===undefined&&bundle.surfaces?prepareSurfaceProgram(bundle.surfaces,bundle):undefined;
   const attributes=generatedResources===undefined&&bundle.meshAttributes?prepareMeshAttributeProgram(bundle.meshAttributes,bundle,{...surfaces?.baseResources}):undefined;
+  const sampled=generatedResources===undefined&&bundle.sampledFields?prepareSampledFieldProgram(bundle.sampledFields,bundle,{...surfaces?.baseResources,...attributes?.baseResources}):undefined;
   const sample=(time:number,overrides?:Readonly<Record<string,ExpressionValue>>,generated?:Readonly<Record<string,DeepReadonly<Resource>>>):FieldVisualizationSample=>{
     if(!Number.isFinite(time))throw new RangeError('Field visualization time must be finite.');const parameters=resolve(overrides);
     const surface=generated===undefined?surfaces?.sample(time,overrides):undefined;
-    const current=generated===undefined?{...defaults,...surface?.resources,...attributes?.sample(time,overrides,surface?.resources??{}).resources}:supplied(generated);
+    const attribute=generated===undefined?attributes?.sample(time,overrides,surface?.resources??{}):undefined;
+    const current=generated===undefined?{...defaults,...surface?.resources,...attribute?.resources,...sampled?.sample(time,overrides,{...surface?.resources,...attribute?.resources}).resources}:supplied(generated);
     const resources:Record<string,DeepReadonly<MeshResource>>=Object.create(null),sets:Record<string,DeepReadonly<InstanceSet3D>>=Object.create(null),reports:FieldVisualizationEvaluation=Object.create(null);let vertices=0,arrows=0;
     const mesh=(id:string,unit:MeshUnit)=>{const value=Object.hasOwn(resources,id)?resources[id]:Object.hasOwn(authored,id)?authored[id]:current[id];if(value?.kind!=='mesh'||value.units!==unit)fail('FIELD_VISUALIZATION_RESOURCE','Supply the declared source/prototype mesh in matching units.');return snapshotMeshResource(value);};
     for(const {operation:o,path,expressions:e,needsNormals} of entries)try{
       const source=mesh(o.source,o.units);vertices+=source.positions.count;if(vertices>FIELD_VISUALIZATION_MAX_VERTICES)fail('FIELD_VISUALIZATION_BUDGET','More than 65536 field vertices.');
       if(needsNormals&&!source.normals)fail('FIELD_VISUALIZATION_NORMALS','Normal displacement or normal locals require explicit source normals.');
       const geometry=copyMeshBuffers(source),rawScalar:(number|null)[]=[],rawVector:(Vec3|null)[]=[],validity:boolean[]=[];
+      const attribute=(selector:DeepReadonly<{attribute:string}>,kind:'scalar'|'vec3')=>{const a=geometry.attributes?.[selector.attribute];if(!a||a.domain!=='vertex'||a.valueType!==kind)fail('FIELD_VISUALIZATION_ATTRIBUTE','A sampled field selector requires a matching vertex attribute.');return a.values;};
+      const scalarValues=object(o.scalar)?attribute(o.scalar,'scalar'):undefined,vectorValues=object(o.vector)?attribute(o.vector as DeepReadonly<{attribute:string}>,'vec3'):undefined;
       const evaluate=(expression:CompiledExpression,values:Readonly<Record<string,ExpressionValue>>,key:keyof Fields,index?:number):ExpressionValue=>{try{return evaluateExpression(expression,{time,parameters:values});}catch(cause){throw located(cause,`${path}.${key}${index===undefined?'':`[${index}]`}`,key==='vector'?o.expressionSpans?.vector?.[index??0]??o.sourceSpan:o.expressionSpans?.[key]??o.sourceSpan);}};
       const amplitude=e.amplitude?evaluate(e.amplitude,parameters,'amplitude') as number:undefined,lengthScale=e.lengthScale?evaluate(e.lengthScale,parameters,'lengthScale') as number:undefined;
       if(lengthScale!==undefined&&lengthScale<0)fail('FIELD_VISUALIZATION_SCALE','Arrow length scale must be nonnegative.');
       for(let i=0;i<source.positions.count;i++){
         const offset=i*3,values={...parameters,x:geometry.positions[offset],y:geometry.positions[offset+1],z:geometry.positions[offset+2],nx:geometry.normals?.[offset]??0,ny:geometry.normals?.[offset+1]??0,nz:geometry.normals?.[offset+2]??0,index:i};
         let valid=true,s:number|null=null,v:Vec3|null=null;
-        try{valid=e.mask?evaluate(e.mask,values,'mask') as boolean:true;if(valid){if(e.scalar)s=evaluate(e.scalar,values,'scalar') as number;if(e.vector)v=e.vector.map((expression,j)=>evaluate(expression,values,'vector',j)) as Vec3;}}
+        try{valid=e.mask?evaluate(e.mask,values,'mask') as boolean:true;if(valid){if(e.scalar)s=evaluate(e.scalar,values,'scalar') as number;else if(scalarValues)s=scalarValues[i];if(e.vector)v=e.vector.map((expression,j)=>evaluate(expression,values,'vector',j)) as Vec3;else if(vectorValues)v=Array.from(vectorValues.slice(offset,offset+3)) as Vec3;}}
         catch(cause){if(o.invalidPolicy==='error')throw cause;valid=false;s=null;v=null;}
-        validity.push(valid);if(e.scalar)rawScalar.push(valid?s:null);if(e.vector)rawVector.push(valid?v:null);
+        validity.push(valid);if(o.scalar!==undefined)rawScalar.push(valid?s:null);if(o.vector!==undefined)rawVector.push(valid?v:null);
       }
       const color=o.color?mapScalarColors(rawScalar,(({attribute:ignored,...options})=>options)(o.color)):undefined,mappedValidity=color?[...color.mappedValidity]:[...validity];
       let display=source,normalOrigin:FieldVisualizationEvaluation[string]['normalOrigin']=source.normals?'source':'none',sourceNormalFallbacks:number[]=[];
@@ -217,7 +228,7 @@ export function prepareFieldVisualizationProgram(input:FieldVisualizationProgram
             color:[...(o.arrows!.color??color?.colors[index]??[1,1,1])] as Vec3,selected:validity[index]&&mappedValidity[index]&&orientation.visible};});
         sets[o.arrows.instanceSetId]=snapshotInstanceSet3D({version:1,prototypeResourceId:o.arrows.prototype,units:o.units,instances},prototype);
       }
-      reports[o.id]={source:o.source,resourceId:o.resourceId,topologyRevision:source.topologyRevision,domain:'vertex',...(e.scalar?{scalar:rawScalar}:{}),...(e.vector?{vector:rawVector}:{}),validity,mappedValidity,range:color?.range??null,
+      reports[o.id]={source:o.source,resourceId:o.resourceId,topologyRevision:source.topologyRevision,domain:'vertex',...(o.scalar!==undefined?{scalar:rawScalar}:{}),...(o.vector!==undefined?{vector:rawVector}:{}),validity,mappedValidity,range:color?.range??null,
         ...(source.normals?{sourceNormals:source.normals as NumericBuffer}:{}),...(display.normals?{displayNormals:display.normals as NumericBuffer}:{}),normalOrigin,sourceNormalFallbacks,
         ...(amplitude!==undefined?{amplitude}:{}),...(lengthScale!==undefined?{lengthScale}:{}),...(o.arrows?{instanceSetId:o.arrows.instanceSetId}:{})};
     }catch(cause){throw located(cause,path,o.sourceSpan);}

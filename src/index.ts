@@ -79,3 +79,5 @@ export * from './operations/instances.js';
 export * from './operations/realize-instances.js';
 export * from './operations/field-visualization.js';
 export * from './operations/field-visualization-data.js';
+export * from './operations/sampled-field.js';
+export * from './resources/bake.js';

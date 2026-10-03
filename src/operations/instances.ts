@@ -15,6 +15,7 @@ import {prepareSurfaceProgram,surfaceValidationResources} from './surface.js';
 import {curveValidationResources} from './curve3d.js';
 import {prepareMeshAttributeProgram,meshAttributeValidationResources} from './mesh-attributes.js';
 import {prepareFieldVisualizationProgram,fieldVisualizationValidationResources,fieldVisualizationValidationSets} from './field-visualization.js';
+import {prepareSampledFieldProgram,sampledFieldValidationResources} from './sampled-field.js';
 
 export type InstanceSource={kind:'mesh';resourceId:string;domain:AttributeDomain}|{kind:'points';points:{id:string;position:Vec3}[]};
 export interface InstanceRealization {
@@ -88,7 +89,7 @@ function located(cause:unknown,path:string,span?:DeepReadonly<SourceSpan>):Opera
 }
 function fail(code:string,message:string):never{throw new OperationValidationError([{severity:'error',code,message}]);}
 function count(mesh:DeepReadonly<MeshResource>,domain:AttributeDomain):number{return domain==='vertex'?mesh.positions.count:domain==='face'?mesh.indices.count/3:mesh.indices.count;}
-function upstreamResources(bundle:Bundle):Record<string,Resource>{return fieldVisualizationValidationResources(bundle.fieldVisualization,meshAttributeValidationResources(bundle.meshAttributes,curveValidationResources(bundle.curves3d,surfaceValidationResources(bundle.surfaces,bundle.resources))));}
+function upstreamResources(bundle:Bundle):Record<string,Resource>{return fieldVisualizationValidationResources(bundle.fieldVisualization,sampledFieldValidationResources(bundle.sampledFields,meshAttributeValidationResources(bundle.meshAttributes,curveValidationResources(bundle.curves3d,surfaceValidationResources(bundle.surfaces,bundle.resources))),bundle.bakes));}
 function inspect(input:unknown,bundle:Bundle,inContext=false):{diagnostics:Diagnostic[];entries:Entry[]}{
   const diagnostics=validateAssetJson(input,'$.instances'),entries:Entry[]=[];
   const error=(code:string,message:string,path:string,sourceSpan?:SourceSpan)=>diagnostics.push({severity:'error',code,message,path,...(sourceSpan?{sourceSpan}:{})});
@@ -175,13 +176,15 @@ export function prepareInstanceProgram(input:InstanceProgram,bundle:Bundle,gener
   const supplied=(value:unknown):Readonly<Record<string,DeepReadonly<Resource>>>=>{const ds=validateAssetJson(value,'$.generatedResources');if(hasErrors(ds))throw new OperationValidationError(ds);if(!object(value))fail('INSTANCE_CONTEXT','Expected a generated resource dictionary.');return value as Readonly<Record<string,DeepReadonly<Resource>>>;};
   const defaults=freezeSnapshot(supplied(generatedResources??{})),surfaces=generatedResources===undefined&&bundle.surfaces?prepareSurfaceProgram(bundle.surfaces,bundle):undefined;
   const attributes=generatedResources===undefined&&bundle.meshAttributes?prepareMeshAttributeProgram(bundle.meshAttributes,bundle,{...surfaces?.baseResources}):undefined;
-  const fields=generatedResources===undefined&&bundle.fieldVisualization?prepareFieldVisualizationProgram(bundle.fieldVisualization,bundle,{...surfaces?.baseResources,...attributes?.baseResources}):undefined;
+  const sampled=generatedResources===undefined&&bundle.sampledFields?prepareSampledFieldProgram(bundle.sampledFields,bundle,{...surfaces?.baseResources,...attributes?.baseResources}):undefined;
+  const fields=generatedResources===undefined&&bundle.fieldVisualization?prepareFieldVisualizationProgram(bundle.fieldVisualization,bundle,{...surfaces?.baseResources,...attributes?.baseResources,...sampled?.baseResources}):undefined;
   const sample=(time:number,overrides?:Readonly<Record<string,ExpressionValue>>,generated?:Readonly<Record<string,DeepReadonly<Resource>>>):InstanceProgramSample=>{
     if(!Number.isFinite(time))throw new RangeError('Instance sample time must be finite.');const parameters=resolve(overrides);
     const surface=generated===undefined?surfaces?.sample(time,overrides):undefined;
     const attribute=generated===undefined?attributes?.sample(time,overrides,surface?.resources??{}):undefined;
-    const field=generated===undefined?fields?.sample(time,overrides,{...surface?.resources,...attribute?.resources}):undefined;
-    const current=generated===undefined?{...defaults,...surface?.resources,...attribute?.resources,...field?.resources}:supplied(generated);
+    const sampledField=generated===undefined?sampled?.sample(time,overrides,{...surface?.resources,...attribute?.resources}):undefined;
+    const field=generated===undefined?fields?.sample(time,overrides,{...surface?.resources,...attribute?.resources,...sampledField?.resources}):undefined;
+    const current=generated===undefined?{...defaults,...surface?.resources,...attribute?.resources,...sampledField?.resources,...field?.resources}:supplied(generated);
     const instanceSets:Record<string,DeepReadonly<InstanceSet3D>>=Object.create(null),resources:Record<string,DeepReadonly<MeshResource>>=Object.create(null);let total=Object.values(field?.instanceSets??{}).reduce((n,set)=>n+set.instances.length,0);
     const mesh=(id:string,unit:MeshUnit):DeepReadonly<MeshResource>=>{const value=Object.hasOwn(resources,id)?resources[id]:Object.hasOwn(authored,id)?authored[id]:current[id];if(value?.kind!=='mesh'||value.units!==unit)fail('INSTANCE_RESOURCE','Supply the declared source/prototype mesh in matching units.');return snapshotMeshResource(value);};
     for(const {operation:o,path,expressions} of entries)try{
