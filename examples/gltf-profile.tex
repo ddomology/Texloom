@@ -1,0 +1,34 @@
+\documentclass{article}
+\usepackage{texloom-gltf}
+\begin{document}
+\TLScene{One asset, three moving instances}{1280}{720}{8}
+\TLSetup{\usepackage{cmbright}\usetikzlibrary{arrows.meta}}
+\loomgltf{model}{data/gltf-profile/scene.gltf}
+\loomspace|{"version":1,"units":"m","handedness":"right","upAxis":"z","nodes":[{"kind":"group","id":"model","transform":{"translation":[-1.75,0,-0.1]}}],"camera":{"id":"view","transform":{"matrix":[1,0,0,0,0,0.3713906763541037,0.9284766908852594,0,0,-0.9284766908852594,0.3713906763541037,0,0,-7,2.8,1]},"projection":{"kind":"orthographic","height":4.8,"near":0.1,"far":100}}}|
+\TLText{title-art}{One asset, three moving instances}
+\TLNode{title}{tex}{"resourceId":"title-art","x":48,"y":58,"scale":2.55,"style":{"fill":"#e4edde"}}
+\TLText{subtitle-art}{A glTF model, native TeX, and the same animation on the web and the board.}
+\TLNode{subtitle}{tex}{"resourceId":"subtitle-art","x":48,"y":103,"scale":1.36,"style":{"fill":"#a8c2b0"}}
+\TLText{asset-label-art}{ONE MESH / THREE INSTANCES}
+\TLNode{asset-label}{tex}{"resourceId":"asset-label-art","x":80,"y":164,"scale":1.2,"style":{"fill":"#d8bd85"}}
+\TLText{coordinates-title-art}{01 / A DECLARED CHANGE OF BASIS}
+\TLNode{coordinates-title}{tex}{"resourceId":"coordinates-title-art","x":824,"y":211,"scale":1.18,"style":{"fill":"#91d5b3"}}
+\TLMath{basis-formula-art}{(x,y,z)_{\rm glTF}\ \mapsto\ (x,-z,y)_{\rm TeX}}
+\TLNode{basis-formula}{tex}{"resourceId":"basis-formula-art","x":824,"y":257,"scale":1.4,"style":{"fill":"#c4dbc9"}}
+\TLText{units-art}{Right-handed coordinates. Metres throughout.}
+\TLNode{units}{tex}{"resourceId":"units-art","x":824,"y":296,"scale":1.18,"style":{"fill":"#a8c2b0"}}
+\TLText{animation-title-art}{02 / CONTINUOUS AND DISCRETE MOTION}
+\TLNode{animation-title}{tex}{"resourceId":"animation-title-art","x":824,"y":371,"scale":1.14,"style":{"fill":"#e4ba73"}}
+\TLText{translation-art}{Left: linear translation.}
+\TLNode{translation}{tex}{"resourceId":"translation-art","x":824,"y":414,"scale":1.32,"style":{"fill":"#c4dbc9"}}
+\TLText{rotation-art}{Centre: quaternion rotation and reflection.}
+\TLNode{rotation}{tex}{"resourceId":"rotation-art","x":824,"y":450,"scale":1.22,"style":{"fill":"#c4dbc9"}}
+\TLText{step-art}{Right: stepped scale, with exact key times.}
+\TLNode{step}{tex}{"resourceId":"step-art","x":824,"y":486,"scale":1.22,"style":{"fill":"#c4dbc9"}}
+\TLTikZ{basis-art}{\begin{tikzpicture}[x=0.7cm,y=0.7cm,>=Stealth,line width=.7pt]\draw[->](0,0)--(1.4,0)node[right]{$x$};\draw[->](0,0)--(-.65,-.45)node[left]{$y$};\draw[->](0,0)--(0,1.1)node[above]{$z$};\end{tikzpicture}}
+\TLNode{basis}{tex}{"resourceId":"basis-art","x":114,"y":590,"scale":1.15,"style":{"fill":"#a8c2b0","stroke":"#a8c2b0"}}
+\TLMath{world-formula-art}{p_{\rm world}(t)=M_{\rm parent}(t)\,T(t)\,R(t)\,S(t)\,p}
+\TLNode{world-formula}{tex}{"resourceId":"world-formula-art","x":256,"y":604,"scale":1.65,"style":{"fill":"#c4dbc9"}}
+\TLText{scope-art}{glTF 2.0 / opaque unlit triangles / shared geometry / STEP and LINEAR animation}
+\TLNode{scope}{tex}{"resourceId":"scope-art","x":48,"y":683,"scale":1.22,"style":{"fill":"#94b29f"}}
+\end{document}

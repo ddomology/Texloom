@@ -27,6 +27,7 @@
     "@types/node": "^26.6.4",
     "@types/three": "0.186.0",
     "esbuild": "^0.28.2",
+    "gltf-validator": "2.0.0-dev.3.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },

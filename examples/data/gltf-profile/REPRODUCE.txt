@@ -1,0 +1,20 @@
+Original, self-authored glTF 2.0 fixture; no third-party model is included.
+
+From the Texloom repository root:
+  python tools/gltf/create_fixture.py --out build/reproduced-gltf
+  python tests/gltf_oracle.py --asset build/reproduced-gltf/scene.gltf --out build/reproduced-gltf/reference.json
+
+scene.gltf uses the external scene.bin payload. scene.glb embeds the same JSON
+content and exact binary payload, with the prescribed GLB alignment padding.
+The two document objects differ only in the external buffer URI.
+
+The independent Python oracle imports no generator or TypeScript implementation.
+It decodes the actual float32 bytes and computes hierarchical TRS, quaternion
+SLERP, right-continuous STEP values and inverse-transpose normals directly.
+reference.json stores all seven animation knots and six intermediate/boundary
+samples. Its point/normal arrays follow each primitive's indices array.
+
+Native TeX: \usepackage{texloom-gltf}
+  \loomgltf[wireframe]{model}{data/gltf-profile/scene.gltf}
+Optional camera=0 selects the source camera; otherwise the TeX camera is kept.
+This is a limited delivery profile, not an AuthorScene or shader round trip.

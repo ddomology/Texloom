@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [{
+    "id": "gltf-profile",
+    "source": "examples/data/gltf-profile/scene.gltf",
+    "inputs": ["examples/data/gltf-profile/scene.gltf", "examples/data/gltf-profile/scene.bin", "examples/data/gltf-profile/scene.glb", "examples/data/gltf-profile/reference.json", "tools/gltf/create_fixture.py"],
+    "tests": ["tests/gltf_fixture_test.py", "tests/gltf_oracle.py", "tests/gltf-validator.test.ts"]
+  }]
+}

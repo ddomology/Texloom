@@ -1,0 +1,462 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        0.550000011920929,
+        0.8500000238418579,
+        0.476313978433609
+      ],
+      "min": [
+        -0.550000011920929,
+        -0.8500000238418579,
+        -0.476313978433609
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 36,
+      "max": [
+        0.7554934024810791,
+        0.48884865641593933,
+        0.8723686337471008
+      ],
+      "min": [
+        -0.7554934024810791,
+        -0.48884865641593933,
+        -0.8723686337471008
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5123,
+      "count": 12,
+      "max": [
+        35
+      ],
+      "min": [
+        0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5123,
+      "count": 12,
+      "max": [
+        26
+      ],
+      "min": [
+        3
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 12,
+      "max": [
+        32
+      ],
+      "min": [
+        9
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        8.0
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        -1.25,
+        0.4000000059604645,
+        0.0
+      ],
+      "min": [
+        -1.5499999523162842,
+        -0.20000000298023224,
+        0.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 4,
+      "max": [
+        8.0
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 4,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 5,
+      "max": [
+        8.0
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 5,
+      "max": [
+        1.0499999523162842,
+        1.149999976158142,
+        1.0499999523162842
+      ],
+      "min": [
+        0.75,
+        0.75,
+        0.75
+      ],
+      "type": "VEC3"
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 1,
+            "path": "translation"
+          }
+        },
+        {
+          "sampler": 1,
+          "target": {
+            "node": 2,
+            "path": "rotation"
+          }
+        },
+        {
+          "sampler": 2,
+          "target": {
+            "node": 3,
+            "path": "scale"
+          }
+        }
+      ],
+      "name": "Eight second TRS demonstration",
+      "samplers": [
+        {
+          "input": 5,
+          "interpolation": "LINEAR",
+          "output": 6
+        },
+        {
+          "input": 7,
+          "interpolation": "LINEAR",
+          "output": 8
+        },
+        {
+          "input": 9,
+          "interpolation": "STEP",
+          "output": 10
+        }
+      ]
+    }
+  ],
+  "asset": {
+    "generator": "Texloom original PR39 fixture; tools/gltf/create_fixture.py",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 432,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 432,
+      "byteOffset": 432,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 24,
+      "byteOffset": 864,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 24,
+      "byteOffset": 888,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 24,
+      "byteOffset": 912,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 16,
+      "byteOffset": 936
+    },
+    {
+      "buffer": 0,
+      "byteLength": 48,
+      "byteOffset": 952
+    },
+    {
+      "buffer": 0,
+      "byteLength": 16,
+      "byteOffset": 1000
+    },
+    {
+      "buffer": 0,
+      "byteLength": 64,
+      "byteOffset": 1016
+    },
+    {
+      "buffer": 0,
+      "byteLength": 20,
+      "byteOffset": 1080
+    },
+    {
+      "buffer": 0,
+      "byteLength": 60,
+      "byteOffset": 1100
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 1160,
+      "uri": "scene.bin"
+    }
+  ],
+  "cameras": [
+    {
+      "name": "Finite perspective",
+      "perspective": {
+        "aspectRatio": 1.7777777777777777,
+        "yfov": 0.8,
+        "zfar": 30,
+        "znear": 0.1
+      },
+      "type": "perspective"
+    }
+  ],
+  "extensionsRequired": [
+    "KHR_materials_unlit"
+  ],
+  "extensionsUsed": [
+    "KHR_materials_unlit"
+  ],
+  "materials": [
+    {
+      "alphaMode": "OPAQUE",
+      "extensions": {
+        "KHR_materials_unlit": {}
+      },
+      "name": "Mint",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.12,
+          0.58,
+          0.39,
+          1
+        ]
+      }
+    },
+    {
+      "alphaMode": "OPAQUE",
+      "extensions": {
+        "KHR_materials_unlit": {}
+      },
+      "name": "Pale mint",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.35,
+          0.8,
+          0.63,
+          1
+        ]
+      }
+    },
+    {
+      "alphaMode": "OPAQUE",
+      "extensions": {
+        "KHR_materials_unlit": {}
+      },
+      "name": "Deep mint",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.045,
+          0.26,
+          0.2,
+          1
+        ]
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Shared faceted hexagonal bipyramid",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0
+          },
+          "indices": 2,
+          "material": 0,
+          "mode": 4
+        },
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0
+          },
+          "indices": 3,
+          "material": 1,
+          "mode": 4
+        },
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0
+          },
+          "indices": 4,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1,
+        2,
+        3
+      ],
+      "name": "GemAssembly",
+      "rotation": [
+        0.0,
+        0.08987854919801104,
+        0.0,
+        0.9959527330119943
+      ],
+      "translation": [
+        0.15,
+        0.08,
+        -0.1
+      ]
+    },
+    {
+      "mesh": 0,
+      "name": "RisingGem",
+      "rotation": [
+        -0.0,
+        -0.0,
+        -0.059964006479444595,
+        0.9982005399352042
+      ],
+      "scale": [
+        0.8,
+        1.1,
+        0.8
+      ],
+      "translation": [
+        -1.35,
+        0,
+        0
+      ]
+    },
+    {
+      "mesh": 0,
+      "name": "MirroredGem",
+      "rotation": [
+        -0.0,
+        -0.14943813247359922,
+        -0.0,
+        0.9887710779360422
+      ],
+      "scale": [
+        -1,
+        1,
+        0.75
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "mesh": 0,
+      "name": "SteppedGem",
+      "scale": [
+        0.75,
+        0.85,
+        0.75
+      ],
+      "translation": [
+        1.35,
+        0,
+        -0.2
+      ]
+    },
+    {
+      "camera": 0,
+      "name": "ReferenceCamera",
+      "rotation": [
+        -0.0876833335171504,
+        -0.0,
+        -0.0,
+        0.9961483990969017
+      ],
+      "translation": [
+        0,
+        1.1,
+        6.2
+      ]
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Three shared faceted gems",
+      "nodes": [
+        0,
+        4
+      ]
+    }
+  ]
+}
