@@ -170,6 +170,8 @@ export function compileTimeline(program:TimelineProgram,bundle:Bundle):DeepReado
   cues.sort((a,b)=>a.time-b.time);
   const result={tracks,cues,clips,origin,end,duration:length,
     ...(materialized.generatedNodes.length?{generatedNodes:materialized.generatedNodes}:{}),
+    ...(Object.keys(materialized.generatedResources).length?{generatedResources:materialized.generatedResources}:{}),
+    ...(materialized.mathTransforms?{mathTransforms:materialized.mathTransforms}:{}),
     ...(materialized.morphs?{morphs:materialized.morphs}:{})};
   // Existing bindings and legacy tracks keep their whole-scene ownership.
   const candidate={...bundle,tracks:[...bundle.tracks,...tracks]};
@@ -195,6 +197,8 @@ export function compileTimeline(program:TimelineProgram,bundle:Bundle):DeepReado
 export function lowerTimeline(program:TimelineProgram,bundle:Bundle):Bundle {
   const compiled=compileTimeline(program,bundle),result=structuredClone(bundle);
   if(compiled.generatedNodes)result.nodes.push(...structuredClone(compiled.generatedNodes) as Node[]);
+  if(compiled.generatedResources)Object.assign(result.resources,structuredClone(compiled.generatedResources));
+  if(compiled.mathTransforms)result.mathTransforms=structuredClone(compiled.mathTransforms) as Bundle['mathTransforms'];
   if(compiled.morphs)result.morphs=structuredClone(compiled.morphs) as Bundle['morphs'];
   result.tracks.push(...structuredClone(compiled.tracks) as Track[]);
   result.timeline={version:1,origin:compiled.origin,end:compiled.end,duration:compiled.duration,cues:structuredClone(compiled.cues) as TimelineCue[],clips:structuredClone(compiled.clips) as TimelineClip[]};

@@ -13,8 +13,11 @@
 % dimensions, in TeX pt, while the DVI origin placeholders are SVG coordinates.
 \ifdefined\TLPartBoxRegister\else\newbox\TLPartBoxRegister\fi
 \def\TLPartBoxOutput#1{%
-  \special{dvisvgm:raw <g data-texloom-part='#1' data-texloom-box='\the\wd\TLPartBoxRegister\space\the\ht\TLPartBoxRegister\space\the\dp\TLPartBoxRegister' data-texloom-x='{?x}' data-texloom-y='{?y}'>}%
-  \box\TLPartBoxRegister\special{dvisvgm:raw </g>}}
+  % Put the origin special inside the same math atom as its measured box.
+  % An outer special can ship before TeX inserts preceding binary/relation
+  % glue, reporting a logical box left of the actual box and painted glyphs.
+  \hbox{\special{dvisvgm:raw <g data-texloom-part='#1' data-texloom-box='\the\wd\TLPartBoxRegister\space\the\ht\TLPartBoxRegister\space\the\dp\TLPartBoxRegister' data-texloom-x='{?x}' data-texloom-y='{?y}'>}%
+  \box\TLPartBoxRegister\special{dvisvgm:raw </g>}}}
 \long\def\TLPartBoxMath#1#2#3{%
   \begingroup\setbox\TLPartBoxRegister=\hbox{$\mathsurround=0pt #1#3$}%
   \TLPartBoxOutput{#2}\endgroup}

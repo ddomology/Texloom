@@ -1,9 +1,10 @@
-import type {Bundle,Node,PathNode,GroupNode} from '../schema.js';
+import type {Bundle,Node,PathNode,GroupNode,Resource} from '../schema.js';
 import type {TimelineProgram,TimelineNode} from './ast.js';
 import {TIMELINE_MAX_DEPTH,TIMELINE_MAX_NODES} from './ast.js';
 import type {MorphOperation,MorphProgram} from './morph.js';
 import {OperationValidationError,type SourceSpan} from '../ir/operations.js';
 import {validateSourceSpan} from '../operations/values.js';
+import {createMathTransformInstance,type MathTransformOperation,type MathTransformProgram} from './math-transform.js';
 
 type Obj=Record<string,any>;
 const object=(v:unknown):v is Obj=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -11,9 +12,10 @@ const named=(v:unknown):v is string=>typeof v==='string'&&v.trim()===v&&v.length
 /** Expand authoring conveniences to ordinary nodes, numeric actions and a
  * portable geometry program. Endpoints are authored local snapshots. */
 export function materializeTimeline(program:TimelineProgram,input:Bundle):{
-  program:TimelineProgram;bundle:Bundle;generatedNodes:Node[];morphs?:MorphProgram;
+  program:TimelineProgram;bundle:Bundle;generatedNodes:Node[];generatedResources:Record<string,Resource>;morphs?:MorphProgram;mathTransforms?:MathTransformProgram;
 } {
   const bundle=structuredClone(input),generatedNodes:Node[]=[],operations:MorphOperation[]=[];
+  const generatedResources:Record<string,Resource>={},mathOperations:MathTransformOperation[]=[];
   const authored=new Map(input.nodes.map(n=>[n.id,n])),reserved=new Set(input.nodes.map(n=>n.id));
   let count=0;
   const fail=(message:string,path:string,span?:SourceSpan):never=>{throw new OperationValidationError([
@@ -36,6 +38,24 @@ export function materializeTimeline(program:TimelineProgram,input:Bundle):{
     if(['sequence','parallel','stagger'].includes(raw.kind)&&Array.isArray(raw.children))
       return {...raw,children:raw.children.map((c:unknown,i:number)=>visit(c,`${path}.children[${i}]`,depth+1))};
     const span=raw.sourceSpan,common=['kind','id','sourceSpan'];
+    if(raw.kind==='math-transform'){
+      keys(raw,[...common,'source','destination','duration','easing','correspondence'],path);
+      const operation:MathTransformOperation={id:raw.id,instance:raw.id,source:raw.source,destination:raw.destination,correspondence:raw.correspondence,...(span?{sourceSpan:span}:{})};
+      let built:ReturnType<typeof createMathTransformInstance>;
+      try{built=createMathTransformInstance(operation,input);}catch(error){
+        if(!(error instanceof OperationValidationError))throw error;
+        throw new OperationValidationError(error.diagnostics.map(d=>({...d,path,...(d.sourceSpan?{}:span?{sourceSpan:span}:{})})));
+      }
+      for(const node of built.nodes)reserve(node.id,path+'.id',span);
+      for(const [id,resource] of Object.entries(built.resources)){
+        if(Object.hasOwn(bundle.resources,id)||Object.hasOwn(generatedResources,id))fail(`Generated resource ${id} already exists.`,path,span);
+        generatedResources[id]=resource;
+      }
+      generatedNodes.push(...built.nodes);mathOperations.push(operation);
+      return {kind:'sequence',children:[
+        {kind:'set',id:raw.id+':appear',target:raw.id,property:'style.opacity',value:built.opacity,...(span?{sourceSpan:span}:{})},
+        {kind:'tween',id:raw.id,target:raw.id,property:'mathProgress',duration:raw.duration,from:0,to:1,...(raw.easing===undefined?{}:{easing:raw.easing}),...(span?{sourceSpan:span}:{})}],...(span?{sourceSpan:span}:{})};
+    }
     if(raw.kind==='enter'||raw.kind==='exit'){
       keys(raw,[...common,'target','duration','easing','mode'],path);
       if(raw.mode!==undefined&&!['fade','create'].includes(raw.mode))fail('Entrance/exit mode must be fade or create.',path+'.mode',span);
@@ -78,7 +98,10 @@ export function materializeTimeline(program:TimelineProgram,input:Bundle):{
   };
   const root=visit(program.root,'$.timelineProgram.root',1) as TimelineNode;
   bundle.nodes.push(...generatedNodes);
+  Object.assign(bundle.resources,generatedResources);
   const morphs=operations.length?{version:1 as const,operations:[...(bundle.morphs?.operations??[]),...operations]}:undefined;
   if(morphs)bundle.morphs=morphs;
-  return {program:{...program,root},bundle,generatedNodes,...(morphs?{morphs}:{})};
+  const mathTransforms=mathOperations.length?{version:1 as const,operations:[...(bundle.mathTransforms?.operations??[]),...mathOperations]}:undefined;
+  if(mathTransforms)bundle.mathTransforms=mathTransforms;
+  return {program:{...program,root},bundle,generatedNodes,generatedResources,...(morphs?{morphs}:{}),...(mathTransforms?{mathTransforms}:{})};
 }
