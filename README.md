@@ -27,6 +27,29 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### A validated wave mode on the sphere (PR37)
+
+`examples/manifold-wave.tex` compares a live analytic spherical mode with
+independently integrated RK4 time samples. For radius 1 m, the mode
+`F=2xy/R²` has eigenvalue `-6/R²`; the declared wave speed gives an 8-second
+period and zero initial velocity. The left panel shows exact scalar colors and
+tangential gradient arrows. The right imports scalar, gradient and position
+channels from 65 stored knots; radial displacement is explicitly a display aid.
+
+```sh
+# Compile the checked-in RK4 sample fixture; the runtime does not run a solver.
+python tools/compile.py examples/manifold-wave.tex --out build/manifold-wave
+node tools/build-gpu-player.mjs build/manifold-wave/bundle.json build/manifold-wave/player.html
+```
+
+RK4 integration error, piecewise linear playback interpolation and visual mesh
+resolution are separate. This validates one known spherical eigenmode; it does
+not implement a general mesh PDE solver or a physically deforming surface.
+The [PR37 comparison contract](docs/ports/features/pr37-manifold-wave.json)
+records the fixture, independent checks and scope; the
+[scientific validation guide](docs/ports/manifold-wave.md) separates solver and
+playback error bounds.
+
 ### External temporal samples (PR36)
 
 `\usepackage{texloom-samples}` adds `\loombake{id}{relative/manifest.json}` and

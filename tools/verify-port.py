@@ -271,8 +271,9 @@ def run(args, output, report):
     pattern = 'port_*_test.py' if args.runtime_only else '*_test.py'
     # Real-TeX integration cases compile several assets each; allow the growing
     # suite to finish on Windows as well as CI without weakening any assertions.
-    # The native/browser suite took 871 seconds on Windows before the field fixtures.
-    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=1200)
+    # PR36 took 993 seconds on Windows; the wave browser fixture adds about 126.
+    # Keep headroom for native compilation and software GPU scheduling.
+    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=1500)
     report['tests'] = {'typecheck': True, 'typescript': True, 'pythonPattern': pattern, 'passed': True}
     if args.record:
         artifacts = {}

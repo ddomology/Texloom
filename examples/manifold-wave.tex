@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{texloom-samples}
+\usepackage{texloom-field}
+\begin{document}
+\TLScene{A wave on the sphere}{1280}{720}{8}
+\TLSetup{\usepackage{cmbright}}
+\input{data/manifold-wave/domain.tex}
+\loombake{numerical-wave}{data/manifold-wave/bake/manifest.json}
+\loommesh{gradient-arrow}|{"kind":"mesh","version":1,"primitive":"triangles","units":"m","coordinateSpace":"object","winding":"ccw","topologyRevision":"wave-gradient-arrow-v1","positions":{"version":1,"componentType":"float64","components":3,"count":13,"byteOffset":0,"byteStride":24,"data":[0.0,-0.006500000000000001,-0.006500000000000001,0.6428571428571429,-0.006500000000000001,-0.006500000000000001,0.6428571428571429,0.006500000000000001,-0.006500000000000001,0.0,0.006500000000000001,-0.006500000000000001,0.0,-0.006500000000000001,0.006500000000000001,0.6428571428571429,-0.006500000000000001,0.006500000000000001,0.6428571428571429,0.006500000000000001,0.006500000000000001,0.0,0.006500000000000001,0.006500000000000001,0.6428571428571429,-0.026000000000000002,-0.026000000000000002,0.6428571428571429,0.026000000000000002,-0.026000000000000002,0.6428571428571429,0.026000000000000002,0.026000000000000002,0.6428571428571429,-0.026000000000000002,0.026000000000000002,1.0,0.0,0.0]},"indices":{"version":1,"componentType":"uint16","components":1,"count":54,"byteOffset":0,"byteStride":2,"data":[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,1,2,6,1,6,5,2,3,7,2,7,6,3,0,4,3,4,7,8,10,9,8,11,10,8,9,12,9,10,12,10,11,12,11,8,12]},"bounds":{"min":[0.0,-0.026000000000000002,-0.026000000000000002],"max":[1.0,0.026000000000000002,0.026000000000000002]}}|
+\loomsampledfield{numerical-sample}|{"source":"wave-domain","resourceId":"wave-sampled","bake":"numerical-wave","units":"m","attributes":[{"channel":"scalar","name":"raw-wave"},{"channel":"gradient","name":"raw-gradient"}],"position":{"channel":"position","normalPolicy":"recompute","degenerateNormalPolicy":"error"}}|
+\loomfieldvisualization{exact-field}|{"source":"wave-domain","resourceId":"wave-exact","units":"m","scalar":"2*x*y*cos(pi*time/4s)","invalidPolicy":"error","color":{"attribute":"wave-color","stops":[{"position":0,"color":[0.025,0.12,0.52]},{"position":0.5,"color":[0.065,0.39,0.28]},{"position":1,"color":[0.98,0.48,0.04]}],"range":{"mode":"fixed","min":-1,"max":1},"outOfRange":"clamp","invalidColor":[0.2,0.2,0.2]}}|
+\loomfieldvisualization{numeric-field}|{"source":"wave-sampled","resourceId":"wave-numeric","units":"m","scalar":{"attribute":"raw-wave"},"invalidPolicy":"error","color":{"attribute":"wave-color","stops":[{"position":0,"color":[0.025,0.12,0.52]},{"position":0.5,"color":[0.065,0.39,0.28]},{"position":1,"color":[0.98,0.48,0.04]}],"range":{"mode":"fixed","min":-1,"max":1},"outOfRange":"clamp","invalidColor":[0.2,0.2,0.2]}}|
+\loomfieldvisualization{gradient-field}@{"source":"wave-domain","resourceId":"wave-gradient","units":"m","vector":["(2*y-4*x*x*y)*cos(pi*time/4s)","(2*x-4*x*y*y)*cos(pi*time/4s)","(-4*x*y*z)*cos(pi*time/4s)"],"mask":"index == 99 || index == 103 || index == 107 || index == 111 || index == 115 || index == 119 || index == 123 || index == 127 || index == 227 || index == 231 || index == 235 || index == 239 || index == 243 || index == 247 || index == 251 || index == 255 || index == 355 || index == 359 || index == 363 || index == 367 || index == 371 || index == 375 || index == 379 || index == 383","invalidPolicy":"error","arrows":{"instanceSetId":"gradient-arrows","prototype":"gradient-arrow","up":[0,0,1],"lengthScale":"0.14","zeroPolicy":"hide","color":[0.95,0.81,0.46]}}@
+\loomspace|{"version":1,"units":"m","handedness":"right","upAxis":"z","nodes":[{"id":"exact-sphere","kind":"mesh","resourceId":"wave-exact","transform":{"translation":[-1.65,0,0]},"material":{"kind":"unlit","color":"#ffffff","colorAttribute":"wave-color"}},{"id":"numeric-sphere","kind":"mesh","resourceId":"wave-numeric","transform":{"translation":[1.65,0,0]},"material":{"kind":"unlit","color":"#ffffff","colorAttribute":"wave-color"}},{"id":"gradient-vectors","kind":"instances","instanceSetId":"gradient-arrows","transform":{"translation":[-1.65,0,0]},"material":{"kind":"unlit","color":"#ffffff","side":"double"}}],"camera":{"id":"view","transform":{"matrix":[1,0,0,0,0,0.39391929857916763,0.9191450300180578,0,0,-0.9191450300180578,0.39391929857916763,0,0,-7,3,1]},"projection":{"kind":"orthographic","height":4.8,"near":0.1,"far":100}}}|
+\TLText{title-art}{A wave on the sphere}
+\TLNode{title}{tex}{"resourceId":"title-art","x":48,"y":49,"scale":2,"style":{"fill":"#d6e8dc"}}
+\TLText{subtitle-art}{One spherical mode: a live analytic reference and independently integrated time samples}
+\TLNode{subtitle}{tex}{"resourceId":"subtitle-art","x":48,"y":81,"scale":1.15,"style":{"fill":"#a6c1af"}}
+\TLMath{pde-art}{u_{tt}=c^2\Delta_{S_R}u,\qquad \Delta_{S_R}F=-\frac{6}{R^2}F}
+\TLNode{pde}{tex}{"resourceId":"pde-art","x":48,"y":137,"scale":1.45,"style":{"fill":"#c5ddce"}}
+\TLMath{initial-art}{u(p,0)=F(p)=\frac{2xy}{R^2},\qquad u_t(p,0)=0}
+\TLNode{initial}{tex}{"resourceId":"initial-art","x":720,"y":137,"scale":1.3,"style":{"fill":"#c5ddce"}}
+\TLText{exact-caption-art}{LIVE ANALYTIC / TANGENTIAL GRADIENT}
+\TLNode{exact-caption}{tex}{"resourceId":"exact-caption-art","x":220,"y":195,"scale":1.1,"style":{"fill":"#91d5b3"}}
+\TLText{numeric-caption-art}{IMPORTED RK4 / VISUAL DISPLACEMENT}
+\TLNode{numeric-caption}{tex}{"resourceId":"numeric-caption-art","x":720,"y":195,"scale":1.1,"style":{"fill":"#e6bc79"}}
+\TLMath{exact-formula-art}{u(p,t)=F(p)\cos(\pi t/4)}
+\TLNode{exact-formula}{tex}{"resourceId":"exact-formula-art","x":225,"y":551,"scale":1.55,"style":{"fill":"#b5cdbb"}}
+\TLText{numeric-method-art}{RK4 step: 1/128 s   /   playback knots: 1/8 s}
+\TLNode{numeric-method}{tex}{"resourceId":"numeric-method-art","x":717,"y":551,"scale":1.04,"style":{"fill":"#d0c6ae"}}
+\TLMath{gradient-formula-art}{\text{arrows: }\nabla_{S_R}u\quad\text{(tangent to the sphere)}}
+\TLNode{gradient-formula}{tex}{"resourceId":"gradient-formula-art","x":225,"y":581,"scale":0.95,"style":{"fill":"#d6c38e"}}
+\TLMath{display-formula-art}{p_{\rm display}=p+(0.28\,\mathrm m)\,u_{\rm RK4}\,n_0}
+\TLNode{display-formula}{tex}{"resourceId":"display-formula-art","x":717,"y":581,"scale":1.0,"style":{"fill":"#d0c6ae"}}
+\TLMath{model-art}{R=1\,\mathrm m,\quad c=\frac{\pi}{4\sqrt6}\,\mathrm{m/s},\quad T=8\,\mathrm s}
+\TLNode{model}{tex}{"resourceId":"model-art","x":48,"y":612,"scale":1.25,"style":{"fill":"#b5cdbb"}}
+\TLMath{range-art}{\text{scalar color:}\quad -1\ \longrightarrow\ 0\ \longrightarrow\ 1}
+\TLNode{range}{tex}{"resourceId":"range-art","x":745,"y":612,"scale":1.1,"style":{"fill":"#a6c1af"}}
+\TLText{scope-art}{Radial displacement is a display aid; the wave equation remains on the original sphere.}
+\TLNode{scope}{tex}{"resourceId":"scope-art","x":48,"y":661,"scale":1.12,"style":{"fill":"#a6c1af"}}
+\TLText{limits-art}{Fixed single-mode RK4 validation. Visual mesh resolution, RK4 error and playback interpolation are distinct.}
+\TLNode{limits}{tex}{"resourceId":"limits-art","x":48,"y":695,"scale":0.92,"style":{"fill":"#8fab98"}}
+\end{document}
