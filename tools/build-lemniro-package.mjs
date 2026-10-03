@@ -13,6 +13,8 @@ const commit = execFileSync('git', ['rev-parse', 'HEAD'], {cwd:root, encoding:'u
 // Publish only a reviewed commit, never a dirty working-tree build under its ID.
 if (execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], {cwd:root, encoding:'utf8'}).trim())
   throw new Error('Commit tracked changes before building the public runtime package.');
+if (execFileSync('git', ['ls-files', '--others', '--exclude-standard', '--', 'src', 'adapters', 'tools/build-lemniro-package.mjs'], {cwd:root, encoding:'utf8'}).trim())
+  throw new Error('Commit all source inputs before building the public runtime package.');
 await mkdir(out, {recursive:true});
 if ((await readdir(out)).length) throw new Error('Choose an empty output directory to exclude stale artifacts.');
 
