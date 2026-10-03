@@ -1,6 +1,8 @@
 import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import {freezeSnapshot} from '../operations/values.js';
 import {validateAssetJson} from './package.js';
+import {MAX_BUFFER_COMPONENTS} from './limits.js';
+export {MAX_BUFFER_COMPONENTS} from './limits.js';
 
 /** Portable numeric backing storage. Byte offsets/strides are independent of host endianness. */
 export interface NumericBuffer {
@@ -13,7 +15,6 @@ export interface NumericBuffer {
   data:number[];
 }
 export type OwnedNumericArray=Float32Array|Float64Array|Uint16Array|Uint32Array;
-export const MAX_BUFFER_COMPONENTS=262_144;
 export class BufferError extends Error {
   readonly code:string;
   readonly diagnostics:DeepReadonly<Diagnostic[]>;

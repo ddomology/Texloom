@@ -3,7 +3,8 @@ import {snapshotMeshResource,copyMeshBuffers,type MeshResource} from '../ir/mesh
 import {snapshotInstanceSet3D,InstanceSetError,type InstanceSet3D,type InstanceSelection} from '../ir/instances.js';
 import {attributeComponents,MAX_MESH_ATTRIBUTES,MAX_MESH_ATTRIBUTE_COMPONENTS,type MeshAttribute} from '../ir/attributes.js';
 import {composeTransform3D,normalMatrix3D,orientationMatrix4,transformPoint3D,transformNormal3D,type Bounds3D} from '../geometry/matrix4.js';
-import {MAX_BUFFER_COMPONENTS,type NumericBuffer} from '../resources/buffers.js';
+import type {NumericBuffer} from '../resources/buffers.js';
+import {MAX_BUFFER_COMPONENTS} from '../resources/limits.js';
 import {validateAssetJson} from '../resources/package.js';
 import {freezeSnapshot} from './values.js';
 
