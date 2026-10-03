@@ -55,6 +55,13 @@ native playback controls, static posters, reduced-motion behavior and unmount
 cleanup to figures declared in a TeX note. See the
 [figure contract and publication guide](docs/lemniro-figures.md).
 
+### Native Chalkspace lecture clips (PR26)
+
+`prepareChalkspaceLecture` prepares named scenes and independently placed clips
+for the real Chalkspace lecture renderer. The host clock drives both writing
+and scene animation, with shared readiness, native Canvas placement and full
+disposal. See the [lecture integration contract](docs/chalkspace-lectures.md).
+
 ## Quick start
 
 Requirements: Node 22+, Python 3.11+, TeX Live with `latex` and `dvisvgm`, and

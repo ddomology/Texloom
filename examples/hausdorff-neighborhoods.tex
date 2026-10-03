@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\loomsetup{
+  \definecolor{mint}{HTML}{A8DCC7}
+  \definecolor{gold}{HTML}{EACB8D}
+  \definecolor{ink}{HTML}{EDEEE5}
+  \definecolor{muted}{HTML}{A5B9AD}
+}
+\loomset{label/.style={text=ink,font=\fontsize{20}{24}\selectfont},
+  small/.style={text=muted,font=\fontsize{13}{17}\selectfont}}
+\begin{document}
+\begin{loomscene}[width=640,height=320,duration=8,title={Separating a point from a compact set}]
+\loompath (compact) {\draw[mint,opacity=.65,line width=1.5bp,dashed] (215,168) ellipse[x radius=164bp,y radius=108bp];};
+\loomnode[label,text=mint] (compact-label) at (95,63) {$K$};
+\loomgeometry[draw=gold,line width=2bp,fill=none] (neighborhood-u)
+  {(160,162) .. controls (144,86) and (300,87) .. (308,155)
+    .. controls (324,230) and (172,233) .. (160,162)};
+\loomgeometry[draw=mint,line width=2bp,fill=none] (neighborhood-v)
+  {(451,156) .. controls (442,72) and (592,82) .. (598,155)
+    .. controls (607,233) and (459,237) .. (451,156)};
+\loomnode[label,text=gold] (u-label) at (239,85) {$U_y$};
+\loomnode[label,text=mint] (v-label) at (525,78) {$V_y$};
+\TLNode{y-point}{point}{"x":235,"y":160,"r":4,"style":{"fill":"#EACB8D"}}
+\TLNode{x-point}{point}{"x":525,"y":160,"r":4,"style":{"fill":"#EDEEE5"}}
+\loomnode[label,text=gold] (y-label) at (253,162) {$y$};
+\loomnode[label] (x-label) at (545,162) {$x$};
+\loomnode[small] (identity) at (320,299) {$y\in U_y,\quad x\in V_y,\quad U_y\cap V_y=\varnothing$};
+% The illustration varies the shape of open neighborhoods without moving the
+% distinguished points or allowing the disjoint sets to cross.
+\loomcontrol[duration=4] (neighborhood-u) {contour-0}{segment-0}{c1}{(174,112)};
+\loomcontrol[duration=4] (neighborhood-u) {contour-0}{segment-0}{c2}{(278,62)};
+\loomcontrol[delay=4,duration=4] (neighborhood-u) {contour-0}{segment-0}{c1}{(144,86)};
+\loomcontrol[delay=4,duration=4] (neighborhood-u) {contour-0}{segment-0}{c2}{(300,87)};
+\loomcontrol[duration=4] (neighborhood-v) {contour-0}{segment-1}{c1}{(587,258)};
+\loomcontrol[duration=4] (neighborhood-v) {contour-0}{segment-1}{c2}{(475,210)};
+\loomcontrol[delay=4,duration=4] (neighborhood-v) {contour-0}{segment-1}{c1}{(607,233)};
+\loomcontrol[delay=4,duration=4] (neighborhood-v) {contour-0}{segment-1}{c2}{(459,237)};
+\end{loomscene}
+\end{document}
