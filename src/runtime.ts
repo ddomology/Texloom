@@ -8,6 +8,7 @@ import {freezeSnapshot, validateJsonData} from './operations/values.js';
 import {snapshotScenePackage, validateAssetJson, type ScenePackage, type AssetEntry} from './resources/package.js';
 import {createAssetStore, type AssetStore, type AssetResolver, type AssetLease} from './resources/store.js';
 import type {MeshUnit} from './ir/mesh.js';
+import {createBakeStore,type BakeResolver,type BakeStore,type BakeManifest} from './resources/bake.js';
 
 export interface SceneManifest {
   readonly contract: 'texloom-runtime/1';
@@ -21,7 +22,8 @@ export interface SceneManifest {
   /** Metadata only: no transport URI, inline payload, object URL or GPU handle. */
   readonly assets?: readonly DeepReadonly<Omit<AssetEntry, 'source'>>[];
   /** Evaluated frame resources, with no asset transport or fixed bounds. */
-  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh'|'curve3d';producer:'surface'|'curve3d'|'mesh-attributes'|'fieldVisualization'|'instances';operationId:string;units:MeshUnit}>[];
+  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh'|'curve3d';producer:'surface'|'curve3d'|'mesh-attributes'|'sampledFields'|'fieldVisualization'|'instances';operationId:string;units:MeshUnit}>[];
+  readonly bakes?:readonly DeepReadonly<{id:string;units:MeshUnit;sampleTimes:number[];interpolation:BakeManifest['interpolation'];outside:BakeManifest['outside'];seed:number;solver:BakeManifest['solver'];topologyRevision:string;vertexCount:number;channels:BakeManifest['channels'];chunks:Omit<BakeManifest['chunks'][number],'source'>[]}>[];
   readonly instanceSets?:readonly Readonly<{id:string;prototypeResourceId:string;units:MeshUnit}>[];
 }
 export interface SceneRuntime {
@@ -48,13 +50,15 @@ function sceneManifest(bundle: Bundle, assets?: readonly AssetEntry[]): SceneMan
     features: Object.freeze(sceneFeatures(bundle)),
     ...(bundle.timeline ? {timeline:freezeSnapshot(bundle.timeline)} : {}),
     ...(assets ? {assets:freezeSnapshot(assets.map(({source: _source, ...metadata}) => metadata))} : {}),
+    ...(bundle.bakes?{bakes:freezeSnapshot(Object.entries(bundle.bakes).map(([id,b])=>({id,units:b.units,sampleTimes:b.sampleTimes,interpolation:b.interpolation,outside:b.outside,seed:b.seed,solver:b.solver,topologyRevision:b.topology.revision,vertexCount:b.topology.vertexCount,channels:b.channels,chunks:b.chunks.map(({source:ignored,...metadata})=>metadata)})))}:{}),
     ...(bundle.instances||bundle.fieldVisualization?.operations.some(o=>o.arrows) ? {instanceSets:freezeSnapshot([
       ...(bundle.fieldVisualization?.operations??[]).flatMap(o=>o.arrows?[{id:o.arrows.instanceSetId,prototypeResourceId:o.arrows.prototype,units:o.units}]:[]),
       ...(bundle.instances?.operations??[]).map(o=>({id:o.id,prototypeResourceId:o.prototype,units:o.units}))])} : {}),
-    ...(bundle.surfaces||bundle.curves3d||bundle.meshAttributes||bundle.fieldVisualization||bundle.instances?.operations.some(o=>o.realize) ? {generatedResources:freezeSnapshot([
+    ...(bundle.surfaces||bundle.curves3d||bundle.meshAttributes||bundle.sampledFields||bundle.fieldVisualization||bundle.instances?.operations.some(o=>o.realize) ? {generatedResources:freezeSnapshot([
       ...(bundle.surfaces?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'surface' as const,operationId:o.id,units:o.units})),
       ...(bundle.curves3d?.operations??[]).map(o=>({id:o.resourceId,kind:'curve3d' as const,producer:'curve3d' as const,operationId:o.id,units:o.units})),
       ...(bundle.meshAttributes?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'mesh-attributes' as const,operationId:o.id,units:o.units})),
+      ...(bundle.sampledFields?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'sampledFields' as const,operationId:o.id,units:o.units})),
       ...(bundle.fieldVisualization?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'fieldVisualization' as const,operationId:o.id,units:o.units})),
       ...(bundle.instances?.operations??[]).flatMap(o=>o.realize?[{id:o.realize.resourceId,kind:'mesh' as const,producer:'instances' as const,operationId:o.id,units:o.units}]:[]),
     ])} : {}),
@@ -78,6 +82,8 @@ export interface ScenePreparation {
 export interface PrepareSceneOptions {
   /** URI policies, transport, and exact range selection belong to the host. */
   assetResolver?: AssetResolver;
+  /** Explicit host transport for binary bake chunks; all chunks verify before ready. */
+  bakeResolver?:BakeResolver;
   /** Host-owned store enables sharing between concurrent scenes. Mutually
    * exclusive with assetResolver. The scene never disposes a supplied store. */
   assetStore?: AssetStore;
@@ -110,8 +116,10 @@ export function beginPrepareScene(input: Bundle | ScenePackage, options: Prepare
   let sample: ReturnType<typeof createEvaluator> | undefined;
   let snapshot: Bundle | ScenePackage | undefined, profile: CapabilityProfile;
   let store: AssetStore | undefined, ownedStore = false;
+  let bakeResolver:BakeResolver|undefined;
   let externalSignal: AbortSignal | undefined;
   const controller = new AbortController(), leases = new Set<AssetLease>();
+  const bakeStores=new Set<BakeStore>();
   let resolveReady!: (runtime: PreparedSceneRuntime) => void, rejectReady!: (error: Error) => void;
   const ready = new Promise<PreparedSceneRuntime>((resolve, reject) => {resolveReady = resolve; rejectReady = reject;});
   // Disposal may precede the host attaching an await/catch. Preserve the public
@@ -124,6 +132,7 @@ export function beginPrepareScene(input: Bundle | ScenePackage, options: Prepare
     externalSignal?.removeEventListener('abort', dispose);
     for (const lease of leases) lease.release();
     leases.clear();
+    for(const bake of bakeStores)bake.dispose();bakeStores.clear();
     if (ownedStore) store?.dispose();
     store = undefined;
   };
@@ -155,6 +164,9 @@ export function beginPrepareScene(input: Bundle | ScenePackage, options: Prepare
       throw new ScenePreparationError('SCENE_OPTIONS', 'Use either assetStore or assetResolver.');
     if (options.assetResolver !== undefined && typeof options.assetResolver !== 'function')
       throw new ScenePreparationError('SCENE_OPTIONS', 'assetResolver must be a function.');
+    if (options.bakeResolver !== undefined && typeof options.bakeResolver !== 'function')
+      throw new ScenePreparationError('SCENE_OPTIONS', 'bakeResolver must be a function.');
+    bakeResolver=options.bakeResolver;
     if (options.assetStore && (typeof options.assetStore.acquire !== 'function' || typeof options.assetStore.dispose !== 'function'))
       throw new ScenePreparationError('SCENE_OPTIONS', 'assetStore must implement acquire and dispose.');
     if (options.signal !== undefined && !(options.signal instanceof AbortSignal))
@@ -199,11 +211,20 @@ export function beginPrepareScene(input: Bundle | ScenePackage, options: Prepare
         const undeclared = actual.filter(feature => !data.assets.requiredFeatures.includes(feature));
         if (undeclared.length) throw new ScenePreparationError('ASSET_FEATURES', `Manifest omits required features: ${undeclared.join(', ')}.`);
         requireCapabilities(actual, profile);
-        sample = createEvaluatorWithSharedResources(bundle);
       } else {
         bundle = data;
-        sample = createEvaluator(bundle);
       }
+      if(bundle.bakes){
+        const baked=await Promise.all(Object.entries(bundle.bakes).map(async([id,manifest])=>{
+          const active=createBakeStore(manifest,{resolver:bakeResolver});bakeStores.add(active);
+          await active.prefetchAll(controller.signal);
+          if(state!=='preparing')throw new ScenePreparationError('SCENE_ABORTED','Preparation ended while loading bake chunks.');
+          const inline=active.materialize();active.dispose();bakeStores.delete(active);return [id,inline] as const;
+        }));
+        if(state!=='preparing')return;
+        bundle={...bundle,bakes:Object.fromEntries(baked) as Record<string,BakeManifest>};
+      }
+      sample='contract' in data?createEvaluatorWithSharedResources(bundle):createEvaluator(bundle);
       if (state !== 'preparing') return;
       const manifest = sceneManifest(bundle, entries);
       const assertReady = () => {

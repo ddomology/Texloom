@@ -1,0 +1,9 @@
+{
+  "schemaVersion":1,
+  "fixtures":[{
+    "id":"temporal-samples",
+    "source":"examples/temporal-samples.tex",
+    "inputs":["examples/temporal-samples.tex","examples/data/temporal-samples/generate.py","examples/data/temporal-samples/domain.tex","examples/data/temporal-samples/mesh.json","examples/data/temporal-samples/samples.json","examples/data/temporal-samples/bake/manifest.json","examples/data/temporal-samples/bake/import-report.json","examples/data/temporal-samples/bake/chunk-000.bin","examples/data/temporal-samples/bake/chunk-001.bin","examples/data/temporal-samples/bake/chunk-002.bin","examples/data/temporal-samples/bake/chunk-003.bin"],
+    "tests":["tests/import_samples_test.py","tests/sampled_field_capture_test.py","tests/sampled_field_player_test.py"]
+  }]
+}

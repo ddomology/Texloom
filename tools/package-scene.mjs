@@ -49,6 +49,31 @@ export async function packageScene(input,out,{mode='external'}={}){
     packed={bytes,uri};
     for(const entry of entries)entry.source={kind:'external',uri,byteRange:positions.get(entry.sha256)};
   }
+  // Temporal payloads have their own typed-binary contract. Keep their transport
+  // independent from JSON resource assets while applying the same packaging mode.
+  const bakePayloads=new Map();let bakePacked;
+  if(bundle.bakes){
+    scene.bakes=structuredClone(bundle.bakes);
+    const chunks=Object.values(scene.bakes).flatMap(bake=>bake.chunks);
+    for(const chunk of chunks){
+      if(chunk.source.kind!=='inline')throw new Error('PACKAGE_BAKE_SOURCE: packaging requires hydrated inline bake chunks.');
+      const bytes=Buffer.from(chunk.source.data,'base64'),sha256=digest(bytes);
+      if(bytes.length!==chunk.byteLength||sha256!==chunk.sha256)throw new Error('PACKAGE_BAKE_HASH: temporal payload differs from its declaration.');
+      const previous=bakePayloads.get(sha256);
+      if(previous&&!previous.equals(bytes))throw new Error('PACKAGE_HASH_COLLISION: temporal payload bytes differ.');
+      bakePayloads.set(sha256,bytes);
+      if(mode==='external')chunk.source={kind:'external',uri:`bakes/${sha256}.bin`};
+    }
+    if(mode==='packed'&&chunks.length){
+      let offset=0;const positions=new Map(),buffers=[];
+      for(const [sha256,bytes] of [...bakePayloads].sort(([a],[b])=>a<b?-1:a>b?1:0)){
+        positions.set(sha256,{offset,length:bytes.length});buffers.push(bytes);offset+=bytes.length;
+        if(!Number.isSafeInteger(offset))throw new Error('PACKAGE_SIZE: temporal packed size exceeds safe integer bytes.');
+      }
+      const bytes=Buffer.concat(buffers),uri=`bakes/${digest(bytes)}.bin`;bakePacked={bytes,uri};
+      for(const chunk of chunks)chunk.source={kind:'external',uri,byteRange:positions.get(chunk.sha256)};
+    }
+  }
   const manifest={contract:'texloom-package/1',scene,assets:{version:1,requiredFeatures:api.sceneFeatures(bundle),entries}};
   const diagnostics=api.validateScenePackage(manifest);
   if(diagnostics.some(d=>d.severity==='error')){
@@ -62,9 +87,15 @@ export async function packageScene(input,out,{mode='external'}={}){
     if(packed)await publish(resolve(out,packed.uri),packed.bytes);
     else for(const [sha256,payload] of byHash)await publish(resolve(out,`assets/${sha256}.json`),payload.bytes);
   }
+  if(mode!=='inline'&&bakePayloads.size){
+    await mkdir(resolve(out,'bakes'),{recursive:true});
+    if(bakePacked)await publish(resolve(out,bakePacked.uri),bakePacked.bytes);
+    else for(const [sha256,bytes] of bakePayloads)await publish(resolve(out,`bakes/${sha256}.bin`),bytes);
+  }
   await publish(resolve(out,'scene.json'),canonicalJson(manifest));
   return {output:resolve(out,'scene.json'),mode,entries:entries.length,uniquePayloads:byHash.size,
     resourceBytes:[...byHash.values()].reduce((sum,payload)=>sum+payload.bytes.length,0),
+    ...(bakePayloads.size?{bakeBytes:[...bakePayloads.values()].reduce((sum,bytes)=>sum+bytes.length,0)}:{}),
     manifestSha256:digest(Buffer.from(canonicalJson(manifest),'utf8'))};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){

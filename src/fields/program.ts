@@ -16,6 +16,7 @@ import {curveValidationResources,validateCurveProgram3DInContext} from '../opera
 import {meshAttributeValidationResources,validateMeshAttributeProgramInContext} from '../operations/mesh-attributes.js';
 import {instanceValidationResources,instanceValidationSets,validateInstanceProgramInContext} from '../operations/instances.js';
 import {fieldVisualizationValidationResources,fieldVisualizationValidationSets,validateFieldVisualizationProgramInContext} from '../operations/field-visualization.js';
+import {sampledFieldValidationResources,validateSampledFieldProgramInContext} from '../operations/sampled-field.js';
 import {validateSpace3DInContext} from '../ir/scene3d.js';
 
 type Obj = Record<string, any>;
@@ -71,8 +72,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (!validatedContext) {
     // Graph expression inputs, fields and deformations consume these candidate
     // parameters; defer them until the declarations have been checked.
-    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,surfaces:deferredSurfaces,curves3d:deferredCurves,meshAttributes:deferredAttributes,fieldVisualization:deferredFieldVisualization,instances:deferredInstances,space3d:deferredSpace,...base} = bundle;
-    const resources=object(base.resources)?instanceValidationResources(deferredInstances,fieldVisualizationValidationResources(deferredFieldVisualization,meshAttributeValidationResources(deferredAttributes,curveValidationResources(deferredCurves,surfaceValidationResources(deferredSurfaces,base.resources))))):base.resources;
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,surfaces:deferredSurfaces,curves3d:deferredCurves,meshAttributes:deferredAttributes,sampledFields:deferredSampledFields,fieldVisualization:deferredFieldVisualization,instances:deferredInstances,space3d:deferredSpace,...base} = bundle;
+    const resources=object(base.resources)?instanceValidationResources(deferredInstances,fieldVisualizationValidationResources(deferredFieldVisualization,sampledFieldValidationResources(deferredSampledFields,meshAttributeValidationResources(deferredAttributes,curveValidationResources(deferredCurves,surfaceValidationResources(deferredSurfaces,base.resources))),base.bakes))):base.resources;
     diagnostics.push(...validateBundle({...base,resources}));
     if(deferredSpace!==undefined&&!diagnostics.some(d=>d.severity==='error'))diagnostics.push(...validateSpace3DInContext(deferredSpace,resources,'$.space3d',{viewport:base.viewport,duration:base.duration},{...fieldVisualizationValidationSets(deferredFieldVisualization),...instanceValidationSets(deferredInstances)}));
   }
@@ -152,6 +153,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
     diagnostics.push(...validateCurveProgram3DInContext(bundle.curves3d,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.meshAttributes !== undefined && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateMeshAttributeProgramInContext(bundle.meshAttributes,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.sampledFields !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateSampledFieldProgramInContext(bundle.sampledFields,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.fieldVisualization !== undefined && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateFieldVisualizationProgramInContext(bundle.fieldVisualization,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.instances !== undefined && !diagnostics.some(d => d.severity === 'error'))

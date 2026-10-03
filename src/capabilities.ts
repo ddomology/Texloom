@@ -10,7 +10,7 @@ export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','cam
   'camera.projection.3d','material.unlit.3d','material.wireframe.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d','surface.parametric.3d',
   'curve.polyline.3d','frame.transport.3d','constraint.curve-follow.3d',
   'attribute.mesh.3d','attribute.domain-transfer.3d','material.color-attribute.3d','instance.mesh.3d','instance.realize.3d',
-  'field.visualization.3d','field.normal-displacement.3d','field.vector-arrows.3d'] as const;
+  'field.visualization.3d','field.normal-displacement.3d','field.vector-arrows.3d','field.sampled.3d','bake.temporal.3d'] as const;
 export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
@@ -97,6 +97,9 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
   if(bundle.curves3d?.followers.length)features.add('constraint.curve-follow.3d');
   if(bundle.meshAttributes?.operations.length)features.add('attribute.mesh.3d');
   if(bundle.meshAttributes?.operations.some(o=>o.steps.some(s=>s.kind==='transfer')))features.add('attribute.domain-transfer.3d');
+  if(bundle.bakes&&Object.keys(bundle.bakes).length)features.add('bake.temporal.3d');
+  if(bundle.sampledFields?.operations.length){features.add('field.sampled.3d');features.add('mesh.triangles.3d');}
+  if(bundle.sampledFields?.operations.some(o=>o.attributes.length))features.add('attribute.mesh.3d');
   if(bundle.fieldVisualization?.operations.length){features.add('field.visualization.3d');features.add('mesh.triangles.3d');}
   if(bundle.fieldVisualization?.operations.some(o=>o.color))features.add('attribute.mesh.3d');
   if(bundle.fieldVisualization?.operations.some(o=>o.displacement))features.add('field.normal-displacement.3d');

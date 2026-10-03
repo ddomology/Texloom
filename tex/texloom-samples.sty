@@ -1,0 +1,18 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-samples}[2026/10/03 Portable external temporal samples]
+\RequirePackage{texloom-space3d}
+\newcount\TLSamplesSerial
+\TLSamplesSerial=0
+\def\TLSamplesStart#1{%
+  \global\advance\TLSamplesSerial by 1
+  \edef\TLEbase{\jobname.tl-samples-\the\TLSamplesSerial}%
+  \immediate\write\TLrecords{\string{"type":"samples-file","kind":"#1","file":"\TLEbase"\string}}}
+\NewDocumentCommand\loombake{m m}{%
+  \TLSamplesStart{bake}%
+  \TLEmetadata{id}{#1}%
+  \TLEmetadata{body}{#2}}
+\NewDocumentCommand\loomsampledfield{m +v}{%
+  \TLSamplesStart{field}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

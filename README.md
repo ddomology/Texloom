@@ -27,6 +27,31 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### External temporal samples (PR36)
+
+`\usepackage{texloom-samples}` adds `\loombake{id}{relative/manifest.json}` and
+`\loomsampledfield{operation-id}|JSON|`. The strict importer produces hashed
+little-endian float chunks on an explicit fixed mesh topology. Nonuniform time
+knots, linear/step interpolation and outside-range policy are declared. Scalar,
+vector and position channels are retained independently from display colors.
+Compilation verifies local payloads and embeds them for an offline player.
+
+```sh
+# Reproduce the imported binary assets in a new output directory.
+python tools/import_samples.py examples/data/temporal-samples/samples.json --out build/imported-samples --chunk-frames 2
+# Compile the example using its checked-in data/temporal-samples/bake/manifest.json.
+python tools/compile.py examples/temporal-samples.tex --out build/temporal-samples
+node tools/build-gpu-player.mjs build/temporal-samples/bundle.json build/temporal-samples/player.html
+```
+
+The first command is an independent import check. To render newly imported data,
+place its output beneath the TeX source directory and update `\loombake` to that
+manifest's relative path; the example does not read `build/imported-samples`.
+
+The example uses independently generated analytic samples, **not a PDE solver**.
+Its original geometry and sampled positions share the same imported scalar
+colors. See [the input format and reproducibility guide](docs/temporal-samples.md).
+
 ### Surface scalar and vector fields (PR35)
 
 `\usepackage{texloom-field}` adds `\loomfieldvisualization{operation-id}|JSON|`.

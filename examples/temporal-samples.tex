@@ -1,0 +1,26 @@
+\documentclass{article}
+\usepackage{texloom-samples}
+\usepackage{texloom-field}
+\begin{document}
+\TLScene{Imported time samples}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\input{data/temporal-samples/domain.tex}
+\loombake{external-wave}{data/temporal-samples/bake/manifest.json}
+\loomsampledfield{sample-left}|{"source":"sample-domain","resourceId":"sampled-left","bake":"external-wave","units":"m","attributes":[{"channel":"scalar","name":"raw-scalar"},{"channel":"vector","name":"raw-vector"}]}|
+\loomsampledfield{sample-right}|{"source":"sample-domain","resourceId":"sampled-right","bake":"external-wave","units":"m","attributes":[{"channel":"scalar","name":"raw-scalar"},{"channel":"vector","name":"raw-vector"}],"position":{"channel":"position","normalPolicy":"recompute","degenerateNormalPolicy":"error"}}|
+\loomfieldvisualization{color-left}|{"source":"sampled-left","resourceId":"colored-left","units":"m","scalar":{"attribute":"raw-scalar"},"invalidPolicy":"error","color":{"attribute":"sample-color","stops":[{"position":0,"color":[0.03,0.14,0.55]},{"position":0.5,"color":[0.08,0.48,0.3]},{"position":1,"color":[0.95,0.46,0.04]}],"range":{"mode":"fixed","min":-1,"max":1},"outOfRange":"clamp","invalidColor":[0.2,0.2,0.2]}}|
+\loomfieldvisualization{color-right}|{"source":"sampled-right","resourceId":"colored-right","units":"m","scalar":{"attribute":"raw-scalar"},"invalidPolicy":"error","color":{"attribute":"sample-color","stops":[{"position":0,"color":[0.03,0.14,0.55]},{"position":0.5,"color":[0.08,0.48,0.3]},{"position":1,"color":[0.95,0.46,0.04]}],"range":{"mode":"fixed","min":-1,"max":1},"outOfRange":"clamp","invalidColor":[0.2,0.2,0.2]}}|
+\loomspace|{"version":1,"units":"m","handedness":"right","upAxis":"z","nodes":[{"id":"original","kind":"mesh","resourceId":"colored-left","transform":{"translation":[-1.65,0,0]},"material":{"kind":"unlit","color":"#ffffff","colorAttribute":"sample-color"}},{"id":"sampled","kind":"mesh","resourceId":"colored-right","transform":{"translation":[1.65,0,0]},"material":{"kind":"unlit","color":"#ffffff","colorAttribute":"sample-color"}}],"camera":{"id":"view","transform":{"matrix":[1,0,0,0,0,0.39391929857916763,0.9191450300180578,0,0,-0.9191450300180578,0.39391929857916763,0,0,-7,3,1]},"projection":{"kind":"orthographic","height":4.8,"near":0.1,"far":100}}}|
+\TLText{title-art}{Imported time samples}
+\TLText{subtitle-art}{Seven nonuniform time knots; piecewise linear interpolation}
+\TLText{left-caption-art}{Original geometry + sampled scalar}
+\TLText{right-caption-art}{Sampled positions + same scalar}
+\TLMath{knots-art}{t_i\in\{0,\ 0.5,\ 1.75,\ 3,\ 4.5,\ 6.25,\ 8\}}
+\TLText{scope-art}{Analytic sample data; this is not a PDE solution}
+\TLNode{title}{tex}{"resourceId":"title-art","x":42,"y":45,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{subtitle}{tex}{"resourceId":"subtitle-art","x":42,"y":76,"scale":1.1,"style":{"fill":"#a6c1af"}}
+\TLNode{left-caption}{tex}{"resourceId":"left-caption-art","x":130,"y":430,"scale":1.04,"style":{"fill":"#91d5b3"}}
+\TLNode{right-caption}{tex}{"resourceId":"right-caption-art","x":535,"y":430,"scale":1.04,"style":{"fill":"#e6bc79"}}
+\TLNode{knots}{tex}{"resourceId":"knots-art","x":195,"y":478,"scale":1.4,"style":{"fill":"#b5cdbb"}}
+\TLNode{scope}{tex}{"resourceId":"scope-art","x":220,"y":516,"scale":1.0,"style":{"fill":"#a6c1af"}}
+\end{document}

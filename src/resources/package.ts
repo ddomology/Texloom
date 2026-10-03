@@ -7,6 +7,7 @@ import {curveResourceDeclarations} from '../operations/curve3d.js';
 import {meshAttributeResourceDeclarations} from '../operations/mesh-attributes.js';
 import {instanceResourceDeclarations} from '../operations/instances.js';
 import {fieldVisualizationResourceDeclarations} from '../operations/field-visualization.js';
+import {sampledFieldResourceDeclarations,validateBakeRegistry} from '../operations/sampled-field.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -194,6 +195,38 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(!sourceKind){error(out,'ASSET_REFERENCE','Attribute inputs require a manifest mesh, generated surface or an earlier attribute result; forward references and cycles are unsupported.',`${path}.source`);continue;}
     if(sourceKind!=='mesh'){error(out,'ASSET_KIND','Mesh attribute operations require a mesh source.',`${path}.source`);continue;}
     generated.set(declaration.resourceId,'mesh');
+  }
+  out.push(...validateBakeRegistry(scene.bakes,'$.scene.bakes'));
+  // These requirements are known from scene declarations alone. Reject an
+  // incomplete manifest before consulting either transport resolver.
+  const temporalFeatures:string[]=[];
+  if(object(scene.bakes)&&Object.keys(scene.bakes).length)temporalFeatures.push('bake.temporal.3d');
+  if(object(scene.sampledFields)&&Array.isArray(scene.sampledFields.operations)&&scene.sampledFields.operations.length){
+    temporalFeatures.push('field.sampled.3d','mesh.triangles.3d');
+    if(scene.sampledFields.operations.some(o=>object(o)&&Array.isArray(o.attributes)&&o.attributes.length))temporalFeatures.push('attribute.mesh.3d');
+  }
+  if(object(assets)&&Array.isArray(assets.requiredFeatures))for(const feature of temporalFeatures){
+    if(!assets.requiredFeatures.includes(feature))error(out,'ASSET_FEATURES',`Manifest omits scene-declared feature ${feature}.`,'$.assets.requiredFeatures');
+  }
+  const sampledDeclarations=sampledFieldResourceDeclarations(scene.sampledFields),sampledIds=new Set<string>();
+  if(scene.sampledFields!==undefined){
+    const program=scene.sampledFields;
+    if(!object(program)||program.version!==1||!Array.isArray(program.operations)||sampledDeclarations.length!==program.operations.length)
+      error(out,'ASSET_GENERATOR','Expected valid ordered sampled-field source/output declarations.','$.scene.sampledFields');
+  }
+  for(const [index,declaration] of sampledDeclarations.entries()){
+    const path=`$.scene.sampledFields.operations[${index}]`;let valid=true;
+    if(sampledIds.has(declaration.id)){error(out,'ASSET_DUPLICATE','Sampled-field operation IDs must be unique.',`${path}.id`);valid=false;}sampledIds.add(declaration.id);
+    if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId)){
+      error(out,'ASSET_DUPLICATE','Sampled-field meshes cannot replace manifest or generated resources.',`${path}.resourceId`);valid=false;
+    }
+    const sourceKind=entries.get(declaration.source)?.kind??generated.get(declaration.source);
+    if(!sourceKind){error(out,'ASSET_REFERENCE','Sampled fields require an earlier mesh source; forward references and cycles are unsupported.',`${path}.source`);valid=false;}
+    else if(sourceKind!=='mesh'){error(out,'ASSET_KIND','Sampled fields require mesh sources.',`${path}.source`);valid=false;}
+    if(!object(scene.bakes)||!own(scene.bakes,declaration.bake)){
+      error(out,'ASSET_REFERENCE','Sampled fields require an existing bake manifest.',`${path}.bake`);valid=false;
+    }
+    if(valid)generated.set(declaration.resourceId,'mesh');
   }
   const instanceSets=new Set<string>(),fieldIds=new Set<string>(),fieldDeclarations=fieldVisualizationResourceDeclarations(scene.fieldVisualization);
   if(scene.fieldVisualization!==undefined){
