@@ -118,7 +118,8 @@ node tools/package-scene.mjs build/hausdorff-neighborhoods/bundle.json --out bui
 ```
 
 Chalkspace's `examples/hausdorff-texloom.yaml` includes a complete compact-closed
-proof, two differently started clips, a later camera pan and legacy erasure.
+proof, two differently started clips and a later camera pan. Legacy erasure
+is checked separately against the original renderer.
 The paired repository's tests cover compilation, actual player controls and
 layer order. `tests/chalkspace-lecture.test.ts` covers independent timing,
 snapshots, random seeking, capability/resource errors, cancellation, disposal
