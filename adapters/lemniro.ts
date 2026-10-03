@@ -1,6 +1,7 @@
-import type {Bundle} from '../src/index.ts';
-import {evaluate} from '../src/index.ts';
-import {renderSvg} from '../src/render-svg.ts';
+import type {Bundle} from '../src/index.js';
+import {evaluate} from '../src/index.js';
+import {renderSvg} from '../src/render-svg.js';
+export * from './lemniro-figure.js';
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));
 let figureSerial = 0;

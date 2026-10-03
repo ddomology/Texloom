@@ -11,7 +11,8 @@
     ".": "./src/index.ts",
     "./svg": "./src/render-svg.ts",
     "./canvas": "./src/render-canvas.ts",
-    "./chalkspace": "./adapters/chalkspace-canvas.ts"
+    "./chalkspace": "./adapters/chalkspace-canvas.ts",
+    "./lemniro": "./adapters/lemniro.ts"
   },
   "scripts": {
     "check": "tsc --noEmit",
