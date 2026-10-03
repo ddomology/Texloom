@@ -27,6 +27,28 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Surface scalar and vector fields (PR35)
+
+`\usepackage{texloom-field}` adds `\loomfieldvisualization{operation-id}|JSON|`.
+Scalar and vector expressions sample source mesh vertices at absolute scene time.
+Color stops use explicit fixed or auto ranges, while raw values and validity stay
+separate from their display colors. Optional displacement uses source normals;
+optional vector arrows share an existing mesh prototype.
+
+The native example compares fixed-range color with the same field displaced
+along the original sphere normals. Its amplitude slider includes zero, which
+restores the source geometry without changing the color scale.
+
+```sh
+python tools/compile.py examples/surface-field.tex --out build/surface-field
+node tools/build-gpu-player.mjs build/surface-field/bundle.json build/surface-field/player.html
+```
+
+The [PR35 PortSpec](docs/ports/features/pr35-field-visualization.json) records the
+supported subset, independent numerical/browser checks and inherited pinned
+conceptual references. Continuous field solvers and implicit deformation feedback
+remain outside this feature.
+
 ### Sampled instances and shared prototypes (PR34)
 
 `\usepackage{texloom-instances}` adds `\loominstances{set-id}|JSON|`.

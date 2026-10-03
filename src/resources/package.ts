@@ -6,6 +6,7 @@ import {surfaceResourceDeclarations} from '../operations/surface.js';
 import {curveResourceDeclarations} from '../operations/curve3d.js';
 import {meshAttributeResourceDeclarations} from '../operations/mesh-attributes.js';
 import {instanceResourceDeclarations} from '../operations/instances.js';
+import {fieldVisualizationResourceDeclarations} from '../operations/field-visualization.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -194,9 +195,31 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(sourceKind!=='mesh'){error(out,'ASSET_KIND','Mesh attribute operations require a mesh source.',`${path}.source`);continue;}
     generated.set(declaration.resourceId,'mesh');
   }
+  const instanceSets=new Set<string>(),fieldIds=new Set<string>(),fieldDeclarations=fieldVisualizationResourceDeclarations(scene.fieldVisualization);
+  if(scene.fieldVisualization!==undefined){
+    const program=scene.fieldVisualization;
+    if(!object(program)||program.version!==1||!Array.isArray(program.operations)||fieldDeclarations.length!==program.operations.length)
+      error(out,'ASSET_GENERATOR','Expected valid ordered field source/output declarations.','$.scene.fieldVisualization');
+  }
+  for(const [index,declaration] of fieldDeclarations.entries()){
+    const path=`$.scene.fieldVisualization.operations[${index}]`;let valid=true;
+    if(fieldIds.has(declaration.id)){error(out,'ASSET_DUPLICATE','Field operation IDs must be unique.',`${path}.id`);valid=false;}fieldIds.add(declaration.id);
+    if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId)){
+      error(out,'ASSET_DUPLICATE','Field display meshes cannot replace manifest or generated resources.',`${path}.resourceId`);valid=false;
+    }
+    if(declaration.instanceSetId!==undefined&&instanceSets.has(declaration.instanceSetId)){
+      error(out,'ASSET_DUPLICATE','Field arrow set IDs must be unique.',`${path}.arrows.instanceSetId`);valid=false;
+    }
+    for(const [id,where] of [[declaration.source,`${path}.source`],...(declaration.prototype===undefined?[]:[[declaration.prototype,`${path}.arrows.prototype`]])]){
+      const kind=entries.get(id)?.kind??generated.get(id);
+      if(!kind){error(out,'ASSET_REFERENCE','Fields require an authored mesh, surface, attribute result or earlier field display mesh; forward references are unsupported.',where);valid=false;}
+      else if(kind!=='mesh'){error(out,'ASSET_KIND','Field sources and arrow prototypes require mesh resources.',where);valid=false;}
+    }
+    if(valid){generated.set(declaration.resourceId,'mesh');if(declaration.instanceSetId!==undefined)instanceSets.add(declaration.instanceSetId);}
+  }
   // Instance prototypes and sampled sources are ordered mesh dependencies.
   // Only explicit realization creates a transport-independent mesh output.
-  const instanceDeclarations=instanceResourceDeclarations(scene.instances),instanceSets=new Set<string>();
+  const instanceDeclarations=instanceResourceDeclarations(scene.instances);
   if(scene.instances!==undefined){
     const program=scene.instances;
     if(!object(program)||program.version!==1||!Array.isArray(program.operations)||instanceDeclarations.length!==program.operations.length)

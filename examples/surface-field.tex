@@ -1,0 +1,245 @@
+\documentclass{article}
+\usepackage{texloom-surface}
+\usepackage{texloom-field}
+\begin{document}
+\TLScene{A field, made visible}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\loomparameter[unit=1,min=0,max=0.6]{amplitude}|0.35|
+\TLText{scene-title}{A field, made visible}
+\TLText{scene-subtitle}{One scalar field on the same sphere: color on the left, normal displacement on the right}
+\TLText{color-caption}{COLOR / FIXED RANGE}
+\TLText{displacement-caption}{COLOR + NORMAL DISPLACEMENT}
+\TLMath{field-equation}{f(p,t)=2xy\cos(2\pi t/8)}
+\TLMath{displacement-equation}{p'=p+a f(p,t)n_0(p)}
+\TLMath{range-caption}{-1\quad\longrightarrow\quad0\quad\longrightarrow\quad1}
+\TLNode{title}{tex}{"resourceId":"scene-title","x":42,"y":45,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{subtitle}{tex}{"resourceId":"scene-subtitle","x":42,"y":76,"scale":0.87,"style":{"fill":"#a6c1af"}}
+\TLNode{color-caption}{tex}{"resourceId":"color-caption","x":133,"y":435,"scale":1.03,"style":{"fill":"#91d5b3"}}
+\TLNode{displacement-caption}{tex}{"resourceId":"displacement-caption","x":540,"y":435,"scale":0.97,"style":{"fill":"#e6bc79"}}
+\TLNode{field-equation}{tex}{"resourceId":"field-equation","x":132,"y":480,"scale":1.5,"style":{"fill":"#b5cdbb"}}
+\TLNode{displacement-equation}{tex}{"resourceId":"displacement-equation","x":545,"y":480,"scale":1.5,"style":{"fill":"#d0c6ae"}}
+\TLNode{range-caption}{tex}{"resourceId":"range-caption","x":132,"y":516,"scale":0.86,"style":{"fill":"#a6c1af"}}
+
+% Mesh and normals are generated from an authored surface, not baked tables.
+\loomsurface{sphere}|{
+  "units": "m",
+  "domain": {
+    "u": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "v": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ]
+  },
+  "segments": {
+    "u": 16,
+    "v": 8
+  },
+  "position": [
+    "cos(v)*cos(u)",
+    "cos(v)*sin(u)",
+    "sin(v)"
+  ],
+  "normals": {
+    "kind": "analytic",
+    "dU": [
+      "-cos(v)*sin(u)",
+      "cos(v)*cos(u)",
+      "0"
+    ],
+    "dV": [
+      "-sin(v)*cos(u)",
+      "-sin(v)*sin(u)",
+      "cos(v)"
+    ]
+  },
+  "orientation": "uv",
+  "seams": {
+    "u": "weld",
+    "v": "open"
+  },
+  "collapsedBoundaries": [
+    "v-min",
+    "v-max"
+  ],
+  "seamTolerance": 1e-09
+}|
+
+% Both outputs sample the original sphere; displacement never feeds the field back.
+\loomfieldvisualization{color-stage}|{
+  "resourceId": "colored-sphere",
+  "source": "sphere",
+  "units": "m",
+  "scalar": "2*x*y*cos(2*pi*time/8s)",
+  "invalidPolicy": "error",
+  "color": {
+    "attribute": "field-color",
+    "stops": [
+      {
+        "position": 0,
+        "color": [
+          0.03,
+          0.14,
+          0.55
+        ]
+      },
+      {
+        "position": 0.5,
+        "color": [
+          0.08,
+          0.48,
+          0.3
+        ]
+      },
+      {
+        "position": 1,
+        "color": [
+          0.95,
+          0.46,
+          0.04
+        ]
+      }
+    ],
+    "range": {
+      "mode": "fixed",
+      "min": -1,
+      "max": 1
+    },
+    "outOfRange": "clamp",
+    "invalidColor": [
+      0.4,
+      0.4,
+      0.4
+    ]
+  }
+}|
+
+\loomfieldvisualization{displacement-stage}|{
+  "resourceId": "displaced-sphere",
+  "source": "sphere",
+  "units": "m",
+  "scalar": "2*x*y*cos(2*pi*time/8s)",
+  "invalidPolicy": "error",
+  "color": {
+    "attribute": "field-color",
+    "stops": [
+      {
+        "position": 0,
+        "color": [
+          0.03,
+          0.14,
+          0.55
+        ]
+      },
+      {
+        "position": 0.5,
+        "color": [
+          0.08,
+          0.48,
+          0.3
+        ]
+      },
+      {
+        "position": 1,
+        "color": [
+          0.95,
+          0.46,
+          0.04
+        ]
+      }
+    ],
+    "range": {
+      "mode": "fixed",
+      "min": -1,
+      "max": 1
+    },
+    "outOfRange": "clamp",
+    "invalidColor": [
+      0.4,
+      0.4,
+      0.4
+    ]
+  },
+  "displacement": {
+    "amplitude": "amplitude",
+    "normalPolicy": "recompute",
+    "degenerateNormalPolicy": "error"
+  }
+}|
+
+\loomspace|{
+  "version": 1,
+  "units": "m",
+  "handedness": "right",
+  "upAxis": "z",
+  "nodes": [
+    {
+      "id": "color-sphere",
+      "kind": "mesh",
+      "resourceId": "colored-sphere",
+      "transform": {
+        "translation": [
+          -1.65,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#ffffff",
+        "side": "front",
+        "colorAttribute": "field-color"
+      }
+    },
+    {
+      "id": "deformed-sphere",
+      "kind": "mesh",
+      "resourceId": "displaced-sphere",
+      "transform": {
+        "translation": [
+          1.65,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#ffffff",
+        "side": "front",
+        "colorAttribute": "field-color"
+      }
+    }
+  ],
+  "camera": {
+    "id": "view",
+    "transform": {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0.39391929857916763,
+        0.9191450300180578,
+        0,
+        0,
+        -0.9191450300180578,
+        0.39391929857916763,
+        0,
+        0,
+        -7,
+        3,
+        1
+      ]
+    },
+    "projection": {
+      "kind": "orthographic",
+      "height": 4.8,
+      "near": 0.1,
+      "far": 100
+    }
+  }
+}|
+\end{document}

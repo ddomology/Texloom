@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-field}[2026/10/03 Explicit scalar and vector field visualization]
+\RequirePackage{texloom-space3d}
+\newcount\TLFieldVisualizationSerial
+\TLFieldVisualizationSerial=0
+% Literal bodies are not expanded. Existing scalar-grid \loomfield remains distinct.
+\NewDocumentCommand\loomfieldvisualization{m +v}{%
+  \global\advance\TLFieldVisualizationSerial by 1
+  \edef\TLEbase{\jobname.tl-field-visualization-\the\TLFieldVisualizationSerial}%
+  \immediate\write\TLrecords{\string{"type":"field-visualization-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

@@ -9,7 +9,8 @@ export const VECTOR_2D_FEATURES = [
 export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d',
   'camera.projection.3d','material.unlit.3d','material.wireframe.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d','surface.parametric.3d',
   'curve.polyline.3d','frame.transport.3d','constraint.curve-follow.3d',
-  'attribute.mesh.3d','attribute.domain-transfer.3d','material.color-attribute.3d','instance.mesh.3d','instance.realize.3d'] as const;
+  'attribute.mesh.3d','attribute.domain-transfer.3d','material.color-attribute.3d','instance.mesh.3d','instance.realize.3d',
+  'field.visualization.3d','field.normal-displacement.3d','field.vector-arrows.3d'] as const;
 export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
@@ -96,6 +97,10 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
   if(bundle.curves3d?.followers.length)features.add('constraint.curve-follow.3d');
   if(bundle.meshAttributes?.operations.length)features.add('attribute.mesh.3d');
   if(bundle.meshAttributes?.operations.some(o=>o.steps.some(s=>s.kind==='transfer')))features.add('attribute.domain-transfer.3d');
+  if(bundle.fieldVisualization?.operations.length){features.add('field.visualization.3d');features.add('mesh.triangles.3d');}
+  if(bundle.fieldVisualization?.operations.some(o=>o.color))features.add('attribute.mesh.3d');
+  if(bundle.fieldVisualization?.operations.some(o=>o.displacement))features.add('field.normal-displacement.3d');
+  if(bundle.fieldVisualization?.operations.some(o=>o.arrows)){features.add('field.vector-arrows.3d');features.add('instance.mesh.3d');}
   if(bundle.instances?.operations.length){features.add('instance.mesh.3d');features.add('mesh.triangles.3d');}
   if(bundle.instances?.operations.some(o=>o.realize))features.add('instance.realize.3d');
   if(bundle.instances?.operations.some(o=>o.realize?.instanceColorAttribute||o.realize?.instanceSelectionAttribute))features.add('attribute.mesh.3d');

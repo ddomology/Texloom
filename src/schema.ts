@@ -24,6 +24,7 @@ import {validateSurfaceProgramInContext,surfaceValidationResources,type SurfaceP
 import {validateCurveProgram3DInContext,curveValidationResources,type CurveProgram3D,type CurveEvaluation3D} from './operations/curve3d.js';
 import {validateMeshAttributeProgramInContext,meshAttributeValidationResources,type MeshAttributeProgram,type MeshAttributeEvaluation} from './operations/mesh-attributes.js';
 import {validateInstanceProgramInContext,instanceValidationResources,instanceValidationSets,type InstanceProgram,type InstanceProgramSample} from './operations/instances.js';
+import {validateFieldVisualizationProgramInContext,fieldVisualizationValidationResources,fieldVisualizationValidationSets,type FieldVisualizationProgram,type FieldVisualizationEvaluation} from './operations/field-visualization.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only scene contract. Legacy 2D dimensions are bp; space3d declares its own units. */
 export interface Style {
@@ -89,6 +90,7 @@ export interface Bundle {
   surfaces?:SurfaceProgram;
   curves3d?:CurveProgram3D;
   meshAttributes?:MeshAttributeProgram;
+  fieldVisualization?:FieldVisualizationProgram;
   instances?:InstanceProgram;
 }
 export interface EvaluatedFrame {
@@ -100,6 +102,7 @@ export interface EvaluatedFrame {
   surfaces?:import('./ir/operations.js').DeepReadonly<SurfaceEvaluation>;
   curves3d?:import('./ir/operations.js').DeepReadonly<CurveEvaluation3D>;
   meshAttributes?:import('./ir/operations.js').DeepReadonly<MeshAttributeEvaluation>;
+  fieldVisualization?:import('./ir/operations.js').DeepReadonly<FieldVisualizationEvaluation>;
   instanceSets?:InstanceProgramSample['instanceSets'];
   shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;
   curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation;
@@ -554,10 +557,11 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.surfaces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateSurfaceProgramInContext(b.surfaces,b as Bundle));
   if (b.curves3d !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateCurveProgram3DInContext(b.curves3d,b as Bundle));
   if (b.meshAttributes !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMeshAttributeProgramInContext(b.meshAttributes,b as Bundle));
+  if (b.fieldVisualization !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateFieldVisualizationProgramInContext(b.fieldVisualization,b as Bundle));
   if (b.instances !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateInstanceProgramInContext(b.instances,b as Bundle));
   if (b.space3d !== undefined && !errors.some(d => d.severity === 'error')) {
     if(b.version!=='0.3')error('SPACE3D_VERSION','3D spaces require Bundle 0.3.','$.space3d');
-    else errors.push(...validateSpace3DInContext(b.space3d,instanceValidationResources(b.instances,meshAttributeValidationResources(b.meshAttributes,curveValidationResources(b.curves3d,surfaceValidationResources(b.surfaces,b.resources)))),'$.space3d',{viewport:b.viewport,duration:b.duration},instanceValidationSets(b.instances)));
+    else errors.push(...validateSpace3DInContext(b.space3d,instanceValidationResources(b.instances,fieldVisualizationValidationResources(b.fieldVisualization,meshAttributeValidationResources(b.meshAttributes,curveValidationResources(b.curves3d,surfaceValidationResources(b.surfaces,b.resources))))),'$.space3d',{viewport:b.viewport,duration:b.duration},{...fieldVisualizationValidationSets(b.fieldVisualization),...instanceValidationSets(b.instances)}));
   }
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');

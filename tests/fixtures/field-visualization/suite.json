@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "surface-field",
+      "source": "examples/surface-field.tex",
+      "inputs": [
+        "examples/surface-field.tex"
+      ],
+      "tests": [
+        "tests/field_visualization_capture_test.py",
+        "tests/field_visualization_player_test.py"
+      ]
+    }
+  ]
+}
