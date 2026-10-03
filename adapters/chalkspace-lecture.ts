@@ -1,9 +1,9 @@
 import {BundleValidationError, type Bundle} from '../src/schema.js';
 import {beginPrepareScene, bindSceneClip, type ScenePreparation, type SceneManifest,
-  type SceneClip, type ClipTiming, type ClipSample} from '../src/runtime.js';
+  type SceneClip, type ClipTiming, type ClipSample, type ClipDescription} from '../src/runtime.js';
 import {CANVAS_2D_PROFILE} from '../src/capabilities.js';
 import {createAssetStore} from '../src/resources/store.js';
-import {validateAssetJson, type ScenePackage} from '../src/resources/package.js';
+import {validateAssetJson, sha256Bytes, type ScenePackage} from '../src/resources/package.js';
 import {freezeSnapshot} from '../src/operations/values.js';
 import type {DeepReadonly} from '../src/ir/operations.js';
 import type {BoardPlacement} from './chalkspace.js';
@@ -14,19 +14,23 @@ export interface ChalkspaceLecture {
   contract:'texloom-lecture/1'; scenes:Record<string,Bundle|ScenePackage>; clips:ChalkspaceLectureClip[];
 }
 export interface ChalkspaceLectureSample extends ClipSample {id:string; scene:string}
+export interface ChalkspaceLectureDescription extends ClipDescription {id:string; scene:string}
 export interface ChalkspaceLectureDrawState {
   id:string; scene:string; sourceTime:number; phase:ClipSample['phase']; visible:boolean; rect?:BoardScreenRect;
 }
 export interface ChalkspaceLectureManifest {
-  contract:'texloom-lecture-runtime/1'; scenes:Record<string,SceneManifest>;
+  contract:'texloom-lecture-runtime/1'; revision:string; scenes:Record<string,SceneManifest>;
   clips:{id:string;scene:string;timing:Required<ClipTiming>;placement:BoardPlacement}[];
 }
 export interface ChalkspaceLectureRuntime {
   readonly state:'ready'|'disposed'; readonly manifest:DeepReadonly<ChalkspaceLectureManifest>;
+  readonly revision:string;
+  /** Clock metadata only; does not evaluate any scene geometry. */
+  describe(hostSeconds:number):ChalkspaceLectureDescription[];
   sample(hostSeconds:number):ChalkspaceLectureSample[];
   draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView):ChalkspaceLectureDrawState[];
-  /** Conservative cache policy: active clips require a new frame. */
-  frameKey(hostSeconds:number):string|null;
+  /** Exact identity including source content, clock state and host quality tag. */
+  frameKey(hostSeconds:number,quality?:string):string|null;
   dispose():void;
 }
 function fail(message:string):never {throw new Error(`LECTURE_INPUT: ${message}`);}
@@ -35,6 +39,13 @@ const keys=(value:Record<string,unknown>,allowed:string[])=>{
   if(Object.keys(value).some(key=>!allowed.includes(key)))fail('Unknown field.');
 };
 const id=(value:unknown):value is string=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(value);
+// Only called after bounded plain-JSON validation. Property order is irrelevant;
+// array order and signed zero are content and must survive the fingerprint.
+function canonical(value:unknown):string {
+  if(Array.isArray(value))return `[${value.map(canonical).join(',')}]`;
+  if(object(value))return `{${Object.keys(value).sort().map(key=>`${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;
+  return typeof value==='number'&&Object.is(value,-0)?'-0':JSON.stringify(value)!;
+}
 function snapshot(input:unknown):ChalkspaceLecture {
   const errors=validateAssetJson(input);if(errors.length)throw new BundleValidationError(errors);
   if(!object(input))fail('Expected a lecture object.');
@@ -91,6 +102,8 @@ export async function prepareChalkspaceLecture(input:unknown,options:{signal?:Ab
   };
   try {
     live();
+    const revision=await sha256Bytes(new TextEncoder().encode(canonical(data)));
+    live();
     const prepared=await Promise.all(Object.entries(data.scenes).map(async([name,scene])=>{
       const loading=beginPrepareScene(scene,{assetStore:store,profile:CANVAS_2D_PROFILE,signal:controller.signal});
       preparations.push(loading);return [name,await loading.ready] as const;
@@ -98,22 +111,27 @@ export async function prepareChalkspaceLecture(input:unknown,options:{signal?:Ab
     live();const scenes=new Map(prepared);
     entries=data.clips.map(declaration=>({declaration,clip:bindSceneClip(scenes.get(declaration.scene)!,declaration.timing),
       layer:createChalkspaceCanvasLayer(declaration.placement)}));
-    const manifest=freezeSnapshot({contract:'texloom-lecture-runtime/1' as const,
+    const manifest=freezeSnapshot({contract:'texloom-lecture-runtime/1' as const,revision,
       scenes:Object.fromEntries(prepared.map(([name,scene])=>[name,scene.manifest])),
       clips:entries.map(({declaration,clip})=>({...declaration,timing:clip.timing}))});
     const sample=(hostSeconds:number):ChalkspaceLectureSample[]=>{
       live(hostSeconds);return entries.map(({declaration,clip})=>({id:declaration.id,scene:declaration.scene,...clip.sample(hostSeconds)}));
     };
-    return Object.freeze({manifest,get state(){return disposed?'disposed' as const:'ready' as const;},sample,
+    const describe=(hostSeconds:number):ChalkspaceLectureDescription[]=>{
+      live(hostSeconds);return entries.map(({declaration,clip})=>({id:declaration.id,scene:declaration.scene,...clip.describe(hostSeconds)}));
+    };
+    return Object.freeze({manifest,revision,get state(){return disposed?'disposed' as const:'ready' as const;},describe,sample,
       draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView){
         return sample(hostSeconds).map(({frame,hostTime:_hostTime,...state},index)=>({
           ...state,...(frame?{rect:entries[index].layer.draw(frame,ctx,view)}:{}),
         }));
       },
-      frameKey(hostSeconds:number){
+      frameKey(hostSeconds:number,quality=''){
         live(hostSeconds);
-        if(entries.some(({clip})=>hostSeconds>=clip.timing.start&&hostSeconds<clip.timing.start+clip.timing.duration))return null;
-        return JSON.stringify(entries.map(({declaration,clip})=>[declaration.id,hostSeconds<clip.timing.start?'before':'after']));
+        if(typeof quality!=='string')fail('Frame quality must be a string.');
+        return canonical(['texloom-lecture-frame/1',revision,quality,describe(hostSeconds).map(state=>[
+          state.id,state.scene,state.phase,state.visible,state.sourceTime,state.phase==='active'?state.hostTime:null,
+        ])]);
       },dispose,
     });
   }catch(error){dispose();throw error;}

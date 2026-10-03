@@ -271,7 +271,7 @@ def run(args, output, report):
     pattern = 'port_*_test.py' if args.runtime_only else '*_test.py'
     # Real-TeX integration cases compile several assets each; allow the growing
     # suite to finish on Windows as well as CI without weakening any assertions.
-    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=600)
+    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=900)
     report['tests'] = {'typecheck': True, 'typescript': True, 'pythonPattern': pattern, 'passed': True}
     if args.record:
         artifacts = {}
