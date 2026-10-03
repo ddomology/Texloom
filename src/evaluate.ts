@@ -11,6 +11,7 @@ import {assertBundle} from './schema.js';
 import {prepareTraceProgram,type PreparedTraceProgram} from './timeline/trace.js';
 import {preparePresentationProgram,type PreparedPresentationProgram} from './ir/presentation-intent.js';
 import {prepareSpace3DSampler} from './ir/scene3d.js';
+import {prepareSurfaceProgram} from './operations/surface.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -133,10 +134,14 @@ function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvalua
   const plan=prepareExecutionPlan(base);
   const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
   const presentation=snapshot.presentation?preparePresentationProgram(snapshot.presentation,snapshot):undefined;
-  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,snapshot.resources,{viewport:snapshot.viewport,duration:snapshot.duration}):undefined;
+  const surfaces=snapshot.surfaces?prepareSurfaceProgram(snapshot.surfaces,snapshot):undefined;
+  const spatialResources=surfaces?{...snapshot.resources,...surfaces.baseResources} as Bundle['resources']:snapshot.resources;
+  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,spatialResources,{viewport:snapshot.viewport,duration:snapshot.duration},surfaces?.resourceIds):undefined;
   return (time,parameters) => {
     const frame=evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
-    if(space3d)frame.space3d=space3d(frame.time);
+    const generated=surfaces?.sample(frame.time,parameters);
+    if(generated){frame.resources=Object.freeze({...snapshot.resources,...generated.resources}) as Bundle['resources'];frame.surfaces=generated.surfaces;}
+    if(space3d)frame.space3d=space3d(frame.time,generated?Object.fromEntries(Object.entries(generated.resources).map(([id,r])=>[id,{bounds:r.bounds,topologyRevision:r.topologyRevision}])):undefined);
     return frame;
   };
 }

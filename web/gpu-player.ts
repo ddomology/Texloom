@@ -1,4 +1,4 @@
-import {prepareScene,copyMeshBuffers,type Bundle,type EvaluatedFrame} from '../src/index.js';
+import {prepareScene,type Bundle,type EvaluatedFrame} from '../src/index.js';
 import {createSceneCanvasRenderer} from '../src/renderers/scene-canvas.js';
 
 const el=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id) as T;
@@ -8,6 +8,7 @@ if(!ctx)throw new Error('GPU_PLAYER_CANVAS: this host has no Canvas2D context fo
 const surface=ctx,stage=el('stage'),timeline=el<HTMLInputElement>('timeline'),playButton=el<HTMLButtonElement>('play');
 const projectionSelect=el<HTMLSelectElement>('projection'),speedSelect=el<HTMLSelectElement>('speed');
 const renderer=createSceneCanvasRenderer(),variants=new Map<string,ReturnType<typeof prepareScene>>();
+const parameters:Record<string,number>=Object.create(null);
 const listenerController=new AbortController(),listenerOptions={signal:listenerController.signal};
 let current=0,frame:EvaluatedFrame,playing=false,disposed=false,failed=false,raf=0,wallStart=0,sourceStart=0,speed=1;
 let explicitSize:{width:number;height:number}|undefined;
@@ -52,7 +53,7 @@ function size(){
   return {width:Math.max(2,Math.min(4096,Math.round(rect.width*scale))),height:Math.max(2,Math.min(4096,Math.round(rect.height*scale)))};
 }
 function draw(time:number){
-  finiteTime(time);const evaluated=runtime().sample(time),dimensions=size();
+  finiteTime(time);const evaluated=runtime().sample(time,parameters),dimensions=size();
   if(canvas.width!==dimensions.width)canvas.width=dimensions.width;
   if(canvas.height!==dimensions.height)canvas.height=dimensions.height;
   // One composed renderer and one sampled frame drive the stage and capture.
@@ -61,6 +62,14 @@ function draw(time:number){
   el('projection-state').textContent=projection.toUpperCase();projectionSelect.value=projection;
   const anchor=evaluated.space3d?.overlays[0]?.worldPosition;
   for(const [i,axis] of ['x','y','z'].entries())el('point-'+axis).textContent=anchor?format(anchor[i]):'—';
+  // Generated surface resources exist in the sampled frame, not in the source table.
+  const instances=evaluated.space3d?.instances??[],meshIds=new Set(instances.map(node=>node.resourceId));
+  el('mesh-count').textContent=String(meshIds.size);
+  el('instance-count').textContent=String(instances.length);
+  el('triangle-count').textContent=String(instances.reduce((sum,node)=>{
+    const resource=evaluated.resources[node.resourceId];
+    return sum+(resource.kind==='mesh'?resource.indices.count/3:0);
+  },0));
   el('loading').hidden=true;return evaluated;
 }
 function seek(time:number){pause();try{return draw(time);}catch(error){failure(error);throw error;}}
@@ -86,16 +95,25 @@ function setSize(width:number,height:number){
     throw new RangeError('GPU_PLAYER_SIZE: expected integer dimensions from 2 to 4096.');
   explicitSize={width,height};return seek(current);
 }
+function setParameter(name:string,value:number){
+  const definition=source.expressions?.parameters[name];
+  if(!definition||definition.type!=='scalar'||!Number.isFinite(value)||
+    definition.min!==undefined&&value<definition.min||definition.max!==undefined&&value>definition.max)
+    throw new RangeError('GPU_PLAYER_PARAMETER: expected an authored scalar parameter within its bounds.');
+  parameters[name]=value;const control=parameterControls.get(name);
+  if(control){control.input.value=String(value);control.output.textContent=format(value);}
+  return seek(current);
+}
 function dispose(){
   if(disposed)return;pause();disposed=true;resize.disconnect();listenerController.abort();
   renderer.dispose();variants.clear();
 }
 const resize=new ResizeObserver(()=>{if(!disposed&&!failed&&frame&&!explicitSize){try{draw(current);}catch(error){failure(error);}}});
 resize.observe(stage);
-const api={ready,seek,render:seek,pause,play,setSize,setProjection:selectProjection,dispose,
+const api={ready,seek,render:seek,pause,play,setSize,setProjection:selectProjection,setParameter,dispose,
   getFrame:()=>structuredClone(frame),
   getState:()=>({time:current,playing,projection,disposed,failed,width:canvas.width,height:canvas.height,
-    renderer:'WebGL2 + native TeX Canvas',sourceUnchanged:JSON.stringify(source)===sourceText}),
+    renderer:'WebGL2 + native TeX Canvas',parameters:{...parameters},sourceUnchanged:JSON.stringify(source)===sourceText}),
   capture(time:number){const value=seek(time);return {data:canvas.toDataURL('image/png').split(',')[1],time:value.time,
     width:canvas.width,height:canvas.height,projection};},
 };
@@ -108,10 +126,20 @@ window.TexloomGpuPlayer=Object.freeze(api);
 
 playButton.disabled=true;timeline.max=String(source.duration);el('duration').textContent=source.duration.toFixed(2)+' s';
 el('end-label').textContent=source.duration+' s';projectionSelect.value=projection;
-const meshes=Object.values(source.resources).filter(resource=>resource.kind==='mesh');
-el('mesh-count').textContent=String(meshes.length);
-el('instance-count').textContent=String(source.space3d!.nodes.filter(node=>node.kind==='mesh').length);
-el('triangle-count').textContent=String(source.space3d!.nodes.reduce((sum,node)=>node.kind==='mesh'?sum+copyMeshBuffers(source.resources[node.resourceId]).triangleCount:sum,0));
+el('point-label').textContent=source.space3d?.overlays?.[0]?.id??'—';
+const parameterControls=new Map<string,{input:HTMLInputElement;output:HTMLOutputElement}>();
+const parameterPanel=el('parameter-controls');
+for(const [name,definition] of Object.entries(source.expressions?.parameters??{})){
+  if(definition.type!=='scalar'||typeof definition.default!=='number'||definition.min===undefined||definition.max===undefined||definition.min>=definition.max)continue;
+  const row=document.createElement('div'),label=document.createElement('label'),input=document.createElement('input'),output=document.createElement('output');
+  const id='parameter-'+parameterControls.size;input.id=id;input.type='range';input.min=String(definition.min);input.max=String(definition.max);
+  input.step=String((definition.max-definition.min)/200);input.value=String(definition.default);
+  label.htmlFor=id;label.textContent=name;output.htmlFor.add(id);output.textContent=format(definition.default);
+  row.className='parameter-control';row.append(label,output,input);parameterPanel.append(row);
+  parameterControls.set(name,{input,output});parameters[name]=definition.default;
+  input.addEventListener('input',()=>{try{setParameter(name,Number(input.value));}catch(error){failure(error);}},listenerOptions);
+}
+parameterPanel.hidden=parameterControls.size===0;
 playButton.addEventListener('click',()=>{try{playing?pause():play();}catch(error){failure(error);}},listenerOptions);
 el('restart').addEventListener('click',()=>{try{seek(0);}catch{}},listenerOptions);
 timeline.addEventListener('input',()=>{try{seek(Number(timeline.value));}catch{}},listenerOptions);

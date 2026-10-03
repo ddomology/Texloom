@@ -2,6 +2,7 @@ import type {Bundle} from '../schema.js';
 import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import type {MeshBounds} from '../ir/mesh.js';
 import {freezeSnapshot} from '../operations/values.js';
+import {surfaceResourceDeclarations} from '../operations/surface.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -158,10 +159,17 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(!asset)error(out,'ASSET_REFERENCE',`No manifest asset for resource ${String(node.resourceId)}.`,`$.scene.nodes[${i}].resourceId`);
     else if(asset.kind!==(node.kind==='tex'?'vector':'scalar-field'))error(out,'ASSET_KIND','Node and asset resource kinds disagree.',`$.scene.nodes[${i}].resourceId`);
   });
+  const generated=new Set<string>();
+  for(const declaration of surfaceResourceDeclarations(scene.surfaces)){
+    if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId))
+      error(out,'ASSET_DUPLICATE',`Generated resource ID ${declaration.resourceId} must be unique and cannot replace a manifest asset.`,'$.scene.surfaces');
+    generated.add(declaration.resourceId);
+  }
   if(object(scene.space3d)&&Array.isArray(scene.space3d.nodes))scene.space3d.nodes.forEach((node,i)=>{
     if(!object(node)||node.kind!=='mesh')return;
     const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
-    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
+    if(!asset&&generated.has(node.resourceId as string))return;
+    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest or generated surface resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
     else if(asset.kind!=='mesh')error(out,'ASSET_KIND','3D mesh nodes require mesh assets.',`$.scene.space3d.nodes[${i}].resourceId`);
   });
   if(object(scene.space3d)&&Array.isArray(scene.space3d.overlays))scene.space3d.overlays.forEach((overlay,i)=>{

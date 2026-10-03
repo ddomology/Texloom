@@ -54,7 +54,7 @@ test('projection validators reject unsupported fields, accessors, nonfinite and 
 test('projected native overlays follow their parent; offsets are logical bp and mesh material is explicit',()=>{
   const b=scene(),frame=createEvaluator(b)(0),s=frame.space3d!,o=s.overlays[0];
   near(o.worldPosition,[1,1,-4]);near(o.position!,[114.5,34.5]);assert.equal(o.visible,true);assert.equal(o.scale,1);assert.equal(o.color,'#ffffff');
-  assert.deepEqual(s.instances[0].material,{kind:'unlit',color:'#d4d9e2',side:'front'});assert.equal(s.camera!.aspect,2);
+  assert.deepEqual(s.instances[0].material,{kind:'unlit',color:'#d4d9e2',side:'front',wireframe:false});assert.equal(s.camera!.aspect,2);
   assert.deepEqual(s.camera!.projection,b.space3d!.camera!.projection);assert.ok(Object.isFrozen(s.overlays[0].worldPosition));
   b.viewport={width:400,height:200};near(createEvaluator(b)(0).space3d!.overlays[0].position!,[227,72]);
 });

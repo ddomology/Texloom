@@ -59,6 +59,8 @@ export * from './timeline/math-transform.js';
 export * from './operations/constraints.js';
 export * from './timeline/trace.js';
 export * from './ir/presentation-intent.js';
+export * from './operations/surface.js';
+export * from './geometry/parametric-surface.js';
 export * from './geometry/matrix4.js';
 export * from './geometry/projection3d.js';
 export * from './resources/buffers.js';

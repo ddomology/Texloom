@@ -81,6 +81,11 @@ render clears both color and depth. Omitted background is transparent.
 - Materials are opaque `unlit` with `#rrggbb` colors and `front` or `double`
   side policy. Output is sRGB with no tone mapping. There are no lights,
   transparency sorting, textures, PBR materials or shadows in this profile.
+- PR31 adds optional `wireframe: true` to expose triangle edges. Filled rendering
+  remains the default. Wireframes draw all triangle edges, including diagonals;
+  they do not add a hidden filled surface, lighting, or a custom line width.
+  Backend line rasterization is device dependent. Geometry is shared between
+  filled and wireframe instances; their materials have separate cache entries.
 - Depth testing and depth writes are enabled. Equal-depth ties follow evaluated
   instance order, which is restored independently of previous renders.
 - World clipping planes keep points for which `dot(normal, point) + constant`
@@ -126,6 +131,13 @@ pixels, active geometry buffers to 128 MiB, instances to 4,096 and drawn
 triangles per frame to one million. Device drawing-buffer limits may be lower
 and are checked before resize. Mesh resource limits still apply independently.
 Unsupported inputs fail explicitly rather than truncating buffers or geometry.
+
+Wireframe geometry reserves the upper bound of Three's derived edge index buffer
+within the same 128 MiB limit. That reservation remains while the geometry is
+cached, including after switching it back to a filled material, because Three
+retains that buffer until geometry disposal. `bufferBytes` includes this bound.
+Generated surface frames use the same immutable-resource ownership path; each
+new mesh replaces the prior frame's upload and unused geometry is disposed.
 
 `stats()` returns a frozen snapshot of state, dimensions, active geometry,
 material and instance counts, buffer bytes, successful render count, last draw

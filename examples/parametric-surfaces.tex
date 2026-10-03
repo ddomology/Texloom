@@ -1,0 +1,207 @@
+\documentclass{article}
+\usepackage{texloom-surface}
+\begin{document}
+\TLScene{Surfaces from coordinates}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\loomparameter[unit=1,min=0.65,max=1.15]{radius}|0.9|
+\TLText{scene-title}{Surfaces from coordinates}
+\TLText{sphere-caption}{SPHERE / ANALYTIC NORMALS}
+\TLText{torus-caption}{TORUS / FINITE DIFFERENCES}
+\TLMath{sphere-formula}{r(t)=a\left(1+0.15\sin\frac{\pi t}{4}\right)}
+\TLMath{torus-formula}{R=1,\qquad \rho(t)=0.28+0.08\sin\frac{\pi t}{4}}
+\TLMath{sphere-label}{S^2}
+\TLMath{torus-label}{T^2}
+\TLNode{title}{tex}{"resourceId":"scene-title","x":42,"y":48,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{sphere-heading}{tex}{"resourceId":"sphere-caption","x":100,"y":440,"scale":1.0,"style":{"fill":"#91d5b3"}}
+\TLNode{torus-heading}{tex}{"resourceId":"torus-caption","x":560,"y":440,"scale":1.0,"style":{"fill":"#e6bc79"}}
+\TLNode{sphere-equation}{tex}{"resourceId":"sphere-formula","x":100,"y":480,"scale":1.35,"style":{"fill":"#b5cdbb"}}
+\TLNode{torus-equation}{tex}{"resourceId":"torus-formula","x":560,"y":480,"scale":1.25,"style":{"fill":"#d0c6ae"}}
+
+% u is longitude; v is latitude. One vertex represents each collapsed pole.
+\loomsurface{sphere}|{
+  "units": "m",
+  "domain": {
+    "u": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "v": [
+      -1.5707963267948966,
+      1.5707963267948966
+    ]
+  },
+  "segments": {
+    "u": 24,
+    "v": 12
+  },
+  "position": [
+    "(radius*(1+0.15*sin(2*pi*time/8s)))*cos(v)*cos(u)",
+    "(radius*(1+0.15*sin(2*pi*time/8s)))*cos(v)*sin(u)",
+    "(radius*(1+0.15*sin(2*pi*time/8s)))*sin(v)"
+  ],
+  "normals": {
+    "kind": "analytic",
+    "dU": [
+      "-(radius*(1+0.15*sin(2*pi*time/8s)))*cos(v)*sin(u)",
+      "(radius*(1+0.15*sin(2*pi*time/8s)))*cos(v)*cos(u)",
+      "0"
+    ],
+    "dV": [
+      "-(radius*(1+0.15*sin(2*pi*time/8s)))*sin(v)*cos(u)",
+      "-(radius*(1+0.15*sin(2*pi*time/8s)))*sin(v)*sin(u)",
+      "(radius*(1+0.15*sin(2*pi*time/8s)))*cos(v)"
+    ]
+  },
+  "orientation": "uv",
+  "seams": {
+    "u": "weld",
+    "v": "open"
+  },
+  "collapsedBoundaries": [
+    "v-min",
+    "v-max"
+  ],
+  "seamTolerance": 1e-9
+}|
+
+% Both periodic directions are explicitly welded; no authored vertex buffers.
+\loomsurface{torus}|{
+  "units": "m",
+  "domain": {
+    "u": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "v": [
+      -3.141592653589793,
+      3.141592653589793
+    ]
+  },
+  "segments": {
+    "u": 32,
+    "v": 12
+  },
+  "position": [
+    "(1+(0.28+0.08*sin(2*pi*time/8s))*cos(v))*cos(u)",
+    "(1+(0.28+0.08*sin(2*pi*time/8s))*cos(v))*sin(u)",
+    "(0.28+0.08*sin(2*pi*time/8s))*sin(v)"
+  ],
+  "normals": {
+    "kind": "finite-difference"
+  },
+  "orientation": "uv",
+  "seams": {
+    "u": "weld",
+    "v": "weld"
+  },
+  "seamTolerance": 1e-9
+}|
+
+\loomspace|{
+  "version": 1,
+  "units": "m",
+  "handedness": "right",
+  "upAxis": "z",
+  "nodes": [
+    {
+      "id": "sphere-instance",
+      "kind": "mesh",
+      "resourceId": "sphere",
+      "transform": {
+        "translation": [
+          -1.9,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#91d5b3",
+        "side": "double",
+        "wireframe": true
+      }
+    },
+    {
+      "id": "torus-instance",
+      "kind": "mesh",
+      "resourceId": "torus",
+      "transform": {
+        "translation": [
+          1.9,
+          0,
+          0
+        ]
+      },
+      "material": {
+        "kind": "unlit",
+        "color": "#e6bc79",
+        "side": "double",
+        "wireframe": true
+      }
+    }
+  ],
+  "camera": {
+    "id": "view",
+    "transform": {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0.6,
+        0.8,
+        0,
+        0,
+        -0.8,
+        0.6,
+        0,
+        0,
+        -5.6,
+        4.2,
+        1
+      ]
+    },
+    "projection": {
+      "kind": "perspective",
+      "fovY": 0.6981317007977318,
+      "near": 0.1,
+      "far": 100
+    }
+  },
+  "overlays": [
+    {
+      "id": "sphere-anchor",
+      "resourceId": "sphere-label",
+      "parent": "sphere-instance",
+      "position": [
+        0,
+        0,
+        1.4
+      ],
+      "offset": [
+        -15,
+        -12
+      ],
+      "scale": 1.45,
+      "color": "#dcefe2"
+    },
+    {
+      "id": "torus-anchor",
+      "resourceId": "torus-label",
+      "parent": "torus-instance",
+      "position": [
+        0,
+        0,
+        0.9
+      ],
+      "offset": [
+        -15,
+        -12
+      ],
+      "scale": 1.45,
+      "color": "#f4e4c9"
+    }
+  ]
+}|
+\end{document}

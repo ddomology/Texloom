@@ -24,7 +24,29 @@ Both SVG and Canvas consume the same `EvaluatedFrame`. See the
 [runtime contract and dual-consumer demo instructions](docs/runtime-contract.md).
 The real lecture consumer, export cache and explicit chalk presentation intents
 are integrated. Mesh instances now render through a shared WebGL2 adapter in the
-web player and Chalkspace. General surfaces and simulation operations remain planned.
+web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
+general simulation operations remain planned.
+
+### Parametric surfaces from TeX (PR31)
+
+`\usepackage{texloom-surface}` adds `\loomsurface{mesh-id}|{...}|`: a literal
+JSON declaration of a rectangular parameter domain, resolution, coordinate
+expressions, seam/pole policy and analytic or finite-difference normals. The
+compiler preserves the declaration and expression sources. Mesh buffers are
+generated from absolute time and scene parameters when the shared runtime samples
+the scene, and may be referenced by ordinary `space3d` mesh instances.
+
+```sh
+python tools/compile.py examples/parametric-surfaces.tex --out build/parametric-surfaces
+node tools/build-gpu-player.mjs build/parametric-surfaces/bundle.json build/parametric-surfaces/player.html
+```
+
+The sphere/torus example uses explicit welded seams, collapsed sphere poles,
+animated radii and native TeX formulas. Its offline player exposes bounded scalar
+parameters while preserving the source program. This is fixed-topology sampling,
+with explicit failure for unsupported degeneracies. See the
+[surface contract](docs/parametric-surfaces.md) and
+[pinned feature PortSpec](docs/ports/features/pr31-parametric-surfaces.json).
 
 ### Projected 3D scenes and shared output (PR30)
 

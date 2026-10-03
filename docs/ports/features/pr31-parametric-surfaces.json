@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "id": "pr31-parametric-surfaces",
+  "title": "Deterministic authored parametric surfaces and captured point attributes",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": [
+      "Bundle 0.3 surface program version 1, three typed scalar coordinate expressions over a fixed rectangular u/v domain",
+      "Fixed grid topology with explicit open/weld/duplicate seams and declared collapsed boundary poles",
+      "Analytic derivative or finite-difference normals, immutable float64 indexed triangle meshes and separate UV/base-position captures",
+      "Absolute-time and bounded scene-parameter evaluation consumed by the shared WebGL2/native TeX player"
+    ],
+    "excluded": [
+      "Arbitrary Blender Geometry Nodes or attribute-domain conversion",
+      "Adaptive or changing topology, remeshing, general implicit surfaces and numerical PDE solvers",
+      "Guarantees of manifoldness, global injectivity, outward orientation or equivalence to Blender output",
+      "Lighting, transparent shaded materials and hidden-surface removal for wireframe presentation"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_input_position.cc",
+      "symbols": [
+        "blender::nodes::node_geo_input_position_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_input_position.cc"
+      ],
+      "role": "Position is treated as point-associated coordinate data; used only as a conceptual reference.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and symbol inspected for conceptual scope. Source headers declare GPL-2.0-or-later. No source code is copied or translated; file-level reuse review would be required before any later adaptation."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc",
+      "symbols": [
+        "blender::nodes::node_geo_attribute_capture_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc"
+      ],
+      "role": "Capture Attribute motivates retaining immutable base positions and parameter coordinates separately from evaluated positions; no Blender attribute graph implementation is imported.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and symbol inspected for conceptual scope. Source headers declare GPL-2.0-or-later. No source code is copied or translated; file-level reuse review would be required before any later adaptation."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_mesh_primitive_uv_sphere.cc",
+      "symbols": [
+        "blender::nodes::node_geo_mesh_primitive_uv_sphere_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_mesh_primitive_uv_sphere.cc"
+      ],
+      "role": "UV Sphere documents separate longitudinal/ring resolution and pole topology. Texloom explicitly triangulates its authored parameter grid; Blender topology equivalence is not claimed.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and symbol inspected for conceptual scope. Source headers declare GPL-2.0-or-later. No source code is copied or translated; file-level reuse review would be required before any later adaptation."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "Explicit operation/resource IDs, mesh units, finite increasing u/v domain intervals and bounded integer segment counts",
+      "Dimensionless u/v locals, time in seconds, and declared typed scene parameters; coordinate outputs are dimensionless numbers interpreted in operation.units",
+      "Three coordinate expressions and either three dU/dV expressions or the finite-difference policy",
+      "At most 16 surface operations and 65536 total grid cells; deterministic failures on invalid domains, seams, units, degeneracy or budgets"
+    ],
+    "outputs": [
+      "Generated resources occur only in sampled frame.resources; authored bundles/packages retain the declarative programs and ordinary assets",
+      "Stable topologyRevision and indices for fixed domain, resolution, seam and pole choices; changing time/parameters regenerates finite positions, normals and bounds",
+      "frame.surfaces retains parameter coordinates and initial base positions alongside generation reports",
+      "Executed TeX JSON and decoded coordinate expressions remain archived with exact generated-source spans"
+    ],
+    "coordinates": [
+      "Resource chart is object-local, right-handed XYZ in explicit unit/m/cm/mm units, independent of document bp",
+      "u/v are authored numeric domain coordinates; captures are not silently normalized to 0..1",
+      "orientation uv follows dU cross dV; vu reverses the selected orientation",
+      "Instance/ancestor transforms and camera projection follow mesh generation; source geometry is not overwritten"
+    ],
+    "errorPolicy": [
+      "Nonfinite coordinates, invalid normals and undeclared degenerate geometry fail with diagnostics",
+      "Weld/duplicate seams require endpoint agreement within declared tolerance; deliberate poles must collapse consistently",
+      "Pole normals use the documented incident-face policy; analytic and finite-difference normals remain distinct approximation contracts",
+      "Literal TeX capture rejects duplicate JSON keys, unsafe sidecar paths, resource collisions and oversized JSON before publishing a bundle"
+    ]
+  },
+  "fixtures": [
+    "parametric-surfaces"
+  ],
+  "verification": {
+    "command": "python -m unittest tests.surface_port_spec_test tests.surface_capture_test tests.surface_player_test -v; npm test",
+    "claims": [
+      "The registered native TeX fixture compiles into declarative sphere and torus resources without authored mesh buffers",
+      "Browser tests check sphere/torus equations and bounds independently at sampled times and after parameter changes",
+      "Repeated/reverse captures preserve exact pixels in the same pinned browser and frozen source; generated topology remains unchanged",
+      "The focused registry validates this PortSpec independently of the historical four-scene raster baseline"
+    ],
+    "notEstablished": [
+      "Blender execution, byte-for-byte mesh equivalence or its complete test corpus",
+      "Identical raster bytes across different browsers, GPUs or drivers",
+      "Correct topology/normals for every arbitrary mathematical expression or undetected between-sample singularity",
+      "An analytical certificate of manifoldness or a solver for wave/PDE evolution"
+    ]
+  }
+}

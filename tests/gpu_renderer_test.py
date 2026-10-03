@@ -31,7 +31,7 @@ class GpuRendererTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        report = {'success':len(cls.reports)==5 and not cls.browser_errors, 'browser':cls.browser.version,
+        report = {'success':len(cls.reports)==6 and not cls.browser_errors, 'browser':cls.browser.version,
             'browserErrors':cls.browser_errors, 'checks':cls.reports,
             'files':{name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in
                 ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','tests/gpu-browser.ts',
@@ -85,6 +85,20 @@ class GpuRendererTests(unittest.TestCase):
         self.assertEqual(report['dimensions'], [96,64])
         self.assertTrue(report['restoredSizeSame'])
         self.reports['historyAndResize'] = report
+
+    def test_wireframe_preserves_empty_interiors_edges_material_separation_and_seek(self):
+        report = self.page.evaluate('gpuQa.wireframe()')
+        self.assertEqual(report['fillCenter'], [255,0,0,255])
+        self.assertEqual(report['wireCenter'], [0,0,0,0])
+        self.assertGreater(report['wirePixels'], 100)
+        self.assertLess(report['wirePixels'], report['filledPixels']//3)
+        self.assertEqual(report['mixedStats']['materials'], 2)
+        self.assertEqual(report['mixedStats']['geometries'], 1)
+        self.assertEqual(report['wireStats']['bufferBytes'], report['fillStats']['bufferBytes']+12)
+        self.assertEqual(report['largeWireBytes'], 65535*12+6+24)
+        self.assertTrue(report['reverseFilled'] and report['reverseWire'])
+        self.assertEqual(report['disposed']['bufferBytes'], 0)
+        self.reports['wireframe'] = report
 
     def test_shared_geometry_identity_replacement_pruning_and_disposal(self):
         report = self.page.evaluate('gpuQa.ownership()')

@@ -354,7 +354,8 @@ are not clamped or moved. Meaningfully outside points remain hidden.
 Each mesh instance may declare
 `material: {kind:'unlit', color:'#rrggbb', side:'front'|'double'}`. Color is an
 opaque six-digit hexadecimal value; side defaults to front. Omitted material
-evaluates to `{kind:'unlit', color:'#d4d9e2', side:'front'}`. These are data
+evaluates to `{kind:'unlit', color:'#d4d9e2', side:'front', wireframe:false}`. Optional
+`wireframe:true` displays the triangle edges. These are data
 descriptors, with no textures, opacity, lights or backend handles.
 
 `space3d.clippingPlanes` accepts at most 32 world-space equations

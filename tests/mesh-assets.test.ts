@@ -36,6 +36,12 @@ const bundle=():Bundle=>({version:'0.3',title:'Portable 3D mesh',units:'bp',dura
   viewport:{width:100,height:60},camera:{x:0,y:0,zoom:1},nodes:[],tracks:[],relations:[],resources:{triangle:mesh()},
   space3d:{version:1,units:'unit',handedness:'right',upAxis:'z',nodes:[
     {id:'assembly',kind:'group'},{id:'surface',kind:'mesh',resourceId:'triangle',parent:'assembly',visible:false}]}});
+function surfaceBundle():Bundle {
+  const full=bundle();full.resources={};
+  full.surfaces={version:1,operations:[{id:'plane',resourceId:'triangle',units:'unit',
+    domain:{u:[0,1],v:[0,1]},segments:{u:3,v:2},position:['u*(1+time/1s)','v','0'],normals:{kind:'finite-difference'}}]};
+  return full;
+}
 function packaged(external=false):ScenePackage {
   const full=bundle(),{resources:_resources,...scene}=full;
   return {contract:'texloom-package/1',scene,assets:{version:1,requiredFeatures:sceneFeatures(full),entries:[entry(mesh(),'triangle',external)]}};
@@ -44,6 +50,34 @@ const code=(expected:string)=>(error:unknown)=>error instanceof AssetError&&erro
 function empty(store:AssetStore){const stats=store.stats();assert.equal(stats.entries,0);assert.equal(stats.waiters,0);
   assert.equal(stats.leases,0);assert.equal(stats.reservedBytes,0);}
 function deferred<T>(){let resolve!:(value:T)=>void;const promise=new Promise<T>(yes=>{resolve=yes;});return {promise,resolve};}
+
+test('generated surfaces package as programs without fabricated assets and hydrate deterministically',async()=>{
+  const folder=await mkdtemp(join(tmpdir(),'texloom-surface-package-'));
+  try {
+    const authored=surfaceBundle(),input=join(folder,'bundle.json');await writeFile(input,JSON.stringify(authored));
+    for(const mode of ['external','inline','packed']){
+      const out=join(folder,mode),report=await packageScene(input,out,{mode});assert.equal(report.entries,0);
+      const packaged=JSON.parse(await readFile(join(out,'scene.json'),'utf8')) as ScenePackage;
+      assert.deepEqual(packaged.scene.surfaces,authored.surfaces);assert.deepEqual(packaged.assets.entries,[]);
+      assert.deepEqual(validateScenePackage(packaged),[]);let calls=0;
+      const store=createAssetStore({resolver:async()=>{calls++;throw Error('Generated mesh cannot perform asset I/O');}});
+      const runtime=await prepareSceneAsync(packaged,{assetStore:store,profile:NUMERIC_3D_PROFILE});
+      const sync=prepareScene(authored),baseline=runtime.sample(.5);
+      assert.equal(baseline.resources.triangle.kind,'mesh');assert.ok(Object.isFrozen(baseline.resources.triangle));
+      for(const t of [2,0,1,.5])assert.deepEqual(runtime.sample(t),sync.sample(t));
+      assert.equal(calls,0);runtime.dispose();assert.deepEqual(baseline,sync.sample(.5));empty(store);store.dispose();
+    }
+  }finally{await rm(folder,{recursive:true,force:true});}
+});
+
+test('generated mesh IDs cannot shadow manifest assets or each other and do not satisfy vector references',()=>{
+  const {resources,...scene}=surfaceBundle(),input:ScenePackage={contract:'texloom-package/1',scene,assets:{version:1,requiredFeatures:[],entries:[]}};
+  input.assets.entries=[entry()];assert.ok(validateScenePackage(input).some(d=>d.code==='ASSET_DUPLICATE'));
+  input.assets.entries=[];scene.surfaces!.operations.push({...scene.surfaces!.operations[0],id:'duplicate'});
+  assert.ok(validateScenePackage(input).some(d=>d.code==='ASSET_DUPLICATE'));scene.surfaces!.operations.pop();
+  scene.space3d!.overlays=[{id:'invalid-label',resourceId:'triangle',position:[0,0,0]}];
+  assert.ok(validateScenePackage(input).some(d=>d.code==='ASSET_REFERENCE'));
+});
 
 test('mesh metadata bounds are discriminated, finite ordered triples or an explicit empty null',()=>{
   assert.deepEqual(validateAssetEntry(entry()),[]);
