@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "pr35-field-visualization",
+  "title": "Explicit scalar color maps, source-normal displacement and vector arrows",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": [
+      "Bounded scalar/vector expression sampling on an existing mesh vertex domain with explicit validity",
+      "Linear RGB stop maps with fixed or per-frame auto ranges and explicit out-of-range/invalid display policies",
+      "Original-normal displacement with declared drop/recompute normal policy, plus optional shared-prototype vector arrows"
+    ],
+    "excluded": [
+      "General field solvers, continuous-domain singularity proofs and unbounded adaptive sampling",
+      "Texture transfer functions, arbitrary shaders, lighting and full Blender node graph equivalence",
+      "Automatic field reevaluation on displaced vertices and implicit deformation feedback"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc",
+      "symbols": [
+        "blender::nodes::node_geo_attribute_capture_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_attribute_capture.cc"
+      ],
+      "role": "Capturing field results makes their values belong to the produced geometry. Texloom uses explicit persistent names and immutable buffers, rather than importing Blender anonymous-attribute graph machinery.",
+      "license": {
+        "status": "review-required",
+        "note": "Previously pinned conceptual source used by the mesh-field design. This feature independently implements its declared numerical contract; no source is copied or translated. Any later adaptation requires separate file-level license review."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_evaluate_on_domain.cc",
+      "symbols": [
+        "blender::nodes::node_geo_evaluate_on_domain_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_evaluate_on_domain.cc"
+      ],
+      "role": "Attribute domain is part of field evaluation context. Texloom exposes a small explicit transfer registry and does not silently perform every Blender domain adaptation.",
+      "license": {
+        "status": "review-required",
+        "note": "Previously pinned conceptual source used by the mesh-field design. This feature independently implements its declared numerical contract; no source is copied or translated. Any later adaptation requires separate file-level license review."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "An existing authored or upstream mesh, unique output resource ID, matching units and at least one scalar/vector expression",
+      "Read-only x/y/z/nx/ny/nz/index locals, source time and bounded shared parameters; an optional boolean mask",
+      "Explicit color stops, fixed/auto range, out-of-range behavior and invalid color; optional uniform displacement amplitude and arrow length scale"
+    ],
+    "outputs": [
+      "Unchanged raw finite values or explicit nulls, raw validity and presentation validity, and reported display range",
+      "An immutable derived mesh preserving topology; named linear-RGB vertex color and optional normal displacement",
+      "Optional instance sets share an authored arrow prototype and expose stable vertex identities, orientation, length and selection",
+      "Original declaration JSON and decoded scalar/vector/mask/amplitude/length-scale expressions are archived with spans"
+    ],
+    "coordinates": [
+      "All fields are evaluated on source mesh positions and source normals, before displacement",
+      "Colors interpolate in linear RGB; GPU output converts to display sRGB downstream",
+      "Displacement uses p + amplitude * rawScalar * sourceNormal; zero amplitude restores source geometry",
+      "Arrow local +X follows the vector; its explicit up vector and zero-vector policy resolve orientation"
+    ],
+    "errorPolicy": [
+      "Reject malformed or duplicate JSON, unknown fields, unsafe sidecars and capture budgets before publication",
+      "Reject source cycles, output collisions, mismatched units and unsupported expression types",
+      "Invalid field samples require explicit error or mask behavior; raw values are never replaced by clamped display values",
+      "Degenerate recomputed normals and zero vectors follow explicit policies rather than invented geometry"
+    ]
+  },
+  "fixtures": [
+    "surface-field"
+  ],
+  "verification": {
+    "command": "python -m unittest tests.field_visualization_port_spec_test tests.field_visualization_capture_test tests.field_visualization_player_test -v; npm test",
+    "claims": [
+      "The actual TeX example creates two spheres from one source: fixed-range color and color plus source-normal displacement",
+      "Independent browser arithmetic checks every raw scalar, mapped RGB, displaced point and exact resulting bounds",
+      "Independent camera/barycentric arithmetic checks visible GPU pixels after linear RGB interpolation and sRGB encoding",
+      "Reverse PNG captures, mobile amplitude controls, zero-amplitude geometry restoration and source immutability are checked",
+      "A separate real TeX fixture tests analytic vector-arrow directions, zero-vector hiding, invalid samples and auto-range behavior"
+    ],
+    "notEstablished": [
+      "Equivalence with the complete Blender field/node system",
+      "Correctness of the mathematical field between sampled vertices",
+      "Identical raster bytes across browsers or GPU drivers",
+      "General PDE integration, simulation state or lighting after displacement"
+    ]
+  }
+}

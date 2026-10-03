@@ -77,3 +77,5 @@ export * from './operations/mesh-attributes.js';
 export * from './ir/instances.js';
 export * from './operations/instances.js';
 export * from './operations/realize-instances.js';
+export * from './operations/field-visualization.js';
+export * from './operations/field-visualization-data.js';
