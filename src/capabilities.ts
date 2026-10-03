@@ -6,7 +6,8 @@ export const VECTOR_2D_FEATURES = [
   'transform.affine.2d', 'paint.clip', 'paint.opacity', 'paint.dash',
   'paint.current-color', 'path.arrowheads',
 ] as const;
-export type RenderFeature = typeof VECTOR_2D_FEATURES[number];
+export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d'] as const;
+export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
   readonly contract: 'texloom-render/1';
@@ -17,6 +18,10 @@ export const SVG_2D_PROFILE: CapabilityProfile = Object.freeze({
 });
 export const CANVAS_2D_PROFILE: CapabilityProfile = Object.freeze({
   id: 'texloom.canvas2d/1', contract: 'texloom-render/1', features: Object.freeze([...VECTOR_2D_FEATURES]),
+});
+/** Core numeric evaluator only; this profile does not promise rasterization or projection. */
+export const NUMERIC_3D_PROFILE: CapabilityProfile = Object.freeze({
+  id:'texloom.numeric3d/1',contract:'texloom-render/1',features:Object.freeze([...VECTOR_2D_FEATURES,...SPATIAL_3D_FEATURES]),
 });
 export interface CapabilityReport {
   profile: string; compatible: boolean; required: string[]; unsupported: string[];
@@ -61,7 +66,15 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     else if (node.kind === 'field') features.add('field.scalar-grid.2d');
     else if (node.kind !== 'group') features.add('primitive.2d');
   }
-  for (const resource of Object.values(bundle.resources)) if (resource.kind === 'vector') vector(resource.items);
+  for (const resource of Object.values(bundle.resources)) {
+    if (resource.kind === 'vector') vector(resource.items);
+    if (resource.kind === 'mesh') features.add('mesh.triangles.3d');
+  }
+  if(bundle.space3d){
+    features.add('transform.affine.3d');
+    if(bundle.space3d.camera)features.add('camera.affine.3d');
+    if(bundle.space3d.nodes.some(n=>n.kind==='mesh'))features.add('mesh.triangles.3d');
+  }
   for (const track of bundle.tracks) {
     if (track.property.startsWith('arrows.')) features.add('path.arrowheads');
     if (track.property.startsWith('transform.')) features.add('transform.affine.2d');

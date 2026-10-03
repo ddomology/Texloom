@@ -1,0 +1,19 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-space3d}[2026/10/03 Portable mesh and affine 3D space capture]
+\RequirePackage{texloom-expressions}
+\newcount\TLSpaceSerial
+\TLSpaceSerial=0
+% Generated names alone enter declaration JSON and filesystem paths. Authored
+% identifiers and JSON are separate sidecars; the +v body is never expanded.
+\def\TLSpaceStart#1{%
+  \global\advance\TLSpaceSerial by 1
+  \edef\TLEbase{\jobname.tl-space3d-\the\TLSpaceSerial}%
+  \immediate\write\TLrecords{\string{"type":"space3d-file","kind":"#1","file":"\TLEbase"\string}}}
+\NewDocumentCommand\loommesh{m +v}{%
+  \TLSpaceStart{mesh}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\NewDocumentCommand\loomspace{+v}{%
+  \TLSpaceStart{space}%
+  \TLEwrite{body}{#1}}
+\endinput

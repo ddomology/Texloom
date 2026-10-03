@@ -17,8 +17,10 @@ import {validateMathTransformProgramInContext,type MathTransformProgram,type Mat
 import {validateTextPartsInContext,type TextParts} from './ir/text-parts.js';
 import {validateTraceProgramInContext,type TraceProgram,type TraceEvaluation} from './timeline/trace.js';
 import {validatePresentationProgramInContext,type PresentationProgram,type PresentationEvaluation} from './ir/presentation-intent.js';
+import {validateMeshResource,type MeshResource} from './ir/mesh.js';
+import {validateSpace3DInContext,type Space3D,type Space3DEvaluation} from './ir/scene3d.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
-/** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
+/** Portable, JSON-only scene contract. Legacy 2D dimensions are bp; space3d declares its own units. */
 export interface Style {
   fill?: string; stroke?: string; strokeWidth?: number; opacity?: number; dash?: number[];
   fillOpacity?: number; strokeOpacity?: number; miterLimit?: number;
@@ -44,7 +46,7 @@ export type Matrix = [number, number, number, number, number, number];
 export interface PaintItem { kind: 'path' | 'group'; d?: string; transform?: Matrix; style?: Style; clip?: Clip & { transform?: Matrix }; children?: PaintItem[] }
 export interface VectorResource { kind: 'vector'; items: PaintItem[]; metrics: { width: number; height: number; depth: number }; inkBounds: [number, number, number, number]; sourceTex?: string; glyphs?: unknown[]; capabilities?: string[];textParts?:TextParts }
 export interface ScalarFieldResource { kind: 'scalar-field'; columns: number; rows: number; times: number[]; samples: number[][]; range: [number, number]; interpolation: 'linear' | 'step'; provenance?: Record<string, unknown> }
-export type Resource = VectorResource | ScalarFieldResource;
+export type Resource = VectorResource | ScalarFieldResource | MeshResource;
 export type TrackValue = number | number[];
 export interface Track { target: string; property: string; keys: [number, TrackValue][]; interpolation?: Easing;
   /** Outgoing interval easing; omitted entries are not allowed. */
@@ -77,8 +79,18 @@ export interface Bundle {
   mathTransforms?: MathTransformProgram;
   traces?: TraceProgram;
   presentation?: PresentationProgram;
+  /** Explicit 3D world chart, independent of the legacy document bp coordinates. */
+  space3d?: Space3D;
 }
-export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation;presentation?:import('./ir/operations.js').DeepReadonly<PresentationEvaluation>; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
+export interface EvaluatedFrame {
+  time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>;
+  fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;
+  mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation;
+  presentation?:import('./ir/operations.js').DeepReadonly<PresentationEvaluation>;
+  space3d?:import('./ir/operations.js').DeepReadonly<Space3DEvaluation>;
+  shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;
+  curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation;
+}
 
 type Obj = Record<string, any>;
 const object = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -227,7 +239,12 @@ export function validateBundle(input: unknown): Diagnostic[] {
         if (!Array.isArray(values) || values.length !== r.columns * r.rows) error('FIELD_GRID_SIZE', 'Sample size must equal columns times rows.', `${path}.samples[${j}]`);
         else values.forEach((v, k) => number(v, `${path}.samples[${j}][${k}]`));
       });
-    } else error('RESOURCE_KIND', 'Expected vector or scalar-field resource.', `${path}.kind`);
+    } else if(r.kind==='mesh') {
+      if(b.version!=='0.3')error('MESH_BUNDLE_VERSION','Mesh resources require Bundle 0.3.',path);
+      if(id.length>512)error('MESH_RESOURCE_ID','Mesh resource IDs cannot exceed 512 characters.',path);
+      errors.push(...validateMeshResource(r,path));
+    }
+    else error('RESOURCE_KIND', 'Expected vector, scalar-field or mesh resource.', `${path}.kind`);
   }
   const nodes = new Map<string, Obj>();
   if (!Array.isArray(b.nodes)) error('NODES', 'Expected a nodes array.', '$.nodes');
@@ -516,6 +533,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.mathTransforms !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMathTransformProgramInContext(b.mathTransforms,b as Bundle));
   if (b.traces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateTraceProgramInContext(b.traces,b as Bundle));
   if (b.presentation !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePresentationProgramInContext(b.presentation,b as Bundle));
+  if (b.space3d !== undefined && !errors.some(d => d.severity === 'error')) {
+    if(b.version!=='0.3')error('SPACE3D_VERSION','3D spaces require Bundle 0.3.','$.space3d');
+    else errors.push(...validateSpace3DInContext(b.space3d,b.resources));
+  }
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');
     else errors.push(...validateTimelineMetadata(b.timeline,b.duration));

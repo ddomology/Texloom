@@ -23,7 +23,17 @@ Canvas2D rendering, and a Chalkspace board placement adapter.
 Both SVG and Canvas consume the same `EvaluatedFrame`. See the
 [runtime contract and dual-consumer demo instructions](docs/runtime-contract.md).
 The real lecture consumer, export cache and explicit chalk presentation intents
-are integrated. 3D and general simulation operations remain planned.
+are integrated. Static mesh resources and 3D numeric evaluation are available;
+3D rendering and general simulation operations remain planned.
+
+### Mesh resources and 3D spaces (PR29)
+
+Versioned indexed meshes, owned typed buffers and a separate right-handed,
+Z-up `space3d` produce immutable instance matrices, normals metadata, bounds
+and an optional affine camera view. TeX literal declarations and existing asset
+packages feed the same numeric contract. `NUMERIC_3D_PROFILE` enables preparation;
+the 2D renderers reject 3D features. Projection and rendering are the next step.
+See the [mesh and space contract](docs/mesh-space.md).
 
 ### Chalk presentation intent (PR28)
 

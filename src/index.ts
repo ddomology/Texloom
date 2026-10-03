@@ -59,3 +59,7 @@ export * from './timeline/math-transform.js';
 export * from './operations/constraints.js';
 export * from './timeline/trace.js';
 export * from './ir/presentation-intent.js';
+export * from './geometry/matrix4.js';
+export * from './resources/buffers.js';
+export * from './ir/mesh.js';
+export * from './ir/scene3d.js';

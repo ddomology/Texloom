@@ -1,7 +1,7 @@
 import {createEvaluator, createEvaluatorWithSharedResources} from './evaluate.js';
 import {assertBundle, BundleValidationError, type Bundle, type EvaluatedFrame, type Resource} from './schema.js';
 import type {ExpressionValue} from './fields/ast.js';
-import {requireCapabilities, sceneFeatures, SVG_2D_PROFILE, type CapabilityProfile, type RenderFeature} from './capabilities.js';
+import {requireCapabilities, sceneFeatures, SVG_2D_PROFILE, NUMERIC_3D_PROFILE, type CapabilityProfile, type RenderFeature} from './capabilities.js';
 import type {TimelineMetadata} from './timeline/ast.js';
 import type {DeepReadonly,SourceSpan} from './ir/operations.js';
 import {freezeSnapshot, validateJsonData} from './operations/values.js';
@@ -151,7 +151,7 @@ export function beginPrepareScene(input: Bundle | ScenePackage, options: Prepare
     if (input && typeof input === 'object' && 'contract' in input) {
       snapshot = snapshotScenePackage(input) as ScenePackage;
       // A permissive custom renderer cannot make an unknown core feature work.
-      requireCapabilities(snapshot.assets.requiredFeatures, SVG_2D_PROFILE);
+      requireCapabilities(snapshot.assets.requiredFeatures, NUMERIC_3D_PROFILE);
       requireCapabilities(snapshot.assets.requiredFeatures, profile);
       store = options.assetStore ?? createAssetStore({resolver: options.assetResolver});
       ownedStore = !options.assetStore;

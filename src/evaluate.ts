@@ -10,6 +10,7 @@ import {evaluateTrack} from './timeline/track.js';
 import {assertBundle} from './schema.js';
 import {prepareTraceProgram,type PreparedTraceProgram} from './timeline/trace.js';
 import {preparePresentationProgram,type PreparedPresentationProgram} from './ir/presentation-intent.js';
+import {prepareSpace3D} from './ir/scene3d.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -132,5 +133,10 @@ function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvalua
   const plan=prepareExecutionPlan(base);
   const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
   const presentation=snapshot.presentation?preparePresentationProgram(snapshot.presentation,snapshot):undefined;
-  return (time,parameters) => evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
+  const space3d=snapshot.space3d?prepareSpace3D(snapshot.space3d,snapshot.resources):undefined;
+  return (time,parameters) => {
+    const frame=evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
+    if(space3d)frame.space3d=space3d;
+    return frame;
+  };
 }

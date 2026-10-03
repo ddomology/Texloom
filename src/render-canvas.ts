@@ -139,6 +139,7 @@ function defaultSurface(width: number, height: number): CanvasRenderingContext2D
  */
 export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2D,
   options: CanvasOptions = {}): void {
+  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: Canvas 2D cannot render mesh/space3d. Use the numeric 3D evaluator until a 3D backend is selected.');
   const {width: logicalWidth, height: logicalHeight} = frame.viewport;
   const width = options.width ?? ctx.canvas.width;
   const height = options.height ?? ctx.canvas.height;
