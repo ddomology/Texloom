@@ -213,3 +213,21 @@ test('board aspect accepts rounded video pixels and rejects stretching before su
     if(original)Object.defineProperty(globalThis,'document',original);else Reflect.deleteProperty(globalThis,'document');
   }
 });
+
+test('3D lecture preparation is DOM-free and requires an explicit projected camera',async()=>{
+  const input=lesson();
+  input.scenes.shared.space3d={version:1,units:'m',handedness:'right',upAxis:'z',nodes:[],camera:{id:'eye',
+    projection:{kind:'orthographic',height:4,near:0,far:20}}};
+  const runtime=await prepareChalkspaceLecture(input);
+  try{
+    const frame=runtime.sample(11.5)[0].frame!;
+    assert.equal(frame.space3d?.camera?.projection?.kind,'orthographic');
+    const layer=createChalkspaceCanvasLayer({x:0,y:1,width:8});
+    assert.throws(()=>layer.draw(frame,{canvas:{width:16384,height:9216}} as CanvasRenderingContext2D,
+      {frameWidth:16,frameHeight:9,cameraY:4.5}),/BOARD_SURFACE_BUDGET.*4096/);
+    layer.dispose();
+  }
+  finally{runtime.dispose();}
+  delete input.scenes.shared.space3d.camera.projection;
+  await assert.rejects(prepareChalkspaceLecture(input),/LECTURE_PROJECTION/);
+});

@@ -164,6 +164,12 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
     else if(asset.kind!=='mesh')error(out,'ASSET_KIND','3D mesh nodes require mesh assets.',`$.scene.space3d.nodes[${i}].resourceId`);
   });
+  if(object(scene.space3d)&&Array.isArray(scene.space3d.overlays))scene.space3d.overlays.forEach((overlay,i)=>{
+    if(!object(overlay))return;
+    const asset=typeof overlay.resourceId==='string'?entries.get(overlay.resourceId):undefined;
+    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest resource ID.',`$.scene.space3d.overlays[${i}].resourceId`);
+    else if(asset.kind!=='vector')error(out,'ASSET_KIND','3D TeX overlays require vector assets.',`$.scene.space3d.overlays[${i}].resourceId`);
+  });
   return out;
 }
 

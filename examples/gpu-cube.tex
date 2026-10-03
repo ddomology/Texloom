@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{texloom-space3d}
+\begin{document}
+\TLScene{A cube in motion}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\TLText{scene-title}{A cube in motion}
+\TLMath{angle}{\theta(t)=\frac{\pi}{4}t,\qquad p(t)=R_z(\theta(t))\,p_0}
+\TLMath{corner-label}{p(t)}
+\TLNode{title}{tex}{"resourceId":"scene-title","x":42,"y":48,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{angle-caption}{tex}{"resourceId":"angle","x":42,"y":498,"scale":1.25,"style":{"fill":"#b5cdbb"}}
+
+% One indexed square, reused for six opaque, unlit cube faces.
+\loommesh{square-face}|{
+  "kind":"mesh","version":1,"primitive":"triangles","units":"m",
+  "coordinateSpace":"object","winding":"ccw","topologyRevision":"square-two-triangles-v1",
+  "positions":{"version":1,"componentType":"float32","components":3,
+               "count":4,"byteOffset":0,"byteStride":12,"data":[-1,-1,0,1,-1,0,1,1,0,-1,1,0]},
+  "indices":{"version":1,"componentType":"uint16","components":1,
+             "count":6,"byteOffset":0,"byteStride":2,"data":[0,1,2,0,2,3]},
+  "bounds":{"min":[-1,-1,0],"max":[1,1,0]}
+}|
+
+\loomspace|{
+  "version":1,"units":"m","handedness":"right","upAxis":"z",
+  "nodes":[
+    {"id":"cube-spin","kind":"group"},
+    {"id":"top","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[0,0,1]},"material":{"kind":"unlit","color":"#91d5b3","side":"front"}},
+    {"id":"bottom","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[0,0,-1],"rotation":[1,0,0,0]},"material":{"kind":"unlit","color":"#467d77","side":"front"}},
+    {"id":"front","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[0,-1,0],"rotation":[0.7071067811865476,0,0,0.7071067811865476]},"material":{"kind":"unlit","color":"#e6bc79","side":"front"}},
+    {"id":"back","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[0,1,0],"rotation":[-0.7071067811865476,0,0,0.7071067811865476]},"material":{"kind":"unlit","color":"#78aeba","side":"front"}},
+    {"id":"right","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[1,0,0],"rotation":[0,0.7071067811865476,0,0.7071067811865476]},"material":{"kind":"unlit","color":"#d9a59b","side":"front"}},
+    {"id":"left","kind":"mesh","parent":"cube-spin","resourceId":"square-face",
+     "transform":{"translation":[-1,0,0],"rotation":[0,-0.7071067811865476,0,0.7071067811865476]},"material":{"kind":"unlit","color":"#a6b979","side":"front"}}
+  ],
+  "camera":{"id":"view","transform":{"matrix":[
+    0.7071067811865476,0.7071067811865476,0,0,
+    -0.5,0.5,0.7071067811865476,0,
+    0.5,-0.5,0.7071067811865476,0,
+    3.5,-3.5,4.949747468305833,1]},
+    "projection":{"kind":"perspective","fovY":0.6981317007977318,"near":0.1,"far":100}},
+  "tracks":[{"target":"cube-spin","property":"rotation","interpolation":"linear","keys":[
+    [0,[0,0,0,1]],[2,[0,0,0.7071067811865476,0.7071067811865476]],
+    [4,[0,0,1,0]],[6,[0,0,0.7071067811865476,-0.7071067811865476]],[8,[0,0,0,-1]]]}],
+  "overlays":[{"id":"corner","resourceId":"corner-label","parent":"cube-spin",
+               "position":[1,1,1],"offset":[13,-9],"scale":1.5,"color":"#f4ead2"}]
+}|
+\end{document}

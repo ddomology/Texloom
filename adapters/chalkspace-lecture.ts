@@ -2,7 +2,7 @@ import {BundleValidationError, type Bundle, type EvaluatedFrame, type Node, type
 import type {NativeNodePainter} from '../src/render-canvas.js';
 import {beginPrepareScene, bindSceneClip, type ScenePreparation, type SceneManifest,
   type SceneClip, type ClipTiming, type ClipSample, type ClipDescription} from '../src/runtime.js';
-import {CANVAS_2D_PROFILE} from '../src/capabilities.js';
+import {GPU_3D_PROFILE} from '../src/capabilities.js';
 import {createAssetStore} from '../src/resources/store.js';
 import {validateAssetJson, sha256Bytes, type ScenePackage} from '../src/resources/package.js';
 import {freezeSnapshot} from '../src/operations/values.js';
@@ -120,8 +120,11 @@ export async function prepareChalkspaceLecture(input:unknown,options:{signal?:Ab
     const revision=await sha256Bytes(new TextEncoder().encode(canonical(data)));
     live();
     const prepared=await Promise.all(Object.entries(data.scenes).map(async([name,scene])=>{
-      const loading=beginPrepareScene(scene,{assetStore:store,profile:CANVAS_2D_PROFILE,signal:controller.signal});
-      preparations.push(loading);return [name,await loading.ready] as const;
+      const loading=beginPrepareScene(scene,{assetStore:store,profile:GPU_3D_PROFILE,signal:controller.signal});
+      preparations.push(loading);const runtime=await loading.ready;
+      const initial=runtime.sample(0);
+      if(initial.space3d&&!initial.space3d.camera?.projection)throw new Error('LECTURE_PROJECTION: a 3D lecture scene needs an explicit projected camera.');
+      return [name,runtime] as const;
     }));
     live();const scenes=new Map(prepared);
     entries=data.clips.map(declaration=>({declaration,clip:bindSceneClip(scenes.get(declaration.scene)!,declaration.timing),

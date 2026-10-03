@@ -6,7 +6,8 @@ export const VECTOR_2D_FEATURES = [
   'transform.affine.2d', 'paint.clip', 'paint.opacity', 'paint.dash',
   'paint.current-color', 'path.arrowheads',
 ] as const;
-export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d'] as const;
+export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d',
+  'camera.projection.3d','material.unlit.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d'] as const;
 export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
@@ -22,6 +23,9 @@ export const CANVAS_2D_PROFILE: CapabilityProfile = Object.freeze({
 /** Core numeric evaluator only; this profile does not promise rasterization or projection. */
 export const NUMERIC_3D_PROFILE: CapabilityProfile = Object.freeze({
   id:'texloom.numeric3d/1',contract:'texloom-render/1',features:Object.freeze([...VECTOR_2D_FEATURES,...SPATIAL_3D_FEATURES]),
+});
+export const GPU_3D_PROFILE: CapabilityProfile = Object.freeze({
+  id:'texloom.gpu3d/1',contract:'texloom-render/1',features:Object.freeze([...VECTOR_2D_FEATURES,...SPATIAL_3D_FEATURES]),
 });
 export interface CapabilityReport {
   profile: string; compatible: boolean; required: string[]; unsupported: string[];
@@ -74,6 +78,11 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     features.add('transform.affine.3d');
     if(bundle.space3d.camera)features.add('camera.affine.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'))features.add('mesh.triangles.3d');
+    if(bundle.space3d.camera?.projection)features.add('camera.projection.3d');
+    if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material))features.add('material.unlit.3d');
+    if(bundle.space3d.clippingPlanes?.length)features.add('clip.planes.3d');
+    if(bundle.space3d.overlays?.length)features.add('overlay.tex.3d');
+    if(bundle.space3d.tracks?.length)features.add('animation.transform.3d');
   }
   for (const track of bundle.tracks) {
     if (track.property.startsWith('arrows.')) features.add('path.arrowheads');

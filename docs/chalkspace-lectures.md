@@ -42,7 +42,7 @@ independent. Sample results are fresh, so reverse seeking and returned-frame
 mutation do not change future evaluation.
 
 Preparation snapshots the complete input before waiting, verifies all resources
-and the Canvas capability profile, then publishes the entire lecture atomically.
+and the combined Canvas/GPU capability profile, then publishes the entire lecture atomically.
 The lecture owns a shared asset store and its scene preparations. Cancellation
 before/during/after readiness and explicit disposal release all preparations,
 leases and Canvas surfaces. A disposed layer rejects sampling or drawing.
@@ -74,6 +74,22 @@ The adapter preserves the incoming context and clip. It retains the existing
 host's 854×480 export preset. A genuinely different aspect ratio is rejected.
 Native vector paint is retained; this stage does not invent chalk stroke order
 for an arbitrary scene or make row erasers delete external scene content.
+
+### Projected 3D clips (PR30)
+
+A scene with `space3d` uses the shared `createSceneCanvasRenderer` compositor:
+the opaque unlit GPU mesh pass, ordinary native 2D scene ink, then projected
+native TeX labels. An explicit projected camera is required during preparation.
+The 2D camera affects scene ink; 3D anchors already use viewport coordinates and
+are not transformed by that camera again. Board placement applies once to the
+finished surface. Labels remain on top of meshes and hide outside the clip volume.
+
+GPU allocation is lazy, so Node lesson validation needs no DOM or GPU. The first
+spatial draw requires WebGL2. Disposal releases all owned GPU buffers and
+contexts. Lost contexts fail visibly until restored; no stale surface is
+published as a successful frame. This path supports surfaces through 4096×4096;
+ordinary 2D scenes retain their existing limits. The companion
+`examples/gpu-cube.yaml` exercises the actual lecture capture path.
 
 ## Actual player hook and export
 

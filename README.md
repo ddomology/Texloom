@@ -4,7 +4,7 @@ TeX-authored mathematical scenes → a portable object bundle → SVG, a seekabl
 web player, and video. The renderer receives evaluated objects; it does not
 execute TeX or independently implement animation timing.
 
-This is a working 2D vertical slice. It includes a real TeX compiler, an explicit
+This is a working 2D engine with an initial 3D rendering path. It includes a real TeX compiler, an explicit
 TikZ scene frontend, typed IR validation, geometric dependencies, a shared
 time evaluator, static SVG output, an offline HTML player, and MP4 export.
 
@@ -23,8 +23,28 @@ Canvas2D rendering, and a Chalkspace board placement adapter.
 Both SVG and Canvas consume the same `EvaluatedFrame`. See the
 [runtime contract and dual-consumer demo instructions](docs/runtime-contract.md).
 The real lecture consumer, export cache and explicit chalk presentation intents
-are integrated. Static mesh resources and 3D numeric evaluation are available;
-3D rendering and general simulation operations remain planned.
+are integrated. Mesh instances now render through a shared WebGL2 adapter in the
+web player and Chalkspace. General surfaces and simulation operations remain planned.
+
+### Projected 3D scenes and shared output (PR30)
+
+An explicit perspective or orthographic camera projects indexed mesh instances.
+Absolute-time transform tracks, opaque unlit colors, depth testing and world
+clipping planes feed a Three.js adapter; the portable IR contains no GPU handles.
+Native TeX resources attach to projected 3D anchors and compose with ordinary 2D
+scene ink. The standalone player and real Chalkspace lecture use the same
+compositor and exact-time video capture.
+
+```sh
+python tools/compile.py examples/gpu-cube.tex --out build/gpu-cube
+node tools/build-gpu-player.mjs build/gpu-cube/bundle.json build/gpu-cube/player.html
+python tools/export_video.py build/gpu-cube/player.html --out build/gpu-cube/cube.mp4 --fps 30
+```
+
+WebGL2 is required for this path. Labels are always-on-top overlays, hidden when
+their anchor is clipped; they do not claim mesh-depth occlusion. Lighting,
+textures, transparent materials, volumetrics and arbitrary 3D-to-SVG output are
+outside this version. See [the renderer contract and backend comparison](docs/gpu-renderer.md).
 
 ### Mesh resources and 3D spaces (PR29)
 
@@ -32,7 +52,7 @@ Versioned indexed meshes, owned typed buffers and a separate right-handed,
 Z-up `space3d` produce immutable instance matrices, normals metadata, bounds
 and an optional affine camera view. TeX literal declarations and existing asset
 packages feed the same numeric contract. `NUMERIC_3D_PROFILE` enables preparation;
-the 2D renderers reject 3D features. Projection and rendering are the next step.
+the standalone 2D renderers continue to reject 3D features explicitly.
 See the [mesh and space contract](docs/mesh-space.md).
 
 ### Chalk presentation intent (PR28)

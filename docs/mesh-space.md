@@ -6,9 +6,11 @@ its own units and a right-handed, Z-up world. There is no implicit conversion
 between these two coordinate charts.
 
 The evaluated result contains instance matrices, bounds, winding orientation
-and an optional affine camera view. Projection, materials, GPU rendering and
-3D timeline animation belong to later work. The current SVG, Canvas, Lemniro
-and Chalkspace render profiles reject required 3D features before rendering.
+and an optional affine camera view. PR30 extends this contract with projection,
+unlit materials, world clipping planes, projected native TeX overlays and
+absolute-time transform tracks, described below. The legacy SVG and Canvas 2D
+renderers continue to reject 3D data; the explicit GPU/composite consumer is
+described in [GPU rendering](gpu-renderer.md).
 
 ## TeX authoring and compilation
 
@@ -310,10 +312,123 @@ The focused checks live in `tests/buffers.test.ts`, `tests/mesh.test.ts` and
 the accompanying matrix, scene, asset and compiler suites. Final full-suite
 counts belong to the PR's verification report.
 
-**PR30 next:** define projection/camera parameters and an initial 3D rendering
-profile, then verify its visible output and exact-time export. Static numeric
-success here does not establish rendering parity, lighting, texturing, 3D
-animation, glTF import/export or Blender compatibility.
+PR30 adds the explicit projection/rendering contract below. Numeric preparation
+alone does not establish lighting, texturing, glTF import/export or Blender
+compatibility.
+
+## PR30 projection, materials and absolute-time transforms
+
+All additions are optional. A PR29 camera without `projection` remains valid
+for numeric evaluation, and its evaluated projection fields are null. The GPU
+consumer requires an explicit projected camera.
+
+```ts
+camera: {
+  id: 'eye', transform: {translation: [0, 0, 6]},
+  projection: {kind: 'perspective', fovY: Math.PI / 3, near: 0.1, far: 100}
+}
+// Alternative: {kind:'orthographic', height:5, near:0, far:100}
+```
+
+Perspective `fovY` is in radians, strictly between zero and pi. Perspective
+near must be positive; orthographic near may be zero. Far must be finite and
+greater than near. Orthographic height is a positive world-space extent.
+Aspect is `Bundle.viewport.width / Bundle.viewport.height`; raster output
+dimensions do not recompute the camera. Both modes look down camera-local -Z
+and use OpenGL NDC depth -1 at near and +1 at far. Viewport output is logical bp,
+with origin at top left and +Y down.
+
+The evaluated camera adds `projection`, `projectionMatrix`,
+`viewProjectionMatrix` and `aspect`. Matrices are finite, column-major arrays;
+projection is kept separate from affine-only `matrix4` helpers. The public
+functions are `projectionMatrix3D(projection, viewport)`,
+`viewProjectionMatrix3D(projectionMatrix, viewMatrix)` and
+`projectPoint3D(worldPoint, viewProjectionMatrix, viewport)`. The last returns
+homogeneous `clip`, nullable `ndc`/`position` and `visible`. Zero homogeneous w
+does not produce infinities. Clip tests keep the closed volume with an eight
+machine-epsilon relative arithmetic allowance at its boundaries; coordinates
+are not clamped or moved. Meaningfully outside points remain hidden.
+
+### Mesh material and clipping planes
+
+Each mesh instance may declare
+`material: {kind:'unlit', color:'#rrggbb', side:'front'|'double'}`. Color is an
+opaque six-digit hexadecimal value; side defaults to front. Omitted material
+evaluates to `{kind:'unlit', color:'#d4d9e2', side:'front'}`. These are data
+descriptors, with no textures, opacity, lights or backend handles.
+
+`space3d.clippingPlanes` accepts at most 32 world-space equations
+`{normal:[nx,ny,nz], constant:c}` and retains points with
+`dot(normal, point) + c >= 0`. Normals must be finite and nonzero. Evaluation
+normalizes both normal and constant, preserving the half-space. Overlay anchor
+tests use an eight-epsilon allowance relative to the actual plane terms for
+closed boundaries. Mesh clipping belongs to the renderer; evaluated source
+vertices and world bounds are not replaced by a clipped mesh.
+
+### Native TeX overlays
+
+```ts
+overlays: [{
+  id: 'corner-label', resourceId: 'native-math', parent: 'rotating-group',
+  position: [1, 1, 1], offset: [8, -6], scale: 1.2, color: '#ffffff'
+}]
+```
+
+The resource must be a native vector resource. Parent is an optional group or
+mesh; an omitted parent makes position world-space. Offset is bp after
+projection, scale is positive and defaults to one, and color defaults to white.
+The projected position is the native TeX node's baseline origin. IDs are unique
+across 3D objects and overlays; at most 1,024 overlays are supported.
+
+Each evaluated overlay contains `id`, `resourceId`, `worldPosition`, nullable
+`position` and `ndc`, `visible`, `scale` and `color`. Its anchor must be inside
+the camera clip volume and every world clipping plane; a hidden parent mesh
+also hides its label. Native glyph geometry is always on top when the anchor
+is visible. Glyph pixels do not participate in mesh depth occlusion, and a
+partly offscreen label is not tested glyph by glyph. This is an explicit
+annotation policy rather than a 3D text mesh.
+
+### Absolute-time transform tracks
+
+```ts
+tracks: [{
+  target: 'rotating-group', property: 'rotation', interpolation: 'linear',
+  keys: [[0, [0,0,0,1]], [2, [0,0,1,0]], [4, [0,0,0,-1]]]
+}]
+```
+
+Targets name groups, meshes or the camera. Properties are `translation`,
+`rotation` or `scale`; values are three-component vectors or nonzero
+`[x,y,z,w]` quaternions respectively. Times are finite, nonnegative, strictly
+increasing and no greater than the Bundle duration. Each lane has 1–4,096 keys;
+there are at most 4,096 lanes and 65,536 total keys. Duplicate target/property
+writers and TRS tracks on an authored matrix transform are rejected.
+
+The first and last values hold outside their key span. Step is right-continuous
+at an exact key. Linear translation/scale use component interpolation;
+rotation uses normalized shortest-arc slerp (normalized linear interpolation
+for almost identical rotations). Antipodal quaternions represent the same
+orientation and do not request a full spin; author intermediate rotations for
+the intended path. Camera-ancestor scale lanes cannot contain zero or cross
+zero linearly. Step reflections are allowed. Singular mesh frames retain the
+PR29 null-normal and winding diagnostics. The camera's own reflection is kept
+as authored and may reverse screen winding; consumers do not silently fix it.
+
+`prepareSpace3D(program, resources, context?)` still returns a frozen time-zero
+evaluation. Projected cameras require `context.viewport`; optional
+`context.duration` validates the schedule extent. For animation use
+`prepareSpace3DSampler(program, resources, {viewport, duration})`, which returns
+a pure absolute-time sampler, clamped to scene duration. It snapshots spatial
+declarations and mesh metadata, without duplicating vertex buffers. Bundle
+evaluation supplies this context automatically. Static programs keep sharing
+their one frozen spatial result; animated frames never depend on prior seeks.
+
+`GPU_3D_PROFILE` (`texloom.gpu3d/1`) and `NUMERIC_3D_PROFILE` recognize
+`camera.projection.3d`, `material.unlit.3d`, `clip.planes.3d`, `overlay.tex.3d`
+and `animation.transform.3d`. Feature inventory adds these when their authored
+declarations are present, so old PR29 package feature lists remain compatible.
+The GPU profile additionally selects a rendering consumer; numeric support
+alone does not create a graphics context or promise pixels.
 
 ## Design references
 

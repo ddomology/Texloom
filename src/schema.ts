@@ -535,7 +535,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.presentation !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePresentationProgramInContext(b.presentation,b as Bundle));
   if (b.space3d !== undefined && !errors.some(d => d.severity === 'error')) {
     if(b.version!=='0.3')error('SPACE3D_VERSION','3D spaces require Bundle 0.3.','$.space3d');
-    else errors.push(...validateSpace3DInContext(b.space3d,b.resources));
+    else errors.push(...validateSpace3DInContext(b.space3d,b.resources,'$.space3d',{viewport:b.viewport,duration:b.duration}));
   }
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');

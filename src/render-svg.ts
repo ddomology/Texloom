@@ -68,7 +68,7 @@ export function fieldColor(value: number, range: readonly number[]): string {
 
 /** Render a fully evaluated frame. No clock, TeX compiler, or animation logic is used here. */
 export function renderSvg(frame: EvaluatedFrame, options: SvgOptions = {}): string {
-  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: SVG 2D cannot render mesh/space3d. Use the numeric 3D evaluator until a 3D backend is selected.');
+  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: SVG 2D cannot render mesh/space3d. Use the explicit GPU scene compositor for projected 3D scenes.');
   const { width: logicalWidth, height: logicalHeight } = frame.viewport;
   const width = options.width ?? logicalWidth;
   const height = options.height ?? logicalHeight;
