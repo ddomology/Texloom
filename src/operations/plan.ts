@@ -20,6 +20,7 @@ import {isCurveOperator,type CurveEvaluation} from './curves.js';
 import {isIntersectionOperator,type IntersectionEvaluation} from './intersections.js';
 import {preparePlotProgram,type PlotEvaluation} from './plot.js';
 import {prepareMorphProgram,type MorphEvaluation} from '../timeline/morph.js';
+import {prepareMathTransformProgram,type MathTransformEvaluation} from '../timeline/math-transform.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -27,9 +28,9 @@ interface StepBase {
 }
 type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
-  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number} | {kind:'plot';index:number} | {kind:'morph';index:number});
+  {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number} | {kind:'plot';index:number} | {kind:'morph';index:number} | {kind:'math-transform';index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
@@ -105,6 +106,10 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   for(const [index,prepared] of (morphs?.operations??[]).entries())
     steps.push({id:`morph:${index}`,path:prepared.path,sourceSpan:prepared.operation.sourceSpan,kind:'morph',index,
       dependencies:[],reads:[...prepared.reads],writes:[...prepared.writes]});
+  const mathTransforms=bundle.mathTransforms?prepareMathTransformProgram(bundle.mathTransforms,bundle):undefined;
+  for(const [index,prepared] of (mathTransforms?.operations??[]).entries())
+    steps.push({id:`math-transform:${index}`,path:prepared.path,sourceSpan:prepared.operation.sourceSpan,kind:'math-transform',index,
+      dependencies:[],reads:[...prepared.reads],writes:[...prepared.writes]});
   // Canonical property ownership catches whole-vs-component writers and joins
   // track, legacy and authored binding ownership without concatenating node IDs.
   const writers = bundle.tracks.map((track,index) => ({id:`track:${index}`,path:`$.tracks[${index}]`,
@@ -157,11 +162,12 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
     const plotResults:Record<string,PlotEvaluation[string]>=Object.create(null);
     const morphResults:Record<string,MorphEvaluation[string]>=Object.create(null);
+    const mathTransformResults:Record<string,MathTransformEvaluation[string]>=Object.create(null);
     const shapes:ShapeEvaluation={definitions:Object.create(null),approximations:Object.create(null)};
     const anchors:AnchorEvaluation=Object.create(null);
     const curves:CurveEvaluation={operations:Object.create(null),samples:Object.create(null)};
     const intersections:IntersectionEvaluation={sets:Object.create(null),selections:Object.create(null)};
-    if(metadata){delete metadata.deformations;delete metadata.plots;delete metadata.morphs;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
+    if(metadata){delete metadata.deformations;delete metadata.plots;delete metadata.morphs;delete metadata.mathTransforms;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {
@@ -182,6 +188,9 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
         } else if (step.kind === 'morph') {
           const prepared=morphs!.operations[step.index];
           morphResults[prepared.operation.id]=prepared.apply(frameNodes);
+        } else if (step.kind === 'math-transform') {
+          const prepared=mathTransforms!.operations[step.index];
+          mathTransformResults[prepared.operation.id]=prepared.apply(frameNodes);
         } else if (step.kind === 'fields') {
           fieldResult = fields!.sample(frameNodes,time,parameters);
           fields!.apply(fieldResult,frameNodes,camera);
@@ -195,6 +204,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     if(metadata&&deformations)metadata.deformations=freezeSnapshot(deformationResults);
     if(metadata&&plots)metadata.plots=freezeSnapshot(plotResults);
     if(metadata&&morphs)metadata.morphs=freezeSnapshot(morphResults);
+    if(metadata&&mathTransforms)metadata.mathTransforms=freezeSnapshot(mathTransformResults);
     if(metadata&&hasShapes)metadata.shapes=structuredClone(shapes);
     if(metadata&&Object.keys(anchors).length)metadata.anchors=structuredClone(anchors);
     if(metadata&&hasCurves)metadata.curves=structuredClone(curves);

@@ -200,5 +200,9 @@ export function renderSvg(frame: EvaluatedFrame, options: SvgOptions = {}): stri
   const cameraTransform = `translate(${number(logicalWidth / 2)} ${number(logicalHeight / 2)}) scale(${number(camera.zoom)}) rotate(${number(-(camera.rotation ?? 0) * 180 / Math.PI)}) translate(${number(-logicalWidth / 2 - camera.x)} ${number(-logicalHeight / 2 - camera.y)})`;
   const background = options.background === undefined ? '#091c27' : options.background;
   const backdrop = background === 'transparent' ? '' : `<rect width="${number(logicalWidth)}" height="${number(logicalHeight)}" fill="${escapeXml(background)}"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${number(width)}" height="${number(height)}" viewBox="0 0 ${number(logicalWidth)} ${number(logicalHeight)}" role="img" aria-label="Texloom scene at ${number(frame.time)} seconds" color="#e7eee4"><defs>${defs.join('')}</defs>${backdrop}<g transform="${cameraTransform}" fill="#e7eee4" stroke="none">${scene}</g></svg>`;
+  const descriptions=Object.values(frame.mathTransforms??{}).filter(report=>report.active).map(report=>report.description);
+  const descriptionId=`${prefix}-math-description`;
+  const describedBy=descriptions.length?` aria-describedby="${descriptionId}"`:'';
+  const description=descriptions.length?`<desc id="${descriptionId}">${escapeXml(descriptions.join(' '))}</desc>`:'';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${number(width)}" height="${number(height)}" viewBox="0 0 ${number(logicalWidth)} ${number(logicalHeight)}" role="img" aria-label="Texloom scene at ${number(frame.time)} seconds"${describedBy} color="#e7eee4">${description}<defs>${defs.join('')}</defs>${backdrop}<g transform="${cameraTransform}" fill="#e7eee4" stroke="none">${scene}</g></svg>`;
 }

@@ -202,24 +202,24 @@ def capture_animation(records: list[dict], execution: Path, output: Path) -> dic
                 else:
                     node['value'] = _value(_json(read('value')), 'value')
                     node['sourceSpan'] = captured['value']
-            elif kind in ('morph', 'clone', 'enter', 'exit'):
+            elif kind in ('morph', 'math-transform', 'clone', 'enter', 'exit'):
                 allowed = {'id'} if kind == 'clone' else {'id', 'duration', 'easing'}
                 if kind in ('enter', 'exit'):
                     allowed.add('mode')
                 options = _options(read('options'), allowed)
-                if kind in ('morph', 'clone') and 'id' not in options:
+                if kind in ('morph', 'math-transform', 'clone') and 'id' not in options:
                     raise AnimationCaptureDiagnostic(f'Animation {kind} requires an explicit instance id')
                 if 'id' in options:
                     node['id'] = options['id']
                 if kind != 'clone':
                     _timing(node, options)
-                if kind in ('morph', 'clone'):
+                if kind in ('morph', 'math-transform', 'clone'):
                     node['source'] = name('source')
-                    if kind == 'morph':
+                    if kind in ('morph', 'math-transform'):
                         node['destination'] = name('destination')
                         correspondence = _json(read('correspondence'))
                         if not isinstance(correspondence, dict):
-                            raise AnimationCaptureDiagnostic('Morph correspondence must be a JSON object')
+                            raise AnimationCaptureDiagnostic(f'Animation {kind} correspondence must be a JSON object')
                         _finite_json(correspondence)
                         node['correspondence'] = correspondence
                         node['sourceSpan'] = captured['correspondence']

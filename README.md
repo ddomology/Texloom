@@ -445,8 +445,18 @@ boxes; transparent markers never infer logical boxes from ink.
 and overlap rules. `\loompartview` creates ordinary independently animatable
 nodes using that selection, consumed by the existing SVG, Canvas and Chalkspace
 renderers. See the [semantic parts guide](docs/text-parts.md) and
-[real TeX example](examples/semantic-math-parts.tex). Formula-to-formula matching
-and semantic morphs are the next milestone.
+[real TeX example](examples/semantic-math-parts.tex). PR22 below adds explicit
+formula-to-formula correspondence.
+
+### Formula part transformations (PR 22)
+
+`\loommathtransform` maps authored part IDs between two native TeX formulas.
+It supports explicit replacement, one-to-many copies, retained sources,
+unmatched fades and measured or explicit alignment anchors. Exact endpoints
+use the original complete resources; native outlines move and crossfade during
+the transition. Shared frame metadata describes the same semantic state used
+by SVG accessibility. See the [formula transform guide](docs/math-transforms.md)
+and [three-stage algebra example](examples/math-transformations.tex).
 
 ## Core API
 

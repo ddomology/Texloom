@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-animation,texloom-math}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{28}{34}\selectfont},
+  subtitle/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=ink,font=\sffamily\bfseries\fontsize{10}{14}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=15,title={Algebra with explicit correspondence}]
+\loomnode[heading] (heading) at (480,47) {Algebra with explicit correspondence};
+\loomnode[subtitle] (subtitle) at (480,84) {Move a named term. Copy it deliberately. Let native TeX define every endpoint.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,113)--(905,113) (55,330)--(905,330) (55,492)--(905,492);};
+\loomnode[label,text=mint] (algebra-label) at (480,145) {01 / MOVE THE DENOMINATOR, THEN COLLECT THE TERMS};
+
+% Only genuine measured boxes provide logical-center anchors. The strict native
+% guard rejects boxing 2 in stages B/C, so those parts remain transparent. The
+% factor's explicit routing point is in native resource-local bp. Operators and
+% fraction rules are intentionally unmatched native paint and use the fade policy.
+\TLMath{stage-a-art}{\frac{\loompartbox{left-x}{x}+\loompartbox{right-x}{x}}{\loompartbox{divisor}{2}}=\loompartbox{three}{3}}
+\TLMath{stage-b-art}{\loompartbox{left-x}{x}+\loompartbox{right-x}{x}=\loompart{factor}{2}\cdot\loompartbox{three}{3}}
+\TLMath{stage-c-art}{\loompart{coefficient}{2}\loompartbox{result-x}{x}=\loompartbox{six}{6}}
+\TLNode{stage-a}{tex}{"resourceId":"stage-a-art","x":365,"y":244,"scale":4,"visible":false,"style":{"fill":"#E5F1EF","opacity":1}}
+\TLNode{stage-b}{tex}{"resourceId":"stage-b-art","x":325,"y":244,"scale":4,"visible":false,"style":{"fill":"#E5F1EF","opacity":1}}
+\TLNode{stage-c}{tex}{"resourceId":"stage-c-art","x":415,"y":244,"scale":4,"visible":false,"style":{"fill":"#E5F1EF","opacity":1}}
+\TLNode{intro}{tex}{"resourceId":"stage-a-art","x":365,"y":244,"scale":4,"style":{"fill":"#E5F1EF","opacity":1}}
+\loomnode[small,text=gold] (caption-a) at (480,304) {The denominator becomes a factor on the right.};
+\begin{loomgroup}[opacity=0]{caption-b}
+  \loomnode[small,text=gold] (caption-b-text) at (480,304) {Combine like terms on the left; evaluate the product on the right.};
+\end{loomgroup}
+\begin{loomgroup}[opacity=0]{caption-c}
+  \loomnode[small,text=gold] (caption-c-text) at (480,304) {The final expression is the target's original TeX geometry.};
+\end{loomgroup}
+
+\loomnode[label,text=coral] (copy-label) at (480,360) {02 / ONE SOURCE, TWO EXPLICIT COPIES};
+\TLMath{copy-source-art}{\loompartbox{seed}{x}}
+\TLMath{copy-target-art}{\loompartbox{first}{x}+\loompartbox{second}{x}}
+\TLNode{copy-source}{tex}{"resourceId":"copy-source-art","x":228,"y":432,"scale":3.4,"visible":false,"style":{"fill":"#EE8D82","opacity":1}}
+\TLNode{copy-target}{tex}{"resourceId":"copy-target-art","x":651,"y":432,"scale":3.4,"visible":false,"style":{"fill":"#EE8D82","opacity":1}}
+\TLNode{copy-intro}{tex}{"resourceId":"copy-source-art","x":228,"y":432,"scale":3.4,"style":{"fill":"#EE8D82","opacity":1}}
+\loompath (copy-guide) {\draw[rule,line width=1bp,->] (302,423)--(580,423);};
+\loomnode[small] (copy-caption) at (480,470) {Each destination has an authored identity. The original source remains.};
+\loomnode[small] (footer) at (480,520) {TEXLOOM / NATIVE PARTS / DECLARED CORRESPONDENCE / SHARED TIME};
+
+\begin{loomanimation}[origin=0.75]
+  \loomcue{begin}
+  \begin{loomparallel}
+    \begin{loomsequence}
+      \loomsetvalue{intro}{style.opacity}|0|
+      \loommathtransform[id=move-denominator,duration=4,easing=smooth]{stage-a}{stage-b}|{"approved":true,"retention":"replace","pairs":[{"source":"left-x","target":"left-x","mode":"replace","sourceAnchor":"logical-center","targetAnchor":"logical-center"},{"source":"right-x","target":"right-x","mode":"replace","sourceAnchor":"logical-center","targetAnchor":"logical-center"},{"source":"divisor","target":"factor","mode":"replace","sourceAnchor":"logical-center","targetAnchor":[46.395412567,-3.764259029]},{"source":"three","target":"three","mode":"replace","sourceAnchor":"logical-center","targetAnchor":"logical-center"}],"unmatched":"fade","labels":{"source":"The sum x plus x, divided by two, equals three.","target":"x plus x equals two times three."}}|
+      \loomcue{denominator-moved}
+      \loomwait{1.25}
+      \loomsetvalue{move-denominator}{style.opacity}|0|
+      \loomsetvalue{caption-a}{style.opacity}|0|
+      \loomsetvalue{caption-b}{style.opacity}|1|
+      \loommathtransform[id=collect-terms,duration=4,easing=smooth]{stage-b}{stage-c}|{"approved":true,"retention":"replace","pairs":[{"source":"left-x","target":"result-x","mode":"replace","sourceAnchor":"logical-center","targetAnchor":"logical-center"}],"unmatched":"fade","labels":{"source":"x plus x equals two times three.","target":"Two x equals six."}}|
+      \loomcue{terms-collected}
+      \loomwait{1}
+      \loomsetvalue{caption-b}{style.opacity}|0|
+      \loomsetvalue{caption-c}{style.opacity}|1|
+      \loomwait{3.25}
+    \end{loomsequence}
+    \begin{loomsequence}
+      \loomwait{1.25}
+      \loomsetvalue{copy-intro}{style.opacity}|0|
+      \loommathtransform[id=make-copies,duration=5,easing=smooth]{copy-source}{copy-target}|{"approved":true,"retention":"keep-source","pairs":[{"source":"seed","target":"first","mode":"copy","sourceAnchor":"logical-center","targetAnchor":"logical-center"},{"source":"seed","target":"second","mode":"copy","sourceAnchor":"logical-center","targetAnchor":"logical-center"}],"unmatched":"fade","labels":{"source":"One original x.","target":"The original x remains, with two named copies at the destination."}}|
+      \loomcue{copies-complete}
+      \loomwait{7.25}
+    \end{loomsequence}
+  \end{loomparallel}
+  \loomcue{complete}
+\end{loomanimation}
+\end{loomscene}
+\end{document}

@@ -52,3 +52,5 @@ export * from './geometry/correspondence.js';
 export {validateMorphProgram,prepareMorphProgram,morphWrites,type MorphProgram,type MorphOperation,type MorphReport,type MorphEvaluation} from './timeline/morph.js';
 export * from './ir/text-parts.js';
 export {lowerTextPartViews,type TextPartViewRecord} from './ir/text-part-views.js';
+export * from './operations/text-parts.js';
+export * from './timeline/math-transform.js';

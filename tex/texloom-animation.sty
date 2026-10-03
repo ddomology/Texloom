@@ -37,6 +37,11 @@
 \NewDocumentCommand\loommorph{O{} m m +v}{%
   \TLAnimationStart{morph}\TLEmetadata{options}{#1}%
   \TLEmetadata{source}{#2}\TLEmetadata{destination}{#3}\TLEwrite{correspondence}{#4}}
+% Semantic math correspondence names native TeX parts. Its policy stays literal
+% JSON and is validated by the same shared timeline compiler as geometry morphs.
+\NewDocumentCommand\loommathtransform{O{} m m +v}{%
+  \TLAnimationStart{math-transform}\TLEmetadata{options}{#1}%
+  \TLEmetadata{source}{#2}\TLEmetadata{destination}{#3}\TLEwrite{correspondence}{#4}}
 \NewDocumentCommand\loomclone{O{} m}{%
   \TLAnimationStart{clone}\TLEmetadata{options}{#1}\TLEmetadata{source}{#2}}
 \NewDocumentCommand\loomenter{O{} m}{%
