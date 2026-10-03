@@ -78,14 +78,16 @@ class InstancePlayerTests(unittest.TestCase):
         self.assertEqual([name for name,value in frame['resources'].items() if value['kind']=='mesh'],['arrow','sample-surface'])
         points=list(zip(*[iter(mesh['positions']['data'])]*3));batch=frame['space3d']['instanceBatches'][0]
         self.assertEqual(batch['prototypeResourceId'],'arrow');self.assertEqual(batch['setId'],'directions')
-        identity_hash=hash32(json.dumps(['sample-surface',mesh['topologyRevision'],'vertex'],separators=(',',':')))
+        identity=json.dumps(['sample-surface',mesh['topologyRevision'],'vertex'],separators=(',',':'))
+        # Four independently salted lanes form the final 128-bit source identity.
+        identity_hash=''.join(f'{hash32(json.dumps([identity,lane],separators=(",",":"))):08x}' for lane in range(4))
         selected=[];phase=math.pi*time/4
         for index,(point,record,evaluated) in enumerate(zip(points,records,batch['instances'])):
             x,y,z=point
             self.assertAlmostEqual(z,.2*math.cos(x)*math.sin(y),delta=2e-12)
             self.assertAlmostEqual((x+2.25)/.3,round((x+2.25)/.3),delta=2e-12)
             self.assertAlmostEqual((y+2.25)/.3,round((y+2.25)/.3),delta=2e-12)
-            self.assertEqual(record['id'],f'mesh:{identity_hash:08x}:vertex:{index}')
+            self.assertEqual(record['id'],f'mesh:{identity_hash}:vertex:{index}')
             randoms=[random_lane(3401,'directions',record['id'],channel) for channel in range(4)]
             yes=randoms[3]<density;self.assertEqual(record['selected'],yes);self.assertEqual(evaluated['selected'],yes)
             if yes:selected.append(record['id'])
