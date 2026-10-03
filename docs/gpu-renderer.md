@@ -86,8 +86,13 @@ render clears both color and depth. Omitted background is transparent.
   they do not add a hidden filled surface, lighting, or a custom line width.
   Backend line rasterization is device dependent. Geometry is shared between
   filled and wireframe instances; their materials have separate cache entries.
+- PR32 adds immutable `curve3d` resources and evaluated `space3d.curves` line
+  strips. They use the same authoritative camera/model-view matrices, depth and
+  clipping. Closed curves repeat their first endpoint. Backend lines have the
+  device's standard one-pixel width; there is no tube or swept surface.
 - Depth testing and depth writes are enabled. Equal-depth ties follow evaluated
-  instance order, which is restored independently of previous renders.
+  mesh instance order, followed by evaluated curve order. This order is restored
+  independently of previous renders, including changing an ID's primitive kind.
 - World clipping planes keep points for which `dot(normal, point) + constant`
   is nonnegative. At most eight planes are supported.
 - Reflection and front-face handling preserve the authored side convention.
@@ -99,14 +104,14 @@ render clears both color and depth. Omitted background is transparent.
 - Resize changes the raster dimensions, not the camera's logical aspect ratio.
   The host fits the logical viewport into its output region.
 
-The GPU adapter paints meshes only. The shared scene Canvas compositor handles
+The GPU adapter paints meshes and 3D curves. The shared scene Canvas compositor handles
 native 2D content and projected TeX overlays after the GPU pass. Overlay
 visibility, projection and anchor positions come from the evaluated frame;
 the mesh renderer does not infer them.
 
 ## Ownership, precision and limits
 
-Mesh resources must be immutable evaluated resources. Geometry is keyed by the
+Mesh and curve resources must be immutable evaluated resources. Geometry is keyed by the
 resource object's identity, so two instances can share one upload. A different
 resource with the same textual ID replaces the geometry. Cache entries not used
 by the current visible frame are disposed. Colors and side policies share
@@ -115,7 +120,8 @@ materials while they are in use; instance IDs retain only renderer-owned objects
 Uploads are independently owned compact arrays. The shared JSON resource and
 another renderer's storage cannot be modified through them. Float64 positions
 are explicitly converted to float32 for WebGL. Overflow, nonzero underflow and
-new triangle degeneracy introduced by conversion produce `GPU_PRECISION`.
+new triangle degeneracy or collapsed curve segments introduced by conversion
+produce `GPU_PRECISION`.
 Transform rank/orientation changes after float32 conversion, and a backend
 determinant sign inconsistent with the evaluated sign, are also rejected.
 Ordinary float32 rounding remains part of GPU output; this is not a float64
@@ -128,7 +134,7 @@ unused vertex normals.
 
 The adapter limits each dimension to 4,096 pixels, the output to 16,777,216
 pixels, active geometry buffers to 128 MiB, instances to 4,096 and drawn
-triangles per frame to one million. Device drawing-buffer limits may be lower
+triangles and curve segments per frame to one million each. Device drawing-buffer limits may be lower
 and are checked before resize. Mesh resource limits still apply independently.
 Unsupported inputs fail explicitly rather than truncating buffers or geometry.
 
@@ -141,7 +147,8 @@ new mesh replaces the prior frame's upload and unused geometry is disposed.
 
 `stats()` returns a frozen snapshot of state, dimensions, active geometry,
 material and instance counts, buffer bytes, successful render count, last draw
-calls/triangles and context generation. These counters describe this adapter;
+calls/triangles/line segments and context generation. Line segment counts also
+include mesh wireframe draws reported by Three. These counters describe this adapter;
 they are not process-wide GPU memory measurements.
 
 ## Context loss and teardown
@@ -176,3 +183,18 @@ float32 limitations, disposal and actual context loss/restoration. The raw GL
 reference has no Three or Texloom rendering imports. Fixed-device repeatability
 and cross-backend comparison are separate assertions; exact cross-GPU pixels
 are not promised.
+
+PR32 extends that independent reference with `GL_LINE_STRIP`: line/triangle
+depth, world clipping and affine camera scale must match every RGBA channel.
+Curve uploads also pass primitive replacement, cache pruning, reverse rendering
+and actual context loss/restoration checks.
+
+Exact Canvas readback comparisons pin the host 2D contexts with
+`getContext('2d', {willReadFrequently: true})`. Chromium may otherwise migrate a
+host canvas between accelerated and software backends after repeated readbacks;
+in the curve fixture this changed six static-text RGB channels by one unit at
+partially transparent edges. This is a backend/alpha conversion difference,
+not a changed sampled frame. The compositor preserves the caller's context,
+clip and state; it cannot promise byte-identical captures across host backend
+changes. The pinned-backend conformance test requires both zero differing RGBA
+channels and identical PNGs after reverse seeking.

@@ -35,7 +35,7 @@ const empty=(store:AssetStore)=>{
 
 test('portable package snapshots preserve exact payload strings and reject structural ambiguity',()=>{
   const authored=scenePackage(),frozen=snapshotScenePackage(authored);assert.deepEqual(validateScenePackage(authored),[]);
-  assert.ok(authored.assets.entries[0].kind!=='mesh');assert.ok(frozen.assets.entries[0].kind!=='mesh');
+  assert.ok(authored.assets.entries[0].kind==='vector');assert.ok(frozen.assets.entries[0].kind==='vector');
   authored.scene.title='changed';authored.assets.entries[0].bounds[0]=9;
   assert.equal(frozen.scene.title,'Assets');assert.equal(frozen.assets.entries[0].bounds[0],0);
   assert.ok(Object.isFrozen(frozen.assets.entries[0].source));assert.equal(Object.isFrozen(authored),false);

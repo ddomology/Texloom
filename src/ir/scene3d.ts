@@ -2,6 +2,7 @@ import {validateBundle,type Resource} from '../schema.js';
 import {type Diagnostic,type DeepReadonly,OperationValidationError} from './operations.js';
 import {validateJsonData,freezeSnapshot} from '../operations/values.js';
 import {validateMeshResource,type MeshUnit,type MeshResource} from './mesh.js';
+import {validateCurve3DResource,type Curve3DResource} from './curve3d.js';
 import {composeTransform3D,identityMatrix4,multiplyMatrix4,inverseMatrix4,normalMatrix3D,
   orientationMatrix4,transformBounds3D,transformPoint3D,normalizeQuaternion,normalizeVec3,validateTransform3D,
   type Transform3D,type Matrix4,type Matrix3,type Bounds3D,type Vec3,type Quaternion} from '../geometry/matrix4.js';
@@ -12,7 +13,8 @@ interface SpatialNode {id:string;parent?:string;transform?:Transform3D}
 export interface Group3D extends SpatialNode {kind:'group'}
 export interface UnlitMaterial3D {kind:'unlit';color:string;side?:'front'|'double';wireframe?:boolean}
 export interface MeshInstance3D extends SpatialNode {kind:'mesh';resourceId:string;visible?:boolean;material?:UnlitMaterial3D}
-export type SceneNode3D=Group3D|MeshInstance3D;
+export interface CurveInstance3D extends SpatialNode {kind:'curve';resourceId:string;visible?:boolean;color?:string}
+export type SceneNode3D=Group3D|MeshInstance3D|CurveInstance3D;
 /** Camera local forward -Z, up +Y. Projection uses the logical Bundle viewport aspect. */
 export interface Camera3D extends SpatialNode {projection?:Projection3D}
 /** World half-space: keep dot(normal, point) + constant >= 0. */
@@ -33,9 +35,14 @@ export interface EvaluatedMeshInstance3D {
 export interface EvaluatedOverlay3D {
   id:string;resourceId:string;worldPosition:Vec3;position:[number,number]|null;ndc:Vec3|null;visible:boolean;scale:number;color:string;
 }
+export interface EvaluatedCurveInstance3D {
+  id:string;resourceId:string;visible:boolean;color:string;topologyRevision:string;
+  worldMatrix:Readonly<Matrix4>;modelViewMatrix:Readonly<Matrix4>|null;worldBounds:DeepReadonly<Bounds3D>|null;
+}
 export interface Space3DEvaluation {
   version:1;units:MeshUnit;handedness:'right';upAxis:'z';
   groups:{id:string;worldMatrix:Readonly<Matrix4>}[];instances:EvaluatedMeshInstance3D[];
+  curves:EvaluatedCurveInstance3D[];
   camera:{id:string;worldMatrix:Readonly<Matrix4>;viewMatrix:Readonly<Matrix4>;forwardAxis:'-z';upAxis:'y';
     projection:Projection3D|null;projectionMatrix:Readonly<Matrix4>|null;viewProjectionMatrix:Readonly<Matrix4>|null;aspect:number|null}|null;
   clippingPlanes:ClippingPlane3D[];overlays:EvaluatedOverlay3D[];diagnostics:Diagnostic[];
@@ -67,9 +74,9 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
   const byId=new Map<string,SceneNode3D|Camera3D>(),checkedResources=new Set<string>();
   const check=(node:unknown,at:string,camera=false)=>{
     if(!object(node)){error('SPACE3D_NODE','Expected a spatial object.',at);return;}
-    keys(node,camera?['id','parent','transform','projection']:node.kind==='mesh'?['kind','id','parent','transform','resourceId','visible','material']:['kind','id','parent','transform'],at);
+    keys(node,camera?['id','parent','transform','projection']:node.kind==='mesh'?['kind','id','parent','transform','resourceId','visible','material']:node.kind==='curve'?['kind','id','parent','transform','resourceId','visible','color']:['kind','id','parent','transform'],at);
     if(!name(node.id)||byId.has(node.id))error('SPACE3D_ID','IDs must be unique, nonempty and at most 256 characters.',at+'.id');else byId.set(node.id,node as SceneNode3D);
-    if(!camera&&!['group','mesh'].includes(node.kind))error('SPACE3D_KIND','Expected group or mesh.',at+'.kind');
+    if(!camera&&!['group','mesh','curve'].includes(node.kind))error('SPACE3D_KIND','Expected group, mesh or curve.',at+'.kind');
     if(node.parent!==undefined&&!name(node.parent))error('SPACE3D_PARENT','Expected a parent group ID.',at+'.parent');
     if(node.transform!==undefined)diagnostics.push(...validateTransform3D(node.transform,at+'.transform'));
     if(camera&&node.projection!==undefined){diagnostics.push(...validateProjection3D(node.projection,at+'.projection'));if(context.viewport===undefined)error('SPACE3D_VIEWPORT','Projected cameras require a logical viewport.',at+'.projection');}
@@ -81,6 +88,14 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
         if(!inContext&&!checkedResources.has(node.resourceId)){diagnostics.push(...validateMeshResource(r,`$.resources.${node.resourceId}`));checkedResources.add(node.resourceId);}}
       if(node.material!==undefined){if(!object(node.material))error('SPACE3D_MATERIAL','Expected an unlit material.',at+'.material');
         else {keys(node.material,['kind','color','side','wireframe'],at+'.material');if(node.material.kind!=='unlit'||!color(node.material.color)||node.material.side!==undefined&&!['front','double'].includes(node.material.side)||node.material.wireframe!==undefined&&typeof node.material.wireframe!=='boolean')error('SPACE3D_MATERIAL','Expected kind unlit, #rrggbb color, front/double side and optional boolean wireframe.',at+'.material');}}
+    }
+    if(!camera&&node.kind==='curve'){
+      if(node.visible!==undefined&&typeof node.visible!=='boolean')error('SPACE3D_VISIBLE','visible must be boolean.',at+'.visible');
+      if(node.color!==undefined&&!color(node.color))error('SPACE3D_CURVE_COLOR','Expected an opaque #rrggbb curve color.',at+'.color');
+      const r=resourceName(node.resourceId)&&Object.hasOwn(resources,node.resourceId)?resources[node.resourceId]:undefined;
+      if(!r||r.kind!=='curve3d')error('SPACE3D_RESOURCE','Curve instances require an existing curve3d resource.',at+'.resourceId');
+      else {if(r.units!==input.units)error('SPACE3D_UNIT_MISMATCH','Curve and world units must match exactly.',at+'.resourceId');
+        if(!inContext&&!checkedResources.has(node.resourceId)){diagnostics.push(...validateCurve3DResource(r,`$.resources.${node.resourceId}`));checkedResources.add(node.resourceId);}}
     }
   };
   input.nodes.forEach((n:unknown,i:number)=>check(n,`${path}.nodes[${i}]`));if(input.camera!==undefined)check(input.camera,path+'.camera',true);
@@ -128,9 +143,11 @@ function inspect(input:unknown,resources:Record<string,Resource>,path:string,inC
 export function validateSpace3D(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={}):Diagnostic[]{return inspect(input,resources,path,false,context);}
 export function validateSpace3DInContext(input:unknown,resources:Record<string,Resource>,path='$.space3d',context:Space3DContext={}):Diagnostic[]{return inspect(input,resources,path,true,context);}
 export interface MeshFrameMetadata3D {bounds:Bounds3D|null;topologyRevision:string}
+/** Local translation and rotation supplied by a prepared geometric constraint. Scale stays authored. */
+export interface FrameTransform3D {translation:Vec3;rotation:Quaternion}
 type MeshMetadata=Record<string,MeshFrameMetadata3D>;
 function metadata(program:Space3D,resources:Record<string,Resource>):MeshMetadata {
-  const result:MeshMetadata={};for(const node of program.nodes)if(node.kind==='mesh'&&!Object.hasOwn(result,node.resourceId)){const r=resources[node.resourceId] as MeshResource;Object.defineProperty(result,node.resourceId,{value:{bounds:structuredClone(r.bounds),topologyRevision:r.topologyRevision},enumerable:true});}return result;
+  const result:MeshMetadata={};for(const node of program.nodes)if(node.kind!=='group'&&!Object.hasOwn(result,node.resourceId)){const r=resources[node.resourceId] as MeshResource|Curve3DResource;Object.defineProperty(result,node.resourceId,{value:{bounds:structuredClone(r.bounds),topologyRevision:r.topologyRevision},enumerable:true});}return result;
 }
 function interpolate(track:TransformTrack3D,time:number):Vec3|Quaternion {
   const keys=track.keys;if(time<=keys[0][0])return [...keys[0][1]] as Vec3|Quaternion;if(time>=keys.at(-1)![0])return [...keys.at(-1)![1]] as Vec3|Quaternion;
@@ -151,47 +168,66 @@ function planeContains(p:ClippingPlane3D,point:readonly number[]):boolean {
   // Closed half-spaces tolerate arithmetic roundoff only, relative to the actual plane terms.
   return sum>=-8*Number.EPSILON*scaled.reduce((s,n)=>s+Math.abs(n),0);
 }
-function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3DContext,time:number):Space3DEvaluation {
+function evaluateValidated(program:Space3D,resources:MeshMetadata,context:Space3DContext,time:number,frameTransforms:DeepReadonly<Record<string,FrameTransform3D>>={}):Space3DEvaluation {
   const objects:(SceneNode3D|Camera3D)[]=[...program.nodes,...(program.camera?[program.camera]:[])],byId=new Map(objects.map(n=>[n.id,n])),transforms=new Map(objects.map(n=>[n.id,structuredClone(n.transform??{})]));
   for(const track of program.tracks??[])Object.assign(transforms.get(track.target)!,{[track.property]:interpolate(track,time)});
+  for(const [id,value] of Object.entries(frameTransforms))Object.assign(transforms.get(id)!,{translation:[...value.translation],rotation:[...value.rotation]});
   const world=new Map<string,Readonly<Matrix4>>();for(const node of objects){const pending:(SceneNode3D|Camera3D)[]=[];let current:SceneNode3D|Camera3D|undefined=node;
     while(current&&!world.has(current.id)){pending.push(current);current=current.parent?byId.get(current.parent):undefined;}
     while(pending.length){const next=pending.pop()!;world.set(next.id,multiplyMatrix4(next.parent?world.get(next.parent)!:identityMatrix4(),composeTransform3D(transforms.get(next.id))));}}
   let camera:Space3DEvaluation['camera']=null;if(program.camera){const worldMatrix=world.get(program.camera.id)!,viewMatrix=inverseMatrix4(worldMatrix),projection=program.camera.projection??null,projectionMatrix=projection?projectionMatrix3D(projection,context.viewport!):null;
     camera={id:program.camera.id,worldMatrix,viewMatrix,forwardAxis:'-z',upAxis:'y',projection:projection?structuredClone(projection):null,projectionMatrix,viewProjectionMatrix:projectionMatrix?viewProjectionMatrix3D(projectionMatrix,viewMatrix):null,aspect:projection?context.viewport!.width/context.viewport!.height:null};}
-  const diagnostics:Diagnostic[]=[],instances:EvaluatedMeshInstance3D[]=[],groups:Space3DEvaluation['groups']=[];
+  const diagnostics:Diagnostic[]=[],instances:EvaluatedMeshInstance3D[]=[],curves:EvaluatedCurveInstance3D[]=[],groups:Space3DEvaluation['groups']=[];
   for(const node of program.nodes){const worldMatrix=world.get(node.id)!;if(node.kind==='group'){groups.push({id:node.id,worldMatrix});continue;}
+    if(node.kind==='curve'){const r=resources[node.resourceId];curves.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,color:node.color??'#d4d9e2',topologyRevision:r.topologyRevision,worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});continue;}
     const r=resources[node.resourceId],orientation=orientationMatrix4(worldMatrix);let normalMatrix:Readonly<Matrix3>|null=null;
     if(orientation===0)diagnostics.push({severity:'warning',code:'SPACE3D_SINGULAR_NORMAL',message:`${node.id}: singular transform has no normal matrix or winding.`,path:`$.space3d.nodes[${program.nodes.indexOf(node)}].transform`});else normalMatrix=normalMatrix3D(worldMatrix);
     instances.push({id:node.id,resourceId:node.resourceId,visible:node.visible!==false,topologyRevision:r.topologyRevision,material:{kind:'unlit',color:node.material?.color??'#d4d9e2',side:node.material?.side??'front',wireframe:node.material?.wireframe??false},worldMatrix,modelViewMatrix:camera?multiplyMatrix4(camera.viewMatrix,worldMatrix):null,normalMatrix,orientation,worldWinding:orientation===0?null:orientation===1?'ccw':'cw',worldBounds:r.bounds?transformBounds3D(worldMatrix,r.bounds):null});}
   const clippingPlanes=(program.clippingPlanes??[]).map(normalizedPlane),overlays=(program.overlays??[]).map((overlay):EvaluatedOverlay3D=>{
     const worldPosition=[...transformPoint3D(overlay.parent?world.get(overlay.parent)!:identityMatrix4(),overlay.position)] as Vec3,projected=camera?.viewProjectionMatrix?projectPoint3D(worldPosition,camera.viewProjectionMatrix,context.viewport!):null;
     const position=projected?.position?[projected.position[0]+(overlay.offset?.[0]??0),projected.position[1]+(overlay.offset?.[1]??0)] as [number,number]:null;if(position)range(position);
-    const parent=overlay.parent?byId.get(overlay.parent):undefined,hidden=parent&&'kind' in parent&&parent.kind==='mesh'&&parent.visible===false;
+    const parent=overlay.parent?byId.get(overlay.parent):undefined,hidden=parent&&'kind' in parent&&parent.kind!=='group'&&parent.visible===false;
     return {id:overlay.id,resourceId:overlay.resourceId,worldPosition,position,ndc:projected?.ndc?[...projected.ndc]:null,visible:!hidden&&!!projected?.visible&&clippingPlanes.every(p=>planeContains(p,worldPosition)),scale:overlay.scale??1,color:overlay.color??'#ffffff'};});
-  return {version:1,units:program.units,handedness:'right',upAxis:'z',groups,instances,camera,clippingPlanes,overlays,diagnostics};
+  return {version:1,units:program.units,handedness:'right',upAxis:'z',groups,instances,curves,camera,clippingPlanes,overlays,diagnostics};
 }
 /** Static time-zero preparation remains available for existing numeric consumers. */
 export function prepareSpace3D(program:Space3D,resources:Record<string,Resource>,context:Space3DContext={}):DeepReadonly<Space3DEvaluation>{
   const diagnostics=validateSpace3D(program,resources,'$.space3d',context);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);return freezeSnapshot(evaluateValidated(program,metadata(program,resources),context,0));
 }
 /** Snapshot declarations and mesh metadata, without copying or retaining caller-owned vertex buffers. */
-export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Resource>,context:{viewport:Viewport3D;duration:number},dynamicResourceIds:readonly string[]=[]):(time:number,dynamicMeshes?:DeepReadonly<Record<string,MeshFrameMetadata3D>>)=>DeepReadonly<Space3DEvaluation>{
+export function prepareSpace3DSampler(program:Space3D,resources:Record<string,Resource>,context:{viewport:Viewport3D;duration:number},dynamicResourceIds:readonly string[]=[],initialTransforms:DeepReadonly<Record<string,FrameTransform3D>>={}):(time:number,dynamicMeshes?:DeepReadonly<Record<string,MeshFrameMetadata3D>>,frameTransforms?:DeepReadonly<Record<string,FrameTransform3D>>)=>DeepReadonly<Space3DEvaluation>{
   if(context===undefined)throw new OperationValidationError([{severity:'error',code:'SPACE3D_CONTEXT',message:'Sampler requires viewport and finite nonnegative duration.'}]);
   const diagnostics=validateSpace3D(program,resources,'$.space3d',context);if(hasErrors(diagnostics))throw new OperationValidationError(diagnostics);
   if(!finite(context.duration)||context.duration<0||!context.viewport)throw new OperationValidationError([{severity:'error',code:'SPACE3D_CONTEXT',message:'Sampler requires viewport and finite nonnegative duration.'}]);
   const idsDiagnostics=validateJsonData(dynamicResourceIds,'$.dynamicResourceIds');if(idsDiagnostics.length)throw new OperationValidationError(idsDiagnostics);
-  if(!Array.isArray(dynamicResourceIds)||dynamicResourceIds.length>4096||new Set(dynamicResourceIds).size!==dynamicResourceIds.length||dynamicResourceIds.some(id=>!resourceName(id)||!Object.hasOwn(resources,id)||resources[id].kind!=='mesh'))throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_RESOURCE',message:'Dynamic IDs must be distinct declared mesh resources.'}]);
-  const ids=Object.freeze([...dynamicResourceIds]),snapshot=structuredClone(program),ctx=structuredClone(context),meshes=metadata(program,resources),constant=snapshot.tracks?.length||ids.length?undefined:freezeSnapshot(evaluateValidated(snapshot,meshes,ctx,0));
-  return (time,dynamicMeshes)=>{
+  if(!Array.isArray(dynamicResourceIds)||dynamicResourceIds.length>4096||new Set(dynamicResourceIds).size!==dynamicResourceIds.length||dynamicResourceIds.some(id=>!resourceName(id)||!Object.hasOwn(resources,id)||!['mesh','curve3d'].includes(resources[id].kind)))throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_RESOURCE',message:'Dynamic IDs must be distinct declared mesh or curve resources.'}]);
+  const snapshot=structuredClone(program),ctx=structuredClone(context);
+  const validateTransforms=(input:unknown,expected?:readonly string[]):DeepReadonly<Record<string,FrameTransform3D>>=>{
+    const ds=validateJsonData(input,'$.frameTransforms');if(ds.length)throw new OperationValidationError(ds);
+    const fail=():never=>{throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_TRANSFORM',message:'Supply exactly the declared mesh/group targets with a finite translation and nonzero quaternion, without conflicting tracks.',path:'$.frameTransforms'}]);};
+    if(!object(input)||Object.keys(input).length>256)fail();
+    const values=input as Record<string,unknown>,names=Object.keys(values);if(expected&&(names.length!==expected.length||names.some(id=>!expected.includes(id))))fail();
+    for(const [id,v] of Object.entries(values)){
+      const node=snapshot.nodes.find(n=>n.id===id);
+      if(!node||!['mesh','group'].includes(node.kind)||node.transform&&'matrix' in node.transform||(snapshot.tracks??[]).some(t=>t.target===id&&t.property!=='scale'))fail();
+      if(!object(v)||Object.keys(v).length!==2||Object.keys(v).some(k=>!['translation','rotation'].includes(k))||!tuple(v.translation,3)||!tuple(v.rotation,4)||v.rotation.every(n=>n===0))fail();
+    }
+    return freezeSnapshot(input as Record<string,FrameTransform3D>);
+  };
+  const initial=validateTransforms(initialTransforms),targets=Object.freeze(Object.keys(initial)),ids=Object.freeze([...dynamicResourceIds]),meshes=metadata(snapshot,resources);
+  // Validate real initial generated bounds and constraint transforms before publishing readiness.
+  const initialFrame=freezeSnapshot(evaluateValidated(snapshot,meshes,ctx,0,initial));
+  const constant=snapshot.tracks?.length||ids.length||targets.length?undefined:initialFrame;
+  return (time,dynamicMeshes,frameTransforms)=>{
     if(!finite(time))throw new RangeError('Spatial sample time must be finite.');let sampled=meshes;
     if(ids.length||dynamicMeshes!==undefined){
       const ds=validateJsonData(dynamicMeshes,'$.dynamicMeshes');if(ds.length)throw new OperationValidationError(ds);
-      const fail=()=>{throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_RESOURCE',message:'Supply exactly the declared dynamic mesh IDs with finite ordered bounds and a topology revision.',path:'$.dynamicMeshes'}]);};
+      const fail=()=>{throw new OperationValidationError([{severity:'error',code:'SPACE3D_DYNAMIC_RESOURCE',message:'Supply exactly the declared dynamic resource IDs with finite ordered bounds and a topology revision.',path:'$.dynamicMeshes'}]);};
       if(!object(dynamicMeshes)||Object.keys(dynamicMeshes).length!==ids.length||Object.keys(dynamicMeshes).some(id=>!ids.includes(id)))fail();
       sampled={...meshes};for(const id of ids){const r=dynamicMeshes![id];if(!object(r)||Object.keys(r).some(k=>!['bounds','topologyRevision'].includes(k))||!resourceName(r.topologyRevision)||r.bounds!==null&&(!object(r.bounds)||Object.keys(r.bounds).some(k=>!['min','max'].includes(k))||!tuple(r.bounds.min,3)||!tuple(r.bounds.max,3)||r.bounds.min.some((n:number,i:number)=>n>r.bounds!.max[i])))fail();
         Object.defineProperty(sampled,id,{enumerable:true,value:structuredClone(r)});}
     }
-    return constant??freezeSnapshot(evaluateValidated(snapshot,sampled,ctx,Math.max(0,Math.min(ctx.duration,time))));
+    const transforms=targets.length||frameTransforms!==undefined?validateTransforms(frameTransforms,targets):initial;
+    return constant??freezeSnapshot(evaluateValidated(snapshot,sampled,ctx,Math.max(0,Math.min(ctx.duration,time)),transforms));
   };
 }

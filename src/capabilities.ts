@@ -7,7 +7,8 @@ export const VECTOR_2D_FEATURES = [
   'paint.current-color', 'path.arrowheads',
 ] as const;
 export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d',
-  'camera.projection.3d','material.unlit.3d','material.wireframe.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d','surface.parametric.3d'] as const;
+  'camera.projection.3d','material.unlit.3d','material.wireframe.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d','surface.parametric.3d',
+  'curve.polyline.3d','frame.transport.3d','constraint.curve-follow.3d'] as const;
 export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
@@ -73,11 +74,13 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
   for (const resource of Object.values(bundle.resources)) {
     if (resource.kind === 'vector') vector(resource.items);
     if (resource.kind === 'mesh') features.add('mesh.triangles.3d');
+    if (resource.kind === 'curve3d') features.add('curve.polyline.3d');
   }
   if(bundle.space3d){
     features.add('transform.affine.3d');
     if(bundle.space3d.camera)features.add('camera.affine.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'))features.add('mesh.triangles.3d');
+    if(bundle.space3d.nodes.some(n=>n.kind==='curve'))features.add('curve.polyline.3d');
     if(bundle.space3d.camera?.projection)features.add('camera.projection.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material))features.add('material.unlit.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material?.wireframe))features.add('material.wireframe.3d');
@@ -86,6 +89,8 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     if(bundle.space3d.tracks?.length)features.add('animation.transform.3d');
   }
   if(bundle.surfaces?.operations.length){features.add('mesh.triangles.3d');features.add('surface.parametric.3d');}
+  if(bundle.curves3d?.operations.length){features.add('curve.polyline.3d');features.add('frame.transport.3d');}
+  if(bundle.curves3d?.followers.length)features.add('constraint.curve-follow.3d');
   for (const track of bundle.tracks) {
     if (track.property.startsWith('arrows.')) features.add('path.arrowheads');
     if (track.property.startsWith('transform.')) features.add('transform.affine.2d');

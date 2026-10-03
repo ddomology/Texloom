@@ -27,6 +27,29 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Spatial curves and transported frames (PR32)
+
+`\usepackage{texloom-curve3d}` adds `\loomspatialcurve{resource-id}|{...}|`
+and `\loomfollowcurve{target-id}|{"curveNode":"path","progress":"time/8s"}|`.
+The curve declaration supplies coordinate expressions, a fixed parameter domain,
+resolution and an explicit frame seed. The runtime creates an immutable line
+strip and discrete parallel-transport frames. A follower moves a mesh or group
+at a normalized fraction of the sampled chord length, preserving its scale.
+Its local +X/+Y/+Z axes represent tangent, normal and binormal.
+
+```sh
+python tools/compile.py examples/curve-frames.tex --out build/curve-frames
+node tools/build-gpu-player.mjs build/curve-frames/bundle.json build/curve-frames/player.html
+```
+
+The eight-second helix example carries three colored arrows and native TeX
+labels, with an authored quarter-turn twist and an adjustable radius. Seeking
+and playback use the same absolute clock. Closed curves have explicit seam
+policies; these sampled frames do not assert analytical arc length or create
+tubes/sweeps. Literal bodies and decoded expressions remain archived with source
+spans. See the [pinned feature PortSpec](docs/ports/features/pr32-curve-frames.json)
+for the supported subset, numerical policy and primary references.
+
 ### Parametric surfaces from TeX (PR31)
 
 `\usepackage{texloom-surface}` adds `\loomsurface{mesh-id}|{...}|`: a literal

@@ -66,3 +66,7 @@ export * from './geometry/projection3d.js';
 export * from './resources/buffers.js';
 export * from './ir/mesh.js';
 export * from './ir/scene3d.js';
+export * from './ir/curve3d.js';
+export * from './geometry/curve3d.js';
+export * from './geometry/frames3d.js';
+export * from './operations/curve3d.js';

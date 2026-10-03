@@ -1,5 +1,5 @@
 /** Independent test-only WebGL2 reference: no Three or Texloom rendering imports. */
-export interface ReferenceDraw {positions:number[];indices:number[];model:number[];viewProjection:number[];color:string;side:'front'|'double';orientation:number}
+export interface ReferenceDraw {positions:number[];indices:number[];model:number[];viewProjection:number[];color:string;side:'front'|'double';orientation:number;primitive?:'line-strip'}
 export function renderRawReference(canvas:HTMLCanvasElement,draws:ReferenceDraw[],width:number,height:number,planes:number[][]=[]):Uint8Array {
   canvas.width=width;canvas.height=height;
   const gl=canvas.getContext('webgl2',{antialias:false,alpha:true,preserveDrawingBuffer:true,premultipliedAlpha:true});
@@ -28,7 +28,8 @@ export function renderRawReference(canvas:HTMLCanvasElement,draws:ReferenceDraw[
     gl.uniformMatrix4fv(gl.getUniformLocation(program,'model'),false,new Float32Array(draw.model));
     gl.uniformMatrix4fv(gl.getUniformLocation(program,'viewProjection'),false,new Float32Array(draw.viewProjection));
     gl.uniform3fv(gl.getUniformLocation(program,'color'),[1,3,5].map(i=>parseInt(draw.color.slice(i,i+2),16)/255));
-    gl.drawElements(gl.TRIANGLES,draw.indices.length,gl.UNSIGNED_INT,0);
+    if(draw.primitive==='line-strip')gl.drawArrays(gl.LINE_STRIP,0,draw.positions.length/3);
+    else gl.drawElements(gl.TRIANGLES,draw.indices.length,gl.UNSIGNED_INT,0);
   }
   const pixels=new Uint8Array(width*height*4);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
   gl.deleteBuffer(vertices);gl.deleteBuffer(indices);gl.deleteVertexArray(vao);gl.deleteProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);
