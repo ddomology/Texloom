@@ -47,6 +47,14 @@ Existing `prepareScene(bundle)` remains synchronous. See the
 [asset package and lifecycle contract](docs/assets.md), including the CLI,
 resolver range rules, limits, and file/HTTP preview instructions.
 
+### Interactive Lemniro figures (PR25)
+
+`texloom/lemniro` prepares a registered, integrity-checked package into an
+independent SVG figure runtime. The paired Lemniro component adds lazy loading,
+native playback controls, static posters, reduced-motion behavior and unmount
+cleanup to figures declared in a TeX note. See the
+[figure contract and publication guide](docs/lemniro-figures.md).
+
 ## Quick start
 
 Requirements: Node 22+, Python 3.11+, TeX Live with `latex` and `dvisvgm`, and
