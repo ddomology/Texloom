@@ -62,6 +62,14 @@ for the real Chalkspace lecture renderer. The host clock drives both writing
 and scene animation, with shared readiness, native Canvas placement and full
 disposal. See the [lecture integration contract](docs/chalkspace-lectures.md).
 
+### Exact-time video capture (PR27)
+
+Lecture frame keys include the immutable content revision, exact clip clock and
+quality; held intervals can reuse a capture. `describe(t)` reports clip times
+without evaluating geometry. The standalone SVG exporter remains an uncached
+reference with a decimal-rational frame schedule, source offsets and per-frame
+manifest. See [video export and verification](docs/video-export.md).
+
 ## Quick start
 
 Requirements: Node 22+, Python 3.11+, TeX Live with `latex` and `dvisvgm`, and

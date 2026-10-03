@@ -1,4 +1,4 @@
-# Chalkspace lecture integration (PR26)
+# Chalkspace lecture integration and exact frame identity (PR26–27)
 
 `prepareChalkspaceLecture` connects compiled Texloom scenes to Chalkspace's
 actual lesson render function. The host owns its clock, camera, rows, erasures,
@@ -47,7 +47,10 @@ The lecture owns a shared asset store and its scene preparations. Cancellation
 before/during/after readiness and explicit disposal release all preparations,
 leases and Canvas surfaces. A disposed layer rejects sampling or drawing.
 
-`manifest` exposes frozen scene metadata and resolved clip timings/placements.
+`manifest` exposes frozen scene metadata, the content revision and resolved clip
+timings/placements. `describe(t)` returns each clip's ID, scene, absolute host
+time, source time, phase and visibility without evaluating any scene geometry.
+It uses `SceneClip.describe`, the same clock mapping called by `sample`.
 `sample(t)` returns each clip's ID, scene, source time, phase, visibility and
 evaluated frame. `draw` samples each clip once and returns the same metadata
 without the frame, plus the screen rectangle for visible clips.
@@ -84,10 +87,39 @@ An error is visible and rejects readiness instead of silently dropping a scene.
 The export path waits for this same promise. Host disposal aborts preparation,
 cancels the host animation frame/audio and disposes a late-arriving layer.
 
-`layer.frameKey(t)` conservatively returns `null` during any active scene clip.
-Outside active intervals it returns a stable endpoint/visibility key. This
-prevents the existing host cache from freezing a scene in an otherwise idle
-lecture interval. Revision/quality-aware optimized caching is PR27's scope.
+## Exact frame identity
+
+`layer.revision` and `layer.manifest.revision` expose the same immutable SHA-256
+fingerprint, computed once during preparation from the complete input snapshot.
+It covers scene geometry, resource content, scene identities, clip ordering,
+timings and placement. Object property insertion order is canonicalized; array
+order and signed numeric zero are preserved. Source metadata is included, so a
+metadata-only edit may conservatively invalidate a cache. The revision is not
+an authentication signature or a guarantee of identical rendering across
+different browser or renderer versions.
+
+`layer.frameKey(t, quality = '')` returns an exact string key containing the
+content revision, the host's quality tag and every clip's phase, visibility and
+source time. Active clips also include the absolute host time, preserving
+distinct representable host times even if their mapped source times happen to
+round to the same number. No decimal rounding or time quantization is applied.
+Repeated requests for the same time and quality have the same key regardless
+of seek history. Before/after intervals omit the changing host time, so an
+unchanged hidden or held endpoint can reuse its cached frame. Zero-duration
+clips use the ordinary after policy at their exact start.
+
+Keys and descriptions do not evaluate geometry, perform I/O, or change playback
+state. The `string | null` return type is retained for host compatibility; this
+adapter returns a string for every valid prepared request. Hosts may still
+receive `null` from older or custom layers and must draw those frames normally.
+
+The host must add its own board content revision, camera, captions, tools and
+output settings to the complete frame key. Pass an unambiguous quality tag for
+pixel size, frame rate or rendering choices, for example
+`JSON.stringify({width:1920,height:1080,fps:30,renderer:'canvas-1'})`. A lecture
+layer cannot infer which host configuration affects the final image. The
+content revision includes placement; it does not include a camera supplied only
+to `draw`. Changing output quality or host camera must invalidate the host key.
 
 ## Distribution and reproduction
 

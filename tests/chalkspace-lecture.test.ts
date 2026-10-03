@@ -73,9 +73,10 @@ test('reverse seeking and returned frame mutation cannot affect later lecture fr
   runtime.dispose();
 });
 
-test('frame keys never cache active embedded animation and remain stable for held endpoints',async()=>{
+test('frame keys identify exact active time and remain stable for held endpoints',async()=>{
   const runtime=await prepareChalkspaceLecture(lesson());
-  assert.equal(runtime.frameKey(10),null);assert.equal(runtime.frameKey(10.5),null);assert.equal(runtime.frameKey(18.999),null);
+  assert.equal(typeof runtime.frameKey(10),'string');assert.equal(typeof runtime.frameKey(10.5),'string');
+  assert.notEqual(runtime.frameKey(10),runtime.frameKey(10.5));assert.notEqual(runtime.frameKey(10.5),runtime.frameKey(18.999));
   assert.equal(typeof runtime.frameKey(9),'string');assert.equal(runtime.frameKey(9),runtime.frameKey(0));
   assert.equal(typeof runtime.frameKey(19),'string');assert.equal(runtime.frameKey(19),runtime.frameKey(100));
   assert.notEqual(runtime.frameKey(9),runtime.frameKey(19));runtime.dispose();
@@ -131,9 +132,61 @@ test('lecture signal cancels pending preparation and disposes a ready runtime id
   await assert.rejects(pending,diagnostic(/ABORT|DISPOS|CANCEL/));
   const controller=new AbortController(),runtime=await prepareChalkspaceLecture(lesson(),{signal:controller.signal});
   assert.equal(runtime.state,'ready');const existing=runtime.sample(11.5);controller.abort();assert.equal(runtime.state,'disposed');
+  assert.throws(()=>runtime.describe(11.5),diagnostic(/DISPOS/));
   assert.throws(()=>runtime.sample(11.5),diagnostic(/DISPOS/));assert.throws(()=>runtime.frameKey(11.5),diagnostic(/DISPOS/));
   assert.throws(()=>runtime.draw({} as CanvasRenderingContext2D,11.5,{frameWidth:16,frameHeight:9,cameraY:4.5}),diagnostic(/DISPOS/));
   runtime.dispose();runtime.dispose();assert.equal(x(existing[0]),50);
+});
+
+test('lecture descriptions share sample clock metadata and are detached from future descriptions',async()=>{
+  const runtime=await prepareChalkspaceLecture(lesson());
+  for(const time of [0,10,11.5,13,19,100]) {
+    const description=runtime.describe(time);
+    assert.deepEqual(description,runtime.sample(time).map(({frame:_frame,...clock})=>clock));
+    assert.ok(description.every(clock=>!('frame' in clock)));
+  }
+  const first=runtime.describe(11.5);first[0].sourceTime=999;
+  assert.equal(runtime.describe(11.5)[0].sourceTime,5);runtime.dispose();
+});
+
+test('revision fingerprints geometry and placement rather than only scene metadata',async()=>{
+  const first=lesson(),geometry=lesson(),placement=lesson(),timing=lesson();
+  geometry.scenes.shared.nodes[0].r=3;placement.clips[0].placement.x+=.1;timing.clips[0].timing.start+=.1;
+  const layers=await Promise.all([first,structuredClone(first),geometry,placement,timing].map(value=>prepareChalkspaceLecture(value)));
+  try {
+    assert.match(layers[0].revision,/^[0-9a-f]{64}$/);assert.equal(layers[0].revision,layers[0].manifest.revision);
+    assert.equal(layers[0].revision,layers[1].revision);assert.equal(layers[0].frameKey(11),layers[1].frameKey(11));
+    assert.equal(new Set(layers.map(layer=>layer.revision)).size,4);
+    assert.equal(new Set(layers.map(layer=>layer.frameKey(11))).size,4);
+    assert.ok(Object.isFrozen(layers[0]));assert.ok(Object.isFrozen(layers[0].manifest));
+  } finally {layers.forEach(layer=>layer.dispose());}
+});
+
+test('revision is independent of object insertion order and preserves signed numeric input',async()=>{
+  const reorder=(value:any):any=>Array.isArray(value)?value.map(reorder):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).reverse().map(key=>[key,reorder(value[key])])):value;
+  const original=lesson(),negative=lesson();negative.scenes.shared.nodes[0].x=-0;
+  const [a,b,c]=await Promise.all([original,reorder(original),negative].map(value=>prepareChalkspaceLecture(value)));
+  try {assert.equal(a.revision,b.revision);assert.notEqual(a.revision,c.revision);}finally {a.dispose();b.dispose();c.dispose();}
+});
+
+test('resource paint changes invalidate keys for both bundled and inline-package lectures',async()=>{
+  const source=bundle();source.resources.label=structuredClone(label);source.nodes.push({id:'label',kind:'tex',resourceId:'label',x:30,y:25});
+  const changed=structuredClone(source);(changed.resources.label as VectorResource).items[0].style!.fill='#00ff00';
+  for(const transform of [(value:Bundle)=>value,packaged]) {
+    const a=lesson(),b=lesson();a.scenes.shared=transform(source);b.scenes.shared=transform(changed);
+    const [first,second]=await Promise.all([prepareChalkspaceLecture(a),prepareChalkspaceLecture(b)]);
+    try {assert.notEqual(first.revision,second.revision);assert.notEqual(first.frameKey(11),second.frameKey(11));}finally {first.dispose();second.dispose();}
+  }
+});
+
+test('frame keys preserve adjacent representable times, quality and deterministic reverse lookup',async()=>{
+  const runtime=await prepareChalkspaceLecture(lesson()),time=11.5,next=time+Number.EPSILON*8;
+  assert.notEqual(time,next);assert.notEqual(runtime.frameKey(time),runtime.frameKey(next));
+  const key=runtime.frameKey(time,'1920x1080:30');
+  assert.notEqual(key,runtime.frameKey(time,'854x480:15'));assert.equal(runtime.frameKey(time),runtime.frameKey(time,''));
+  for(const t of [19,0,12,500,10.5,next])runtime.frameKey(t,'1920x1080:30');
+  assert.equal(runtime.frameKey(time,'1920x1080:30'),key);
+  assert.throws(()=>runtime.frameKey(time,{} as any),diagnostic(/quality|LECTURE_INPUT/));runtime.dispose();
 });
 
 test('accessor-backed lecture data is rejected without invoking the accessor',async()=>{

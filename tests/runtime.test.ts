@@ -32,6 +32,25 @@ test('held endpoints and backwards host seeking stay deterministic',()=>{
   assert.equal(clip.sample(100).frame!.time,8);
   assert.throws(()=>clip.sample(NaN),/CLIP_TIME/);
 });
+
+test('clip description maps timing without evaluation and sample reuses the exact mapping',()=>{
+  const original=prepareScene(fixture()),calls:number[]=[];
+  const runtime={...original,sample(time:number){calls.push(time);return original.sample(time);}};
+  const clip=bindSceneClip(runtime,{start:10,sourceStart:2,rate:2,duration:3,after:'hidden'});
+  const expected=[
+    {hostTime:9,sourceTime:2,phase:'before',visible:false},
+    {hostTime:10,sourceTime:2,phase:'active',visible:true},
+    {hostTime:11.5,sourceTime:5,phase:'active',visible:true},
+    {hostTime:13,sourceTime:8,phase:'after',visible:false},
+  ];
+  assert.deepEqual([9,10,11.5,13].map(time=>clip.describe(time)),expected);assert.deepEqual(calls,[]);
+  for(const clock of expected){const {frame:_frame,...description}=clip.sample(clock.hostTime);assert.deepEqual(description,clock);}
+  assert.deepEqual(calls,[2,5]);
+  const changed=clip.describe(11.5);changed.sourceTime=700;assert.equal(clip.describe(11.5).sourceTime,5);
+  assert.throws(()=>clip.describe(NaN),/CLIP_TIME/);
+  const zero=bindSceneClip(runtime,{start:5,sourceStart:3,duration:0});
+  assert.deepEqual(zero.describe(5),{hostTime:5,sourceTime:3,phase:'after',visible:true});
+});
 test('invalid rates, source overflow, and extrapolation fail explicitly',()=>{
   const runtime=prepareScene(fixture());
   for(const timing of [{start:0,rate:0},{start:0,rate:-1},{start:-1},{start:0,sourceStart:9},
