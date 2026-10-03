@@ -19,6 +19,7 @@ import {validateTraceProgramInContext,type TraceProgram,type TraceEvaluation} fr
 import {validatePresentationProgramInContext,type PresentationProgram,type PresentationEvaluation} from './ir/presentation-intent.js';
 import {validateMeshResource,type MeshResource} from './ir/mesh.js';
 import {validateSpace3DInContext,type Space3D,type Space3DEvaluation} from './ir/scene3d.js';
+import {validateSurfaceProgramInContext,surfaceValidationResources,type SurfaceProgram,type SurfaceEvaluation} from './operations/surface.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only scene contract. Legacy 2D dimensions are bp; space3d declares its own units. */
 export interface Style {
@@ -81,6 +82,7 @@ export interface Bundle {
   presentation?: PresentationProgram;
   /** Explicit 3D world chart, independent of the legacy document bp coordinates. */
   space3d?: Space3D;
+  surfaces?:SurfaceProgram;
 }
 export interface EvaluatedFrame {
   time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>;
@@ -88,6 +90,7 @@ export interface EvaluatedFrame {
   mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation;
   presentation?:import('./ir/operations.js').DeepReadonly<PresentationEvaluation>;
   space3d?:import('./ir/operations.js').DeepReadonly<Space3DEvaluation>;
+  surfaces?:import('./ir/operations.js').DeepReadonly<SurfaceEvaluation>;
   shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;
   curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation;
 }
@@ -533,9 +536,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.mathTransforms !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMathTransformProgramInContext(b.mathTransforms,b as Bundle));
   if (b.traces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateTraceProgramInContext(b.traces,b as Bundle));
   if (b.presentation !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePresentationProgramInContext(b.presentation,b as Bundle));
+  if (b.surfaces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateSurfaceProgramInContext(b.surfaces,b as Bundle));
   if (b.space3d !== undefined && !errors.some(d => d.severity === 'error')) {
     if(b.version!=='0.3')error('SPACE3D_VERSION','3D spaces require Bundle 0.3.','$.space3d');
-    else errors.push(...validateSpace3DInContext(b.space3d,b.resources,'$.space3d',{viewport:b.viewport,duration:b.duration}));
+    else errors.push(...validateSpace3DInContext(b.space3d,surfaceValidationResources(b.surfaces,b.resources),'$.space3d',{viewport:b.viewport,duration:b.duration}));
   }
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');

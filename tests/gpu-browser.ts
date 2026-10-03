@@ -47,6 +47,23 @@ async function hash(bytes:Uint8Array):Promise<string>{return [...new Uint8Array(
 function withRenderer<T>(run:(r:GpuRenderer)=>T):T {const r=createGpuRenderer({antialias:false});try{return run(r);}finally{r.dispose();}}
 
 (window as any).gpuQa={fixture,
+ async wireframe(){const r=createGpuRenderer({antialias:false});try{
+  const bundle=fixture(),wire=structuredClone(bundle);(wire.space3d!.nodes[0] as any).material.wireframe=true;
+  const filled=createEvaluator(bundle)(0),outline=createEvaluator(wire)(0);
+  r.render(filled,{width:128,height:128});const fill=pixels(r),fillStats=r.stats();
+  r.render(outline,{width:128,height:128});const lines=pixels(r),wireStats=r.stats(),lineHash=await hash(lines);
+  const count=(a:Uint8Array)=>a.filter((v,i)=>i%4===3&&v!==0).length;
+  const mixed=structuredClone(wire);mixed.space3d!.nodes.push({...bundle.space3d!.nodes[0],id:'filled',transform:{translation:[.5,0,0]}});
+  r.render(createEvaluator(mixed)(0),{width:128,height:128});const mixedStats=r.stats();
+  r.render(filled,{width:128,height:128});const reverseFilled=await hash(pixels(r))===await hash(fill);
+  r.render(outline,{width:128,height:128});const reverseWire=await hash(pixels(r))===lineHash;
+  const large=fixture(),largeMesh=large.resources.triangle as MeshResource;
+  largeMesh.positions.data=largeMesh.positions.data.concat(new Array(3*(65535-3)).fill(0));largeMesh.positions.count=65535;largeMesh.bounds!.max[2]=0;
+  (large.space3d!.nodes[0] as any).material.wireframe=true;
+  r.render(createEvaluator(large)(0),{width:128,height:128});const largeWireBytes=r.stats().bufferBytes;
+  r.dispose();return {fillCenter:pixel(fill,64,64),wireCenter:pixel(lines,64,64),filledPixels:count(fill),wirePixels:count(lines),
+   fillStats,wireStats,mixedStats,reverseFilled,reverseWire,largeWireBytes,disposed:r.stats()};
+ }finally{r.dispose();}},
  parity(mode:string){return withRenderer(r=>{
   const input=fixture(mode),before=JSON.stringify(input),f=createEvaluator(input)(0);r.render(f,{width:128,height:128});
   const actual=pixels(r),reference=renderRawReference(document.createElement('canvas'),referenceDraws(f),128,128,f.space3d!.clippingPlanes.map(p=>[...p.normal,p.constant]));

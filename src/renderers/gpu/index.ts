@@ -18,7 +18,10 @@ export interface GpuRenderer {
   stats():Readonly<GpuRendererStats>;
   dispose():void;
 }
-type GeometryEntry={geometry:BufferGeometry;bytes:number};
+type GeometryEntry={geometry:BufferGeometry;bytes:number;wireBytes:number};
+// Three retains a derived edge index until geometry disposal. Reserve its upper bound
+// even when a later frame uses the same geometry with a filled material.
+const wireBufferSize=(r:DeepReadonly<MeshResource>)=>r.indices.count*2*(r.positions.count>=65535?4:2);
 const immutableMesh=(r:DeepReadonly<MeshResource>)=>Object.isFrozen(r)&&Object.isFrozen(r.positions)&&Object.isFrozen(r.positions.data)&&
   Object.isFrozen(r.indices)&&Object.isFrozen(r.indices.data)&&(!r.normals||Object.isFrozen(r.normals)&&Object.isFrozen(r.normals.data));
 
@@ -67,7 +70,7 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       const projection=view.projectionMatrix;
       validateGpuMatrix(projection,'projection');validateGpuMatrix(view.worldMatrix,'camera world');validateGpuMatrix(view.viewMatrix,'view');
       if(space.instances.length>4096)throw new GpuRenderError('GPU_BUDGET','At most 4096 instances are supported.');
-      const neededGeometry=new Set<DeepReadonly<MeshResource>>(),neededMaterials=new Set<string>(),ids=new Set<string>();let bytes=0,drawnTriangles=0;
+      const neededGeometry=new Set<DeepReadonly<MeshResource>>(),neededWire=new Set<DeepReadonly<MeshResource>>(),neededMaterials=new Set<string>(),ids=new Set<string>();let drawnTriangles=0;
       const draws=space.instances.filter(instance=>instance.visible).map(instance=>{
         if(ids.has(instance.id))throw new GpuRenderError('GPU_INSTANCE','Duplicate evaluated instance ID.');ids.add(instance.id);
         const resource=frame.resources[instance.resourceId];
@@ -79,13 +82,15 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
           throw new GpuRenderError('GPU_PRECISION','Backend determinant arithmetic cannot retain the evaluated front-face orientation.');
         validateGpuTransformBounds(resource.bounds,instance.modelViewMatrix,projection);
         const material=instance.material;validateGpuColor(material?.color);
-        if(material.kind!=='unlit'||!['front','double'].includes(material.side))throw new GpuRenderError('GPU_MATERIAL','Only opaque unlit front/double materials are supported.');
-        if(!neededGeometry.has(resource)){neededGeometry.add(resource);bytes+=gpuBufferSize(resource);}
+        if(material.kind!=='unlit'||!['front','double'].includes(material.side)||typeof material.wireframe!=='boolean')throw new GpuRenderError('GPU_MATERIAL','Only opaque unlit front/double materials with boolean wireframe are supported.');
+        neededGeometry.add(resource);if(material.wireframe)neededWire.add(resource);
         drawnTriangles+=resource.indices.count/3;
-        if(bytes>MAX_GPU_BUFFER_BYTES||drawnTriangles>MAX_GPU_TRIANGLES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds 128 MiB vertex/index uploads or one million drawn triangles.');
-        const materialKey=`${material.color.toLowerCase()}:${material.side}`;neededMaterials.add(materialKey);
+        if(drawnTriangles>MAX_GPU_TRIANGLES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds one million drawn triangles.');
+        const materialKey=`${material.color.toLowerCase()}:${material.side}:${material.wireframe}`;neededMaterials.add(materialKey);
         return {instance,resource,material,materialKey};
       });
+      const bytes=[...neededGeometry].reduce((total,r)=>total+gpuBufferSize(r)+(neededWire.has(r)?wireBufferSize(r):geometries.get(r)?.wireBytes??0),0);
+      if(bytes>MAX_GPU_BUFFER_BYTES)throw new GpuRenderError('GPU_BUDGET','Frame exceeds 128 MiB vertex/index uploads including derived wireframe indices.');
       if(space.clippingPlanes.length>8)throw new GpuRenderError('GPU_CLIPPING','At most eight world clipping planes are supported.');
       const planes=space.clippingPlanes.map(p=>new Plane(new Vector3(...p.normal.map((n,i)=>finiteFloat32(n,`clip normal ${i}`)) as [number,number,number]),finiteFloat32(p.constant,'clip constant')));
       camera.matrixWorld.fromArray(view.worldMatrix);camera.matrixWorldInverse.fromArray(view.viewMatrix);camera.projectionMatrix.fromArray(projection);
@@ -97,15 +102,16 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       try{for(const resource of neededGeometry)if(!geometries.has(resource)){
         const data=prepareGpuGeometry(resource),geometry=new BufferGeometry();
         geometry.setAttribute('position',new BufferAttribute(data.positions,3));geometry.setIndex(new BufferAttribute(data.indices,1));
-        geometries.set(resource,{geometry,bytes:data.bytes});added.push(resource);
+        geometries.set(resource,{geometry,bytes:data.bytes,wireBytes:0});added.push(resource);
       }}catch(cause){for(const resource of added){geometries.get(resource)!.geometry.dispose();geometries.delete(resource);}throw cause;}
       for(const [key,entry] of geometries)if(!neededGeometry.has(key)){entry.geometry.dispose();geometries.delete(key);}
       for(const [key,material] of materials)if(!neededMaterials.has(key)){material.dispose();materials.delete(key);}
       for(const [id,mesh] of meshes)if(!ids.has(id)){scene.remove(mesh);meshes.delete(id);}
+      for(const resource of neededWire)geometries.get(resource)!.wireBytes=wireBufferSize(resource);
       for(const {instance,resource,material,materialKey} of draws){
         if(!materials.has(materialKey)){
           const value=new MeshBasicMaterial({color:material.color,side:material.side==='double'?DoubleSide:FrontSide,
-            toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true});
+            toneMapped:false,transparent:false,opacity:1,depthTest:true,depthWrite:true,wireframe:material.wireframe});
           // Three computes this before the material hook. Use the evaluated matrix for the actual uniform.
           value.onBeforeRender=(_renderer,_scene,_camera,_geometry,object)=>object.modelViewMatrix.fromArray(modelViews.get(object as Mesh)!);
           materials.set(materialKey,value);
@@ -124,7 +130,7 @@ export function createGpuRenderer(options:GpuRendererOptions={}):GpuRenderer {
       if(context.isContextLost())throw new GpuRenderError('GPU_CONTEXT_LOST','Context was lost during rendering.');
     },
     stats(){return Object.freeze({state,width,height,geometries:geometries.size,materials:materials.size,instances:meshes.size,
-      bufferBytes:[...geometries.values()].reduce((n,e)=>n+e.bytes,0),renders,drawCalls,triangles,contextGeneration:generation});},
+      bufferBytes:[...geometries.values()].reduce((n,e)=>n+e.bytes+e.wireBytes,0),renders,drawCalls,triangles,contextGeneration:generation});},
     dispose(){if(state==='disposed')return;state='disposed';canvas.removeEventListener('webglcontextlost',lost);canvas.removeEventListener('webglcontextrestored',restored);
       clearCaches();renderer.dispose();renderer.forceContextLoss();},
   });

@@ -14,9 +14,15 @@ from compile import compile_scene
 
 class GpuCompositeTests(unittest.TestCase):
     def test_board_placement_copies_the_same_gpu_and_native_tex_frame(self):
+        self.assert_scene_composites('gpu-cube.tex')
+
+    def test_generated_surfaces_share_exact_pixels_and_source_clock_with_board(self):
+        self.assert_scene_composites('parametric-surfaces.tex')
+
+    def assert_scene_composites(self, source):
         with tempfile.TemporaryDirectory() as temporary:
             folder=Path(temporary)
-            bundle=compile_scene(ROOT/'examples/gpu-cube.tex',folder/'compiled')
+            bundle=compile_scene(ROOT/'examples'/source,folder/'compiled')
             entry=folder/'entry.ts'
             code='\n'.join([
                 f'import {{prepareScene}} from {json.dumps((ROOT/"src/index.ts").as_posix())};',

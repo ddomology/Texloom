@@ -7,6 +7,7 @@ import type {DeepReadonly,SourceSpan} from './ir/operations.js';
 import {freezeSnapshot, validateJsonData} from './operations/values.js';
 import {snapshotScenePackage, validateAssetJson, type ScenePackage, type AssetEntry} from './resources/package.js';
 import {createAssetStore, type AssetStore, type AssetResolver, type AssetLease} from './resources/store.js';
+import type {MeshUnit} from './ir/mesh.js';
 
 export interface SceneManifest {
   readonly contract: 'texloom-runtime/1';
@@ -19,6 +20,8 @@ export interface SceneManifest {
   readonly timeline?: DeepReadonly<TimelineMetadata>;
   /** Metadata only: no transport URI, inline payload, object URL or GPU handle. */
   readonly assets?: readonly DeepReadonly<Omit<AssetEntry, 'source'>>[];
+  /** Evaluated frame resources, with no asset transport or fixed bounds. */
+  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh';producer:'surface';operationId:string;units:MeshUnit}>[];
 }
 export interface SceneRuntime {
   readonly manifest: SceneManifest;
@@ -44,6 +47,7 @@ function sceneManifest(bundle: Bundle, assets?: readonly AssetEntry[]): SceneMan
     features: Object.freeze(sceneFeatures(bundle)),
     ...(bundle.timeline ? {timeline:freezeSnapshot(bundle.timeline)} : {}),
     ...(assets ? {assets:freezeSnapshot(assets.map(({source: _source, ...metadata}) => metadata))} : {}),
+    ...(bundle.surfaces ? {generatedResources:freezeSnapshot(bundle.surfaces.operations.map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'surface' as const,operationId:o.id,units:o.units})))} : {}),
   });
 }
 

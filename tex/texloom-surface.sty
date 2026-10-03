@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-surface}[2026/10/03 Declarative parametric surface capture]
+\RequirePackage{texloom-space3d}
+\newcount\TLSurfaceSerial
+\TLSurfaceSerial=0
+% Identifiers and literal JSON remain separate, unexpanded sidecars.
+\NewDocumentCommand\loomsurface{m +v}{%
+  \global\advance\TLSurfaceSerial by 1
+  \edef\TLEbase{\jobname.tl-surface-\the\TLSurfaceSerial}%
+  \immediate\write\TLrecords{\string{"type":"surface-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

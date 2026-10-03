@@ -11,6 +11,7 @@ import {validateDeformationProgramInContext} from '../operations/deform.js';
 import {validatePlotProgramInContext} from '../operations/plot.js';
 import {validateMorphProgramInContext} from '../timeline/morph.js';
 import {validateOperationGraphInContext} from '../operations/validate.js';
+import {surfaceValidationResources,validateSurfaceProgramInContext} from '../operations/surface.js';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -65,8 +66,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
   if (!validatedContext) {
     // Graph expression inputs, fields and deformations consume these candidate
     // parameters; defer them until the declarations have been checked.
-    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,...base} = bundle;
-    diagnostics.push(...validateBundle(base));
+    const {expressions:ignored,fields:deferredFields,deformations:deferredDeformations,plots:deferredPlots,operationGraph:deferredGraph,surfaces:deferredSurfaces,...base} = bundle;
+    diagnostics.push(...validateBundle({...base,resources:object(base.resources)?surfaceValidationResources(deferredSurfaces,base.resources):base.resources}));
   }
   if (bundle.version !== '0.3') fail('EXPRESSION_BUNDLE_VERSION','Expression programs require Bundle 0.3.','$.version');
   if (diagnostics.some(d => d.severity === 'error')) return {diagnostics,bindings};
@@ -138,6 +139,8 @@ function inspect(input: unknown,bundle:Bundle,validatedContext=false):{diagnosti
     diagnostics.push(...validatePlotProgramInContext(bundle.plots,{...bundle,expressions:input as ExpressionProgram}));
   if (!validatedContext && bundle.morphs !== undefined && !diagnostics.some(d => d.severity === 'error'))
     diagnostics.push(...validateMorphProgramInContext(bundle.morphs,{...bundle,expressions:input as ExpressionProgram}));
+  if (!validatedContext && bundle.surfaces !== undefined && !diagnostics.some(d => d.severity === 'error'))
+    diagnostics.push(...validateSurfaceProgramInContext(bundle.surfaces,{...bundle,expressions:input as ExpressionProgram}));
   return {diagnostics,bindings};
 }
 

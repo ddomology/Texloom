@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "parametric-surfaces",
+      "source": "examples/parametric-surfaces.tex",
+      "inputs": [
+        "examples/parametric-surfaces.tex"
+      ],
+      "tests": [
+        "tests/surface_capture_test.py",
+        "tests/surface_player_test.py",
+        "tests/surface-program.test.ts"
+      ]
+    }
+  ]
+}
