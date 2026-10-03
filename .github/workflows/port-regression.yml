@@ -69,14 +69,20 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
-          import hashlib, json, os, pathlib, tarfile, urllib.request
+          import hashlib, json, os, pathlib, subprocess, tarfile
           pin = json.loads(pathlib.Path('tools/blender/toolchain.json').read_text())
           platform = pin['platforms']['linux-x64']
           folder = pathlib.Path(os.environ['RUNNER_TEMP']) / 'texloom-blender'
           folder.mkdir()
           archive = folder / 'blender.tar.xz'
-          urllib.request.urlretrieve(platform['url'], archive)
-          assert hashlib.sha256(archive.read_bytes()).hexdigest() == platform['sha256'], 'Blender checksum mismatch'
+          urls = [platform['url'], platform['url'].replace('https://download.blender.org/', 'https://mirrors.ocf.berkeley.edu/blender/', 1)]
+          for url in urls:
+              result = subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--connect-timeout', '30', '--max-time', '300', '--user-agent', 'Texloom-CI/1.0', '--output', str(archive), url])
+              if result.returncode == 0:
+                  assert hashlib.sha256(archive.read_bytes()).hexdigest() == platform['sha256'], 'Blender checksum mismatch'
+                  break
+          else:
+              raise RuntimeError('Pinned Blender archive unavailable from the official server and mirror')
           with tarfile.open(archive) as source:
               source.extractall(folder, filter='data')
           binary = folder / ('blender-' + pin['version'] + '-linux-x64') / 'blender'
