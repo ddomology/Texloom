@@ -38,7 +38,7 @@ preserves the prior video output. This exporter has no audio.
 ## Chalkspace capture contract
 
 The paired Chalkspace PR implements an awaited `capture(t, options)` against the
-actual lecture renderer and exposes `--fps` / `--no-cache` in video export.
+actual lecture renderer and exposes `--fps` / `--no-frame-cache` in video export.
 Input revision, renderer version, dimensions, quality, guides and native clip
 time enter the capture key. The default cache holds one serialized image;
 `cache: false` remains the direct reference path. Different active source times
