@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "pr34-sampled-instances",
+  "title": "Shared prototypes, sampled instance fields and explicit bounded realization",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": [
+      "Immutable instance sets reference one mesh prototype and store explicit stable IDs, transforms, linear-RGB color and selection",
+      "Declarative mesh-domain or literal-point sampling uses bounded scalar expressions and seed/ID-based random lanes",
+      "GPU batches share geometry while explicit realization creates owned mesh buffers with defined normal and attribute policies"
+    ],
+    "excluded": [
+      "Nested instances, arbitrary geometry sets, geometry-node graphs and Blender pick-instance semantics",
+      "Implicit realization, automatic domain conversion, topology correspondence across edited samples and general point-cloud assets",
+      "Textures, lighting, arbitrary shaders and universal bit-identical raster output across GPU drivers"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_instance_on_points.cc",
+      "symbols": [
+        "blender::nodes::node_geo_instance_on_points_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_instance_on_points.cc"
+      ],
+      "role": "Sharing prototype geometry separately from per-point transforms and selection. Texloom uses explicit named sets, declared field inputs and deterministic source IDs.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and execution symbol inspected for conceptual scope. No implementation is copied or translated; later source adaptation requires a separate file-level license review."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_realize_instances.cc",
+      "symbols": [
+        "blender::nodes::node_geo_realize_instances_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_realize_instances.cc"
+      ],
+      "role": "Realization is an explicit conversion from references to owned mesh buffers, with selected/all policies and named attribute propagation. Texloom does not implement nested Blender instance hierarchies.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and execution symbol inspected for conceptual scope. No implementation is copied or translated; later source adaptation requires a separate file-level license review."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "Explicit prototype mesh, units, unsigned32 seed and mesh vertex/face/corner domain or literal identified points",
+      "Optional position, quaternion rotation, scale and linear-color component expressions; boolean selection expression",
+      "Dimensionless x/y/z/index/rand/rand1/rand2/rand3 locals with typed shared source time and parameters",
+      "At most16 operations and4096 elements in total; realization has explicit vertex/byte limits"
+    ],
+    "outputs": [
+      "Portable instance programs remain in the authored bundle; evaluated immutable sets contain no copied prototype geometry",
+      "Unselected records retain their IDs and field values; selected GPU instances share prototype buffers",
+      "Explicit realized meshes preserve transformed geometry and declared captured/promoted attributes while enforcing conflicts and budgets",
+      "Original declaration JSON and exact decoded component expression sources are archived with spans"
+    ],
+    "coordinates": [
+      "Source position fields are object-local in declared units; spatial batch transforms compose after per-instance transforms",
+      "Quaternion and scale fields produce ordinary affine transforms; reflection is handled explicitly by winding-aware consumers",
+      "Random lanes depend on seed, operation ID, stable source-element ID and channel, never on playback history or current time",
+      "Realization bounds are checked against the corresponding transformed prototype vertices"
+    ],
+    "errorPolicy": [
+      "Reject invalid references, mismatched units, duplicate IDs, unsupported domains, invalid quaternions and nonfinite values",
+      "Reject invalid color ranges, nonboolean selection and unbounded operation/element or realization budgets",
+      "Reject attribute naming conflicts during realization; no silently overwritten captures",
+      "Reject duplicate/nonfinite literal JSON, unsafe sidecars and authored provenance before publishing a bundle"
+    ]
+  },
+  "fixtures": [
+    "sampled-instances"
+  ],
+  "verification": {
+    "command": "python -m unittest tests.instance_port_spec_test tests.instance_capture_test tests.instance_player_test -v; npm test",
+    "claims": [
+      "The real TeX fixture places256 directional arrows at generated surface vertices using one authored prototype",
+      "Independent numeric tests derive sample positions, transforms, colors, seed lanes and selected IDs from the authored formulas",
+      "Same-browser reverse captures, mobile controls and selection restoration preserve exact state and source geometry",
+      "An independent reflected selected-only fixture compares native instancing with realized-mesh pixels and bounds",
+      "Feature-specific PortSpec registration leaves historical raster goldens unchanged"
+    ],
+    "notEstablished": [
+      "Full Blender instance graph or realization equivalence",
+      "Stable correspondence after mesh topology/source-domain edits",
+      "Cross-browser or cross-device raster identity",
+      "Unlimited instance counts or arbitrary asset and attribute schemas"
+    ]
+  }
+}

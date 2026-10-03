@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-instances}[2026/10/03 Sampled instances with shared geometry]
+\RequirePackage{texloom-space3d}
+\newcount\TLInstancesSerial
+\TLInstancesSerial=0
+% Set IDs and literal JSON stay separate and are never macro-expanded.
+\NewDocumentCommand\loominstances{m +v}{%
+  \global\advance\TLInstancesSerial by 1
+  \edef\TLEbase{\jobname.tl-instances-\the\TLInstancesSerial}%
+  \immediate\write\TLrecords{\string{"type":"instances-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

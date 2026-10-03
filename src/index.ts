@@ -74,3 +74,6 @@ export * from './ir/attributes.js';
 export * from './fields/mesh-context.js';
 export * from './operations/domain-transfer.js';
 export * from './operations/mesh-attributes.js';
+export * from './ir/instances.js';
+export * from './operations/instances.js';
+export * from './operations/realize-instances.js';

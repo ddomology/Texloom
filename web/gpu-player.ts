@@ -63,13 +63,15 @@ function draw(time:number){
   const anchor=evaluated.space3d?.overlays[0]?.worldPosition;
   for(const [i,axis] of ['x','y','z'].entries())el('point-'+axis).textContent=anchor?format(anchor[i]):'—';
   // Generated surface resources exist in the sampled frame, not in the source table.
-  const instances=evaluated.space3d?.instances??[],meshIds=new Set(instances.map(node=>node.resourceId));
+  const instances=evaluated.space3d?.instances??[],batches=evaluated.space3d?.instanceBatches??[];
+  const selected=batches.filter(batch=>batch.visible).flatMap(batch=>batch.instances.filter(instance=>instance.selected).map(()=>batch.prototypeResourceId));
+  const meshIds=new Set([...instances.map(node=>node.resourceId),...batches.map(batch=>batch.prototypeResourceId)]);
   el('mesh-count').textContent=String(meshIds.size);
-  el('instance-count').textContent=String(instances.length);
+  el('instance-count').textContent=String(instances.filter(instance=>instance.visible).length+selected.length);
   el('triangle-count').textContent=String(instances.reduce((sum,node)=>{
     const resource=evaluated.resources[node.resourceId];
-    return sum+(resource.kind==='mesh'?resource.indices.count/3:0);
-  },0));
+    return sum+(node.visible&&resource.kind==='mesh'?resource.indices.count/3:0);
+  },0)+selected.reduce((sum,id)=>{const resource=evaluated.resources[id];return sum+(resource.kind==='mesh'?resource.indices.count/3:0);},0));
   const curves=evaluated.space3d?.curves??[];
   el('curve-fact').hidden=curves.length===0;el('curve-count').textContent=String(curves.length);
   el('segment-fact').hidden=curves.length===0;el('segment-count').textContent=String(curves.reduce((sum,node)=>{

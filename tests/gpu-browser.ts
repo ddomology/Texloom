@@ -4,6 +4,7 @@ import type {Bundle,EvaluatedFrame} from '../src/schema.js';
 import type {MeshResource} from '../src/ir/mesh.js';
 import {attachMeshAttributes} from '../src/ir/attributes.js';
 import {renderRawReference,type ReferenceDraw} from './gpu-reference.js';
+import {instanceQa} from './gpu-instances-browser.js';
 
 function resource(z=-2,extent=.5):MeshResource {
  const data=[-extent,-extent,z,extent,-extent,z,0,extent,z];
@@ -47,7 +48,7 @@ function errorCode(run:()=>unknown):string {try{run();return 'NO_ERROR';}catch(e
 async function hash(bytes:Uint8Array):Promise<string>{return [...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes as Uint8Array<ArrayBuffer>))].map(n=>n.toString(16).padStart(2,'0')).join('');}
 function withRenderer<T>(run:(r:GpuRenderer)=>T):T {const r=createGpuRenderer({antialias:false});try{return run(r);}finally{r.dispose();}}
 
-(window as any).gpuQa={fixture,
+(window as any).gpuQa={fixture,instances:instanceQa,
  async attributes(){const r=createGpuRenderer({antialias:false});try{
   const bundle=fixture(),base=resource(-2,.5);
   const buffer=(data:number[])=>({version:1 as const,componentType:'float64' as const,components:3 as const,count:data.length/3,byteOffset:0,byteStride:24,data});

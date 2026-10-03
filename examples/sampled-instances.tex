@@ -1,0 +1,282 @@
+\documentclass{article}
+\usepackage{texloom-surface}
+\usepackage{texloom-instances}
+\begin{document}
+\TLScene{One arrow, many directions}{960}{540}{8}
+\TLSetup{\usepackage{cmbright}}
+\loomparameter[unit=1,min=0,max=1]{density}|1|
+\TLText{scene-title}{One arrow, many directions}
+\TLText{scene-subtitle}{256 stable sample sites, one shared prototype, and a seeded selection}
+\TLMath{field-formula}{\theta(p,t)=0.7x+0.4y+2\pi t/8}
+\TLMath{direction-formula}{v(p,t)=\bigl(\cos\theta,\;\sin\theta,\;0\bigr)}
+\TLText{seed-caption}{SEED 3401 / SHARED GEOMETRY}
+\TLNode{title}{tex}{"resourceId":"scene-title","x":42,"y":45,"scale":1.7,"style":{"fill":"#d6e8dc"}}
+\TLNode{subtitle}{tex}{"resourceId":"scene-subtitle","x":42,"y":76,"scale":0.95,"style":{"fill":"#a6c1af"}}
+\TLNode{formula}{tex}{"resourceId":"field-formula","x":42,"y":480,"scale":1.2,"style":{"fill":"#b5cdbb"}}
+\TLNode{direction}{tex}{"resourceId":"direction-formula","x":525,"y":480,"scale":1.2,"style":{"fill":"#b5cdbb"}}
+\TLNode{seed}{tex}{"resourceId":"seed-caption","x":42,"y":516,"scale":0.75,"style":{"fill":"#91bba4"}}
+
+% 15 by 15 cells have exactly 16 by 16 vertex sites. No baked point table.
+\loomsurface{sample-surface}|{
+  "units": "m",
+  "domain": {
+    "u": [
+      -2.25,
+      2.25
+    ],
+    "v": [
+      -2.25,
+      2.25
+    ]
+  },
+  "segments": {
+    "u": 15,
+    "v": 15
+  },
+  "position": [
+    "u",
+    "v",
+    "0.2*cos(u)*sin(v)"
+  ],
+  "normals": {
+    "kind": "analytic",
+    "dU": [
+      "1",
+      "0",
+      "-0.2*sin(u)*sin(v)"
+    ],
+    "dV": [
+      "0",
+      "1",
+      "0.2*cos(u)*cos(v)"
+    ]
+  }
+}|
+
+% The +X arrow is stored once. Per-element transforms do not copy its buffers.
+\loommesh{arrow}|{
+  "kind": "mesh",
+  "version": 1,
+  "primitive": "triangles",
+  "units": "m",
+  "coordinateSpace": "object",
+  "winding": "ccw",
+  "topologyRevision": "axis-arrow-v1",
+  "positions": {
+    "version": 1,
+    "componentType": "float64",
+    "components": 3,
+    "count": 13,
+    "byteOffset": 0,
+    "byteStride": 24,
+    "data": [
+      0,
+      -0.025,
+      -0.025,
+      0.45,
+      -0.025,
+      -0.025,
+      0.45,
+      0.025,
+      -0.025,
+      0,
+      0.025,
+      -0.025,
+      0,
+      -0.025,
+      0.025,
+      0.45,
+      -0.025,
+      0.025,
+      0.45,
+      0.025,
+      0.025,
+      0,
+      0.025,
+      0.025,
+      0.45,
+      -0.1,
+      -0.1,
+      0.45,
+      0.1,
+      -0.1,
+      0.45,
+      0.1,
+      0.1,
+      0.45,
+      -0.1,
+      0.1,
+      0.7,
+      0,
+      0
+    ]
+  },
+  "indices": {
+    "version": 1,
+    "componentType": "uint16",
+    "components": 1,
+    "count": 54,
+    "byteOffset": 0,
+    "byteStride": 2,
+    "data": [
+      0,
+      2,
+      1,
+      0,
+      3,
+      2,
+      4,
+      5,
+      6,
+      4,
+      6,
+      7,
+      0,
+      1,
+      5,
+      0,
+      5,
+      4,
+      1,
+      2,
+      6,
+      1,
+      6,
+      5,
+      2,
+      3,
+      7,
+      2,
+      7,
+      6,
+      3,
+      0,
+      4,
+      3,
+      4,
+      7,
+      8,
+      10,
+      9,
+      8,
+      11,
+      10,
+      8,
+      9,
+      12,
+      9,
+      10,
+      12,
+      10,
+      11,
+      12,
+      11,
+      8,
+      12
+    ]
+  },
+  "bounds": {
+    "min": [
+      0,
+      -0.1,
+      -0.1
+    ],
+    "max": [
+      0.7,
+      0.1,
+      0.1
+    ]
+  }
+}|
+
+\loominstances{directions}|{
+  "prototype": "arrow",
+  "units": "m",
+  "seed": 3401,
+  "source": {
+    "kind": "mesh",
+    "resourceId": "sample-surface",
+    "domain": "vertex"
+  },
+  "position": [
+    "x",
+    "y",
+    "z+0.12"
+  ],
+  "rotation": [
+    "0",
+    "0",
+    "sin((0.7*x+0.4*y+2*pi*time/8s)/2)",
+    "cos((0.7*x+0.4*y+2*pi*time/8s)/2)"
+  ],
+  "scale": [
+    "0.34+0.06*sin(x+y+2*pi*time/8s)",
+    "0.32",
+    "0.32"
+  ],
+  "color": [
+    "0.35+0.3*rand+0.2*cos(x+2*pi*time/8s)",
+    "0.4+0.3*rand1+0.2*sin(y-2*pi*time/8s)",
+    "0.35+0.3*rand2+0.2*sin(x+y+2*pi*time/8s)"
+  ],
+  "selection": "rand3 < density"
+}|
+
+\loomspace|{
+  "version": 1,
+  "units": "m",
+  "handedness": "right",
+  "upAxis": "z",
+  "nodes": [
+    {
+      "id": "surface",
+      "kind": "mesh",
+      "resourceId": "sample-surface",
+      "material": {
+        "kind": "unlit",
+        "color": "#1c4638",
+        "side": "double"
+      }
+    },
+    {
+      "id": "vector-field",
+      "kind": "instances",
+      "instanceSetId": "directions",
+      "material": {
+        "kind": "unlit",
+        "color": "#ffffff",
+        "side": "double"
+      }
+    }
+  ],
+  "camera": {
+    "id": "view",
+    "transform": {
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0.5812381937190965,
+        0.813733471206735,
+        0,
+        0,
+        -0.813733471206735,
+        0.5812381937190965,
+        0,
+        0,
+        -7,
+        5,
+        1
+      ]
+    },
+    "projection": {
+      "kind": "orthographic",
+      "height": 5.8,
+      "near": 0.1,
+      "far": 100
+    }
+  }
+}|
+\end{document}

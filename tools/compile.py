@@ -43,6 +43,7 @@ from space3d_capture import lower_space3d
 from surface_capture import lower_surfaces
 from curve3d_capture import lower_curves3d
 from attribute_capture import lower_attributes
+from instance_capture import lower_instances
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
@@ -240,7 +241,7 @@ def compile_scene(source,out):
                 vector['provenance']['dvi']=str((run_root/vector['provenance']['dvi']).relative_to(out)).replace('\\','/')
                 bundle['resources'][rid]=vector
             else: bundle['resources'][rid]=scalar_resource((source.parent/record['file']).resolve())
-        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file','animation-file','part-view-file','relation-file','presentation-file','space3d-file','surface-file','curve3d-file','attributes-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
+        elif kind not in ('scene','expression-file','field-program-file','deformation-file','coordinate-file','shape-file','anchor-profile','anchor-file','curve-file','intersection-file','connector-file','arrow-file','decoration-file','layout-file','axes-file','plot-file','animation-file','part-view-file','relation-file','presentation-file','space3d-file','surface-file','curve3d-file','attributes-file','instances-file') and not kind.startswith('tikz-'): raise CompileDiagnostic(f'Unknown declaration type {kind}')
     if bundle['version'] in ('0.2','0.3'): lower_records(records,bundle,source.name)
     if any(r.get('textParts') for r in bundle['resources'].values()): bundle['version']='0.3'
     lower_expressions(records,bundle,execution,out)
@@ -265,6 +266,7 @@ def compile_scene(source,out):
     surface_sources=lower_surfaces(records,bundle,execution,out)
     curve3d_sources=lower_curves3d(records,bundle,execution,out)
     attribute_sources=lower_attributes(records,bundle,execution,out)
+    instance_sources=lower_instances(records,bundle,execution,out)
     validate_relation_targets(relation_targets,bundle)
     node_ids=[n['id'] for n in bundle['nodes']]
     if len(set(node_ids))!=len(node_ids): raise CompileDiagnostic('Duplicate scene node ID')
@@ -278,6 +280,7 @@ def compile_scene(source,out):
     if space3d_sources is not None: bundle['provenance']['space3dCapture']=space3d_sources
     if surface_sources is not None: bundle['provenance']['surfaceCapture']=surface_sources
     if attribute_sources is not None: bundle['provenance']['attributeCapture']=attribute_sources
+    if instance_sources is not None: bundle['provenance']['instanceCapture']=instance_sources
     if curve3d_sources is not None: bundle['provenance']['curve3dCapture']=curve3d_sources
     # One shared validator defines the interchange contract for compiler and player.
     # Validate before publishing; malformed tracks or resources cannot be reported
