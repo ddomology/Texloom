@@ -4,6 +4,7 @@ import type {MeshBounds} from '../ir/mesh.js';
 import {freezeSnapshot} from '../operations/values.js';
 import {surfaceResourceDeclarations} from '../operations/surface.js';
 import {curveResourceDeclarations} from '../operations/curve3d.js';
+import {meshAttributeResourceDeclarations} from '../operations/mesh-attributes.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -158,7 +159,7 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
   if(Array.isArray(scene.nodes))scene.nodes.forEach((node,i)=>{
     if(!object(node)||!['tex','field'].includes(node.kind as string))return;
     const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
-    if(!asset)error(out,'ASSET_REFERENCE',`No manifest asset for resource ${String(node.resourceId)}.`,`$.scene.nodes[${i}].resourceId`);
+    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest resource ID.',`$.scene.nodes[${i}].resourceId`);
     else if(asset.kind!==(node.kind==='tex'?'vector':'scalar-field'))error(out,'ASSET_KIND','Node and asset resource kinds disagree.',`$.scene.nodes[${i}].resourceId`);
   });
   const generated=new Map<string,'mesh'|'curve3d'>();
@@ -171,6 +172,26 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId))
       error(out,'ASSET_DUPLICATE',`Generated resource ID ${declaration.resourceId} must be unique and cannot replace a manifest asset.`,'$.scene.curves3d');
     generated.set(declaration.resourceId,'curve3d');
+  }
+  // Attribute operations are ordered. Only a transported mesh, generated surface,
+  // or an earlier valid attribute result may be an input; forward references do
+  // not become available merely because they have an output declaration.
+  const attributeDeclarations=meshAttributeResourceDeclarations(scene.meshAttributes);
+  if(scene.meshAttributes!==undefined){
+    const program=scene.meshAttributes;
+    if(!object(program)||program.version!==1||!Array.isArray(program.operations)||attributeDeclarations.length!==program.operations.length)
+      error(out,'ASSET_GENERATOR','Expected valid ordered mesh attribute source/output declarations.','$.scene.meshAttributes');
+  }
+  for(const [index,declaration] of attributeDeclarations.entries()){
+    const path=`$.scene.meshAttributes.operations[${index}]`;
+    if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId)){
+      error(out,'ASSET_DUPLICATE',`Generated resource ID ${declaration.resourceId} must be unique and cannot replace a manifest asset.`,`${path}.resourceId`);
+      continue;
+    }
+    const sourceKind=entries.get(declaration.source)?.kind??generated.get(declaration.source);
+    if(!sourceKind){error(out,'ASSET_REFERENCE','Attribute inputs require a manifest mesh, generated surface or an earlier attribute result; forward references and cycles are unsupported.',`${path}.source`);continue;}
+    if(sourceKind!=='mesh'){error(out,'ASSET_KIND','Mesh attribute operations require a mesh source.',`${path}.source`);continue;}
+    generated.set(declaration.resourceId,'mesh');
   }
   if(object(scene.space3d)&&Array.isArray(scene.space3d.nodes))scene.space3d.nodes.forEach((node,i)=>{
     if(!object(node)||!['mesh','curve'].includes(node.kind as string))return;

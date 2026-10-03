@@ -90,6 +90,13 @@ render clears both color and depth. Omitted background is transparent.
   strips. They use the same authoritative camera/model-view matrices, depth and
   clipping. Closed curves repeat their first endpoint. Backend lines have the
   device's standard one-pixel width; there is no tube or swept surface.
+- PR33 adds `material.colorAttribute`, naming a typed linear RGB `color`
+  attribute. Vertex values interpolate over triangles. Face values remain
+  constant across each triangle; corner values preserve discontinuities at
+  shared vertices. The GPU adapter expands face/corner uploads into owned
+  per-index vertices without changing the shared mesh. Material `color`
+  modulates the linear attribute values; use `#ffffff` for an unmodified
+  attribute. Output still receives the standard linear-to-sRGB transfer.
 - Depth testing and depth writes are enabled. Equal-depth ties follow evaluated
   mesh instance order, followed by evaluated curve order. This order is restored
   independently of previous renders, including changing an ID's primitive kind.
@@ -112,7 +119,8 @@ the mesh renderer does not infer them.
 ## Ownership, precision and limits
 
 Mesh and curve resources must be immutable evaluated resources. Geometry is keyed by the
-resource object's identity, so two instances can share one upload. A different
+resource object's identity and selected color attribute, so two instances with
+the same selection share one upload. Distinct selections remain separate. A different
 resource with the same textual ID replaces the geometry. Cache entries not used
 by the current visible frame are disposed. Colors and side policies share
 materials while they are in use; instance IDs retain only renderer-owned objects.
@@ -144,6 +152,9 @@ cached, including after switching it back to a filled material, because Three
 retains that buffer until geometry disposal. `bufferBytes` includes this bound.
 Generated surface frames use the same immutable-resource ownership path; each
 new mesh replaces the prior frame's upload and unused geometry is disposed.
+Color buffers and expanded face/corner positions and indices count toward the
+same budget. Wireframe indices use the expanded vertex count when selecting
+their index width. Color uploads also reject nonzero float32 underflow.
 
 `stats()` returns a frozen snapshot of state, dimensions, active geometry,
 material and instance counts, buffer bytes, successful render count, last draw
@@ -188,6 +199,12 @@ PR32 extends that independent reference with `GL_LINE_STRIP`: line/triangle
 depth, world clipping and affine camera scale must match every RGBA channel.
 Curve uploads also pass primitive replacement, cache pruning, reverse rendering
 and actual context loss/restoration checks.
+
+PR33 adds explicit-domain upload/ownership checks, simultaneous red vertex,
+blue face, green corner and uncolored variants of one mesh, pruning and actual
+context restoration. The native sphere demo also checks independently projected
+interior pixel colors against interpolated vertex values and constant face
+means. No tolerance is added to the existing 13 raw WebGL reference cases.
 
 Exact Canvas readback comparisons pin the host 2D contexts with
 `getContext('2d', {willReadFrequently: true})`. Chromium may otherwise migrate a

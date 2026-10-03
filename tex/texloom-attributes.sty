@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-attributes}[2026/10/03 Explicit mesh attribute capture and transfer]
+\RequirePackage{texloom-space3d}
+\newcount\TLAttributesSerial
+\TLAttributesSerial=0
+% Output IDs and JSON are archived separately without macro expansion.
+\NewDocumentCommand\loomattributes{m +v}{%
+  \global\advance\TLAttributesSerial by 1
+  \edef\TLEbase{\jobname.tl-attributes-\the\TLAttributesSerial}%
+  \immediate\write\TLrecords{\string{"type":"attributes-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

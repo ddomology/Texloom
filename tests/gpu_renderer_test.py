@@ -31,7 +31,7 @@ class GpuRendererTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        report = {'success':len(cls.reports)==7 and not cls.browser_errors, 'browser':cls.browser.version,
+        report = {'success':len(cls.reports)==8 and not cls.browser_errors, 'browser':cls.browser.version,
             'browserErrors':cls.browser_errors, 'checks':cls.reports,
             'files':{name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in
                 ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','src/renderers/gpu/curve-data.ts','tests/gpu-browser.ts',
@@ -85,6 +85,19 @@ class GpuRendererTests(unittest.TestCase):
         self.assertEqual(report['dimensions'], [96,64])
         self.assertTrue(report['restoredSizeSame'])
         self.reports['historyAndResize'] = report
+
+    def test_attribute_variants_on_one_mesh_remain_distinct_across_prune_and_restore(self):
+        report=self.page.evaluate('gpuQa.attributes()')
+        self.assertEqual(report['centers'],[[255,0,0,255],[0,0,255,255],[0,255,0,255],[255,255,255,255]])
+        self.assertEqual(report['stats']['geometries'],4)
+        self.assertEqual(report['stats']['materials'],2)
+        self.assertEqual(report['stats']['bufferBytes'],3*78+42)
+        self.assertEqual(report['wireStats']['bufferBytes'],3*78+42+4*12)
+        self.assertEqual(report['pruned']['geometries'],1)
+        self.assertTrue(report['reverse'] and report['restoredSame'] and report['sourceUnchanged'])
+        for state in ('lostStats','disposed'):
+            self.assertEqual(report[state]['bufferBytes'],0)
+        self.reports['attributes']=report
 
     def test_curve_lines_depth_clip_affine_camera_lifecycle_and_primitive_replacement(self):
         report = self.page.evaluate('gpuQa.curves()')

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "mesh-attributes",
+      "source": "examples/mesh-attributes.tex",
+      "inputs": [
+        "examples/mesh-attributes.tex"
+      ],
+      "tests": [
+        "tests/attribute_capture_test.py",
+        "tests/attribute_player_test.py",
+        "tests/mesh-attributes.test.ts",
+        "tests/mesh-attribute-assets.test.ts"
+      ]
+    }
+  ]
+}

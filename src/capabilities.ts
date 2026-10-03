@@ -8,7 +8,8 @@ export const VECTOR_2D_FEATURES = [
 ] as const;
 export const SPATIAL_3D_FEATURES=['mesh.triangles.3d','transform.affine.3d','camera.affine.3d',
   'camera.projection.3d','material.unlit.3d','material.wireframe.3d','clip.planes.3d','overlay.tex.3d','animation.transform.3d','surface.parametric.3d',
-  'curve.polyline.3d','frame.transport.3d','constraint.curve-follow.3d'] as const;
+  'curve.polyline.3d','frame.transport.3d','constraint.curve-follow.3d',
+  'attribute.mesh.3d','attribute.domain-transfer.3d','material.color-attribute.3d'] as const;
 export type RenderFeature = typeof VECTOR_2D_FEATURES[number]|typeof SPATIAL_3D_FEATURES[number];
 export interface CapabilityProfile {
   readonly id: string;
@@ -75,6 +76,7 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     if (resource.kind === 'vector') vector(resource.items);
     if (resource.kind === 'mesh') features.add('mesh.triangles.3d');
     if (resource.kind === 'curve3d') features.add('curve.polyline.3d');
+    if (resource.kind === 'mesh'&&resource.attributes)features.add('attribute.mesh.3d');
   }
   if(bundle.space3d){
     features.add('transform.affine.3d');
@@ -84,6 +86,7 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
     if(bundle.space3d.camera?.projection)features.add('camera.projection.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material))features.add('material.unlit.3d');
     if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material?.wireframe))features.add('material.wireframe.3d');
+    if(bundle.space3d.nodes.some(n=>n.kind==='mesh'&&n.material?.colorAttribute))features.add('material.color-attribute.3d');
     if(bundle.space3d.clippingPlanes?.length)features.add('clip.planes.3d');
     if(bundle.space3d.overlays?.length)features.add('overlay.tex.3d');
     if(bundle.space3d.tracks?.length)features.add('animation.transform.3d');
@@ -91,6 +94,8 @@ export function sceneFeatures(bundle: Bundle): RenderFeature[] {
   if(bundle.surfaces?.operations.length){features.add('mesh.triangles.3d');features.add('surface.parametric.3d');}
   if(bundle.curves3d?.operations.length){features.add('curve.polyline.3d');features.add('frame.transport.3d');}
   if(bundle.curves3d?.followers.length)features.add('constraint.curve-follow.3d');
+  if(bundle.meshAttributes?.operations.length)features.add('attribute.mesh.3d');
+  if(bundle.meshAttributes?.operations.some(o=>o.steps.some(s=>s.kind==='transfer')))features.add('attribute.domain-transfer.3d');
   for (const track of bundle.tracks) {
     if (track.property.startsWith('arrows.')) features.add('path.arrowheads');
     if (track.property.startsWith('transform.')) features.add('transform.affine.2d');
