@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{texloom-blender}
+\begin{document}
+\TLScene{Blender, inside a TeX scene}{1280}{720}{8}
+\TLSetup{\usepackage{cmbright}}
+\loomblender[wireframe]{model}{data/blender-evaluated/manifest.json}
+\loomspace|{"version":1,"units":"m","handedness":"right","upAxis":"z","nodes":[{"kind":"group","id":"model","transform":{"translation":[-1.45,0,-0.15]}}],"camera":{"id":"view","transform":{"matrix":[1,0,0,0,0,0.3713906763541037,0.9284766908852594,0,0,-0.9284766908852594,0.3713906763541037,0,0,-7,2.8,1]},"projection":{"kind":"orthographic","height":4.8,"near":0.1,"far":100}}}|
+\TLText{title-art}{Blender, inside a TeX scene}
+\TLNode{title}{tex}{"resourceId":"title-art","x":48,"y":57,"scale":2.1,"style":{"fill":"#dcebdc"}}
+\TLText{subtitle-art}{A real evaluated modifier stack, shared geometry and one portable animation clock.}
+\TLNode{subtitle}{tex}{"resourceId":"subtitle-art","x":48,"y":94,"scale":1.2,"style":{"fill":"#9fbaa9"}}
+\TLText{scene-label-art}{EVALUATED BLENDER GEOMETRY}
+\TLNode{scene-label}{tex}{"resourceId":"scene-label-art","x":180,"y":177,"scale":1.1,"style":{"fill":"#91d5b3"}}
+\TLText{modifier-label-art}{01 / MODIFIERS BECOME GEOMETRY}
+\TLNode{modifier-label}{tex}{"resourceId":"modifier-label-art","x":784,"y":218,"scale":1.08,"style":{"fill":"#91d5b3"}}
+\TLText{modifier-desc-art}{Bevel, triangulation and a time-varying twist.}
+\TLNode{modifier-desc}{tex}{"resourceId":"modifier-desc-art","x":784,"y":254,"scale":1.03,"style":{"fill":"#c0d0bf"}}
+\TLMath{modifier-count-art}{42\text{ authored vertices}\ \longrightarrow\ 96\text{ evaluated}}
+\TLNode{modifier-count}{tex}{"resourceId":"modifier-count-art","x":784,"y":287,"scale":0.99,"style":{"fill":"#b0c6b6"}}
+\TLText{instance-label-art}{02 / ONE ORB, THREE INSTANCES}
+\TLNode{instance-label}{tex}{"resourceId":"instance-label-art","x":784,"y":348,"scale":1.08,"style":{"fill":"#e4ba73"}}
+\TLText{instance-desc-art}{Shared mesh; distinct transforms and identities.}
+\TLNode{instance-desc}{tex}{"resourceId":"instance-desc-art","x":784,"y":384,"scale":1.03,"style":{"fill":"#c0d0bf"}}
+\TLText{mirror-desc-art}{The eastern instance includes a reflection.}
+\TLNode{mirror-desc}{tex}{"resourceId":"mirror-desc-art","x":784,"y":416,"scale":1.03,"style":{"fill":"#b0c6b6"}}
+\TLText{space-label-art}{03 / EXPLICIT SPACE AND NORMALS}
+\TLNode{space-label}{tex}{"resourceId":"space-label-art","x":784,"y":477,"scale":1.08,"style":{"fill":"#a4c8df"}}
+\TLMath{space-formula-art}{p_{\rm world}=A(t)p_{\rm evaluated}(t)+b(t)}
+\TLNode{space-formula}{tex}{"resourceId":"space-formula-art","x":784,"y":518,"scale":1.4,"style":{"fill":"#c2d8e1"}}
+\TLMath{normal-formula-art}{n_{\rm world}=\frac{A^{-T}n}{\lVert A^{-T}n\rVert}}
+\TLNode{normal-formula}{tex}{"resourceId":"normal-formula-art","x":784,"y":567,"scale":1.35,"style":{"fill":"#b0c6b6"}}
+\TLText{caption-art}{Evaluated samples drive the deformation. Native TeX supplies the explanation.}
+\TLNode{caption}{tex}{"resourceId":"caption-art","x":120,"y":586,"scale":0.93,"style":{"fill":"#a9c2b0"}}
+\TLText{scope-art}{Blender 4.5.9 LTS / metres / right-handed Z-up / opaque unlit materials}
+\TLNode{scope}{tex}{"resourceId":"scope-art","x":48,"y":653,"scale":1.1,"style":{"fill":"#a2bfa9"}}
+\TLText{limits-art}{Stored samples match Blender evaluation. Between knots: declared interpolation. Variable topology is rejected.}
+\TLNode{limits}{tex}{"resourceId":"limits-art","x":48,"y":691,"scale":0.97,"style":{"fill":"#8ca997"}}
+\end{document}

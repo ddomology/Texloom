@@ -1,0 +1,15 @@
+Pinned producer: Blender 4.5.9 LTS, build 8bf95cbd38d1.
+Set BLENDER_EXE to the executable pinned in tools/blender/toolchain.json.
+
+From the Texloom repository root:
+  "$BLENDER_EXE" --background examples/data/blender-evaluated/fixture.blend --python-exit-code 1 --python tools/blender/export_scene.py -- --out build/reproduced-blender --times 0,0.25,1,2,4,6,8
+  "$BLENDER_EXE" --background examples/data/blender-evaluated/fixture.blend --python-exit-code 1 --python tools/blender/reference_scene.py -- --out build/reproduced-blender/reference.json --times 0,0.25,1,2,4,6,8
+
+From a delivered archive (scene directory or output directory):
+  "$BLENDER_EXE" --background data/blender-evaluated/fixture.blend --python-exit-code 1 --python tools/blender/export_scene.py -- --out reproduced-blender --times 0,0.25,1,2,4,6,8
+  "$BLENDER_EXE" --background data/blender-evaluated/fixture.blend --python-exit-code 1 --python tools/blender/reference_scene.py -- --out reproduced-blender/reference.json --times 0,0.25,1,2,4,6,8
+
+PowerShell invocation starts with: & $env:BLENDER_EXE
+The export destination must be new. Identical source bytes/tool/configuration on the same platform reproduce manifest.json and report.json exactly.
+Creating a new .blend with create_fixture.py generates a new source hash; this is distinct from reproducing the archived .blend.
+The independent reference uses Blender float32 math. Cross-platform numeric checks use explicit test tolerances, rather than claiming cross-platform binary identity.

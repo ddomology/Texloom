@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [{
+    "id": "blender-producer",
+    "source": "tools/blender/create_fixture.py",
+    "inputs": ["tools/blender/create_fixture.py", "tools/blender/reference_scene.py", "tools/blender/export_scene.py", "tools/blender/toolchain.json", "src/resources/blender-manifest.ts", "tools/lower-blender.mjs"],
+    "tests": ["tests/blender_producer_test.py", "tests/blender_player_test.py", "tests/blender_oracle.py"]
+  }]
+}

@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-blender}[2026/10/03 Evaluated Blender assets]
+\RequirePackage{texloom-samples}
+\newcount\TLBlenderSerial
+\TLBlenderSerial=0
+\NewDocumentCommand\loomblender{O{} m m}{%
+  \global\advance\TLBlenderSerial by 1
+  \edef\TLEbase{\jobname.tl-blender-\the\TLBlenderSerial}%
+  \immediate\write\TLrecords{\string{"type":"blender-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{presentation}{#1}%
+  \TLEmetadata{id}{#2}%
+  \TLEmetadata{body}{#3}}
+\endinput
