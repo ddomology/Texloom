@@ -25,6 +25,28 @@ Both SVG and Canvas consume the same `EvaluatedFrame`. See the
 Full lecture scheduler, chalk strokes, eraser and export-cache integration remain
 explicit follow-up gates; 3D and general simulation operations are planned.
 
+### Packaged assets and preparation (PR 24)
+
+Scenes can also publish a portable `texloom-package/1` manifest with inline,
+relative-path, or packed byte-range resources. Preparation verifies every
+resource's SHA-256, byte length, kind and bounds before a runtime becomes ready.
+The host supplies transport through an `assetResolver`; sampling performs no I/O.
+
+```ts
+const store = createAssetStore({resolver: hostResolver});
+const loading = beginPrepareScene(scenePackage, {assetStore: store, signal});
+const runtime = await loading.ready;
+renderCanvas(runtime.sample(2), context);
+runtime.dispose(); // Releases this scene's leases. Safe to call again.
+store.dispose();   // Host teardown, after its scenes have been disposed.
+```
+
+Concurrent scenes share verified immutable resources and pending reads. A
+cancelled scene releases its own leases; other consumers keep their resources.
+Existing `prepareScene(bundle)` remains synchronous. See the
+[asset package and lifecycle contract](docs/assets.md), including the CLI,
+resolver range rules, limits, and file/HTTP preview instructions.
+
 ## Quick start
 
 Requirements: Node 22+, Python 3.11+, TeX Live with `latex` and `dvisvgm`, and
