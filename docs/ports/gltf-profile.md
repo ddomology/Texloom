@@ -135,6 +135,12 @@ coordinates. The committed `reference.json` records indexed world points,
 normals, transforms and source hashes. Reported sampled bounds are not a proof
 of continuous-time extrema.
 
+The generator uses algebraic regular-hexagon coordinates so exact zeros do not
+acquire platform-specific trigonometric residuals. Stored reference floats are
+rounded to 12 decimal places with a positive zero sign for portable archive
+bytes. This serialization policy does not round the runtime oracle's numeric
+calculations or loosen its full-precision acceptance tolerances.
+
 ```sh
 python tools/gltf/create_fixture.py --out build/reproduced-gltf
 python tests/gltf_oracle.py --asset build/reproduced-gltf/scene.gltf --out build/reproduced-gltf/reference.json

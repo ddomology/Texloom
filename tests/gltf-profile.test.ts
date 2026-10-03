@@ -210,6 +210,19 @@ test('malformed animation time/value ranges are rejected before runtime sampling
   rejected(a=>{a.document.animations[0].channels[0].target.node=99;});
 });
 
+test('direct API bounds document strings before serialization and expanded animation keys',()=>{
+  const oversized=asset();oversized.document.extras={text:'x'.repeat(8*1024*1024)};
+  assert.throws(()=>importGltfAsset(oversized,'model'),(e:any)=>e.code==='GLTF_DOCUMENT_BUDGET');
+  const a=asset(),d=a.document,count=4096,bytes=Buffer.alloc(count*16);
+  for(let i=0;i<count;i++)bytes.writeFloatLE(i,i*4);
+  const bi=d.buffers.length;d.buffers.push({byteLength:bytes.length,uri:'keys.bin'});a.buffers.push(bytes.toString('base64'));
+  const vi=d.bufferViews.length;d.bufferViews.push({buffer:bi,byteOffset:0,byteLength:count*4},{buffer:bi,byteOffset:count*4,byteLength:count*12});
+  const ai=d.accessors.length;d.accessors.push({bufferView:vi,componentType:5126,count,type:'SCALAR',min:[0],max:[count-1]},{bufferView:vi+1,componentType:5126,count,type:'VEC3'});
+  const channels=[];for(let i=0;i<17;i++){const node=d.nodes.length;d.nodes.push({name:`Key target ${i}`});d.nodes[0].children.push(node);channels.push({sampler:0,target:{node,path:'translation'}});}
+  d.animations=[{samplers:[{input:ai,output:ai+1,interpolation:'LINEAR'}],channels}];
+  assert.throws(()=>importGltfAsset(a,'model'),(e:any)=>e.code==='GLTF_OUTPUT_BUDGET');
+});
+
 test('generated primitive nodes are budgeted before resource expansion',()=>{
   const a=asset(),d=a.document;delete d.animations;
   d.meshes[0].primitives=Array.from({length:256},()=>structuredClone(d.meshes[0].primitives[0]));

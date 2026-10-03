@@ -30,7 +30,11 @@ def make_scene():
             item['min']=[min(converted[i::components]) for i in range(components)]
             item['max']=[max(converted[i::components]) for i in range(components)]
         accessors.append(item);return len(accessors)-1
-    ring=[[.55*math.cos(i*math.pi/3),0.,.55*math.sin(i*math.pi/3)] for i in range(6)]
+    # Use the algebraic regular-hexagon coordinates rather than sin(k*pi/3).
+    # Mathematically zero coordinates must not retain platform-libm residuals.
+    height=.55*math.sqrt(3)/2
+    ring=[[.55,0.,0.],[.275,0.,height],[-.275,0.,height],
+        [-.55,0.,0.],[-.275,0.,-height],[.275,0.,-height]]
     positions=[];normals=[];indices=[[],[],[]]
     for i in range(6):
         for pole in [[0.,.85,0.],[0.,-.85,0.]]:

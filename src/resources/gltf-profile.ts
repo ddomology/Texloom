@@ -165,7 +165,7 @@ export function importGltfAsset(asset:GltfAsset,id='gltf',options:GltfImportOpti
       for(let p=0;p<mesh.primitives.length;p++){const value=primitive(source.mesh,p);spatial.push({kind:'mesh',id:`${id}:primitive:${n}:${p}`,parent:nodeMap.get(n)!,resourceId:value.resourceId,material:value.material as any});}
     }
     if(!meshCache.size)fail('GLTF_EMPTY','Selected scene has no supported triangle meshes.');
-    const tracks:TransformTrack3D[]=[];let duration=0;
+    const tracks:TransformTrack3D[]=[];let duration=0,outputKeys=0;
     let selectedAnimation:number|undefined=options.animation;if(selectedAnimation!==undefined)index(selectedAnimation,animations,'$.options.animation');else if(animations.length===1)selectedAnimation=0;else if(animations.length>1)fail('GLTF_ANIMATION_SELECTION','Multiple animations require explicit selection.');
     if(selectedAnimation!==undefined){const animation=animations[selectedAnimation];extensions(animation,'$.document.animations');const samplers=list(animation,'samplers'),channels=list(animation,'channels');if(!channels.length)fail('GLTF_ANIMATION','Selected animation requires channels.');const writers=new Set<string>();
       for(const [ci,channel] of channels.entries()){const path=`$.document.animations[${selectedAnimation}].channels[${ci}]`;extensions(channel,path);if(!object(channel.target))fail('GLTF_ANIMATION','Animation target is required.',path);extensions(channel.target,path+'.target');
@@ -174,6 +174,7 @@ export function importGltfAsset(asset:GltfAsset,id='gltf',options:GltfImportOpti
         const writer=`${target}:${property}`;if(writers.has(writer))fail('GLTF_ANIMATION_CONFLICT','Multiple channels write one node property.',path);writers.add(writer);
         const sampler=samplers[index(channel.sampler,samplers,path+'.sampler')];extensions(sampler,path+'.sampler');const interpolation=sampler.interpolation??'LINEAR';if(!['STEP','LINEAR'].includes(interpolation))fail('GLTF_ANIMATION_INTERPOLATION','Only STEP and LINEAR are supported.',path);
         const times=read(sampler.input,'SCALAR',[5126],path+'.input'),size=property==='rotation'?4:3,values=read(sampler.output,size===4?'VEC4':'VEC3',[5126],path+'.output');
+        if((outputKeys+=times.length)>65536)fail('GLTF_OUTPUT_BUDGET','Expanded animation exceeds 65536 keyframes.',path);
         if(times.length>4096||times.some((t,i)=>t<0||i>0&&t<=times[i-1])||values.length!==times.length*size||accessors[sampler.input].min===undefined||accessors[sampler.input].max===undefined)fail('GLTF_ANIMATION_KEYS','Keys require matching output counts and strictly increasing nonnegative time extrema.',path);
         const keys=times.map((time,i)=>{const value=values.slice(i*size,(i+1)*size);if(property==='rotation')unitQuaternion(value,path+'.output');if(property==='scale'&&(value.some(n=>n===0)||interpolation==='LINEAR'&&i>0&&value.some((n,k)=>Math.sign(n)!==Math.sign(values[(i-1)*size+k]))))fail('GLTF_ANIMATION_SCALE','Scale keys must stay invertible between samples.',path);return [time,(property==='translation'?point(value):property==='rotation'?rotation(value):scale(value))] as TransformTrack3D['keys'][number];});
         duration=Math.max(duration,times.at(-1)!);tracks.push({target:nodeMap.get(target)!,property,interpolation:interpolation==='STEP'?'step':'linear',keys});

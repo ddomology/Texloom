@@ -87,6 +87,8 @@ class GltfFixtureTests(unittest.TestCase):
     def test_archive_reference_is_current_deterministic_and_container_independent(self):
         original=(DATA/'reference.json').read_bytes();report=json.loads(original)
         self.assertEqual(report['sampleTimes'],TIMES);self.assertEqual(report['knots'],KNOTS)
+        self.assertEqual(report['archivePrecision']['decimalPlaces'],12)
+        self.assertEqual(report['archivePrecision']['zeroSign'],'positive')
         self.assertEqual(report['sourceSha256'],hashlib.sha256((DATA/'scene.gltf').read_bytes()).hexdigest())
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'reference.json';write_reference(DATA/'scene.gltf',path);self.assertEqual(path.read_bytes(),original)

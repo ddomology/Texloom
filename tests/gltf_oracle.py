@@ -179,8 +179,16 @@ def write_reference(asset,out):
         'referenceScriptSha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'sampleTimes':TIMES,'knots':KNOTS,'coordinates':{'source':'right-handed Y-up metres','target':'right-handed Z-up metres','conversion':'(x,y,z) -> (x,-z,y)'},
         'sampledWorldBounds':{'min':[min(v[i] for v in positions) for i in range(3)],'max':[max(v[i] for v in positions) for i in range(3)]},
-        'frames':archived,'scope':'Independent decoding, hierarchical TRS, shortest-path quaternion SLERP, right-continuous STEP and inverse-transpose normals. Archived point/normal lists follow each primitive indices array. These sampled bounds are not a proof of continuous extrema.'}
-    out.write_text(json.dumps(report,separators=(',',':'),sort_keys=True)+'\n',encoding='utf8',newline='\n')
+        'frames':archived,'archivePrecision':{'decimalPlaces':12,'zeroSign':'positive','scope':'Serialized reference floats only; runtime oracle calculations retain full precision.'},
+        'scope':'Independent decoding, hierarchical TRS, shortest-path quaternion SLERP, right-continuous STEP and inverse-transpose normals. Archived point/normal lists follow each primitive indices array. These sampled bounds are not a proof of continuous extrema.'}
+    def archive(value):
+        if isinstance(value,float):
+            rounded=round(value,12)
+            return 0.0 if rounded==0 else rounded
+        if isinstance(value,list):return [archive(item) for item in value]
+        if isinstance(value,dict):return {key:archive(item) for key,item in value.items()}
+        return value
+    out.write_text(json.dumps(archive(report),separators=(',',':'),sort_keys=True)+'\n',encoding='utf8',newline='\n')
 
 
 if __name__=='__main__':
