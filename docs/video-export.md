@@ -1,7 +1,7 @@
 # Exact-time video export (PR27)
 
 The scene evaluator remains independent of playback. Video frames use an integer
-index, not accumulated wall-clock time. The standalone SVG exporter is the
+index, not accumulated wall-clock time. The standalone player exporter is the
 uncached reference path; Chalkspace's paired exporter can additionally reuse a
 verified capture key. The two tools preserve their existing rendering styles.
 
@@ -17,6 +17,12 @@ length. Without duration, export ends at scene duration. A still uses its
 absolute `--still` time, including the endpoint; a zero-duration scene can be
 captured at zero. Preparation, optional playback pause, font readiness and any
 asynchronous renderer result are awaited before screenshot capture.
+
+The GPU player from `tools/build-gpu-player.mjs` uses the same export command.
+Its bridge exposes a renderer label and explicit output sizing; the manifest
+records `WebGL2 + native TeX Canvas` instead of `SVG`. Camera, geometry and
+projected native labels are evaluated at every exact source time. This requires
+WebGL2 support in the capture browser; rendering errors stop the export.
 
 The clock interprets numeric inputs as their decimal values and calculates
 `start + frameIndex / fps` with rational arithmetic, converting once to a

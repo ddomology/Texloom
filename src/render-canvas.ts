@@ -42,6 +42,19 @@ function paintSyntax(value: string): void {
     throw new Error(`Unsupported Canvas paint: ${String(value)}`);
   }
 }
+/** Normalize and validate a compositor background without modifying host state. */
+export function canvasBackground(ctx:CanvasRenderingContext2D,value:string):string {
+  paintSyntax(value);
+  if(value==='none'||value==='transparent')return 'transparent';
+  if(value==='currentColor')return INITIAL.color;
+  ctx.save();
+  try{
+    ctx.fillStyle='#010203';ctx.fillStyle=value;const first=ctx.fillStyle;
+    ctx.fillStyle='#040506';ctx.fillStyle=value;
+    if(ctx.fillStyle!==first)throw new Error(`Unsupported Canvas paint: ${value}`);
+    return value;
+  }finally{ctx.restore();}
+}
 function inspectStyle(style: Style | undefined, paints: Set<string>): void {
   if (!style) return;
   for (const key of Object.keys(style)) {
@@ -139,7 +152,7 @@ function defaultSurface(width: number, height: number): CanvasRenderingContext2D
  */
 export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2D,
   options: CanvasOptions = {}): void {
-  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: Canvas 2D cannot render mesh/space3d. Use the numeric 3D evaluator until a 3D backend is selected.');
+  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: Canvas 2D cannot render mesh/space3d. Use the explicit GPU scene compositor for projected 3D scenes.');
   const {width: logicalWidth, height: logicalHeight} = frame.viewport;
   const width = options.width ?? ctx.canvas.width;
   const height = options.height ?? ctx.canvas.height;

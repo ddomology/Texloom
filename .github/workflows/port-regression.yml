@@ -78,6 +78,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: port-regression-full
-          path: build/port-verification/
+          path: |
+            build/port-verification/
+            build/gpu-conformance/
           if-no-files-found: warn
           retention-days: 14

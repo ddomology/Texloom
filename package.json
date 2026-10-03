@@ -11,6 +11,8 @@
     ".": "./src/index.ts",
     "./svg": "./src/render-svg.ts",
     "./canvas": "./src/render-canvas.ts",
+    "./gpu": "./src/renderers/gpu/index.ts",
+    "./scene-canvas": "./src/renderers/scene-canvas.ts",
     "./chalkspace": "./adapters/chalkspace-canvas.ts",
     "./lemniro": "./adapters/lemniro.ts"
   },
@@ -23,8 +25,12 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
+    "@types/three": "0.186.0",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "three": "0.186.1"
   }
 }

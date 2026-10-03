@@ -35,12 +35,13 @@ def export(player: Path, output: Path, fps: int, width: int | None, height: int 
         page.goto(player.resolve().as_uri() + '?' + urlencode({'capture': '1'}), wait_until='load')
         page.wait_for_function('Boolean(window.texloom && typeof window.texloom.render === "function")')
         page.evaluate('async () => { await window.texloom.ready; window.texloom.pause?.(); await document.fonts.ready; }')
-        meta = page.evaluate('({duration: window.texloom.bundle.duration, viewport: window.texloom.bundle.viewport})')
+        meta = page.evaluate('({duration: window.texloom.bundle.duration, viewport: window.texloom.bundle.viewport, renderer: window.texloom.renderer || "SVG"})')
         width = width or int(meta['viewport']['width'])
         height = height or int(meta['viewport']['height'])
         if width < 2 or height < 2 or width % 2 or height % 2:
             raise ValueError('capture dimensions must be even integers >= 2')
         page.set_viewport_size({'width': width, 'height': height})
+        page.evaluate('([width,height]) => window.texloom.setSize?.(width,height)', [width,height])
         stage = page.locator('#stage')
         page.add_style_tag(content='html,body{margin:0!important;padding:0!important;overflow:hidden!important} #stage{width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important;border-radius:0!important;border:0!important} #stage svg{display:block;width:100%;height:100%;}')
 
@@ -118,11 +119,11 @@ def export(player: Path, output: Path, fps: int, width: int | None, height: int 
                 temporary.unlink(missing_ok=True)
     return {'contract': 'texloom-video-export/1', 'output': str(output), **schedule.manifest(),
             'width': width, 'height': height, 'inputRevision': revision,
-            'quality': {'renderer': 'SVG', 'capture': 'PNG', 'crf': 18},
+            'quality': {'renderer': meta['renderer'], 'capture': 'PNG', 'crf': 18},
             'cache': False, 'capturePolicy': 'fresh evaluation and screenshot for every frame',
             'samples': records, 'measurements': measurements,
             'measurementNotes': 'Render includes browser RPC; screenshots include raster capture and PNG encoding. Pipe writes and final FFmpeg wait are separate wall times, not isolated codec CPU time.',
-            'renderer': 'same SVG player and shared evaluator', 'audio': False}
+            'renderer': f"same {meta['renderer']} player and shared evaluator", 'audio': False}
 
 
 if __name__ == '__main__':

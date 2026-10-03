@@ -1,5 +1,6 @@
 import type {EvaluatedFrame, Matrix} from '../src/schema.js';
-import {renderCanvas, type CanvasOptions} from '../src/render-canvas.js';
+import type {CanvasOptions} from '../src/render-canvas.js';
+import {createSceneCanvasRenderer} from '../src/renderers/scene-canvas.js';
 import {multiplyMatrix,localMatrix,transformPoint} from '../src/geometry.js';
 import type {BoardPlacement} from './chalkspace.js';
 export * from './chalkspace-lecture.js';
@@ -45,6 +46,7 @@ export function boardScreenRect(viewport: {width: number; height: number}, place
  */
 export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
   const placed={...placement};
+  const renderer=createSceneCanvasRenderer();
   let buffer: HTMLCanvasElement | undefined;
   const opacitySurfaces: CanvasRenderingContext2D[]=[];
   let surfaceIndex=0;
@@ -66,12 +68,13 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
     if(Math.abs(ctx.canvas.height-ctx.canvas.width*view.frameHeight/view.frameWidth)>1)
       throw new Error('BOARD_ASPECT: canvas and board viewport must have the same aspect ratio.');
     const width=Math.max(1,Math.ceil(rect.width)),height=Math.max(1,Math.ceil(rect.height));
-    if(width>8192||height>8192)throw new Error('BOARD_SURFACE_BUDGET: layer exceeds 8192 backing pixels per dimension.');
+    const limit=frame.space3d?4096:8192;
+    if(width>limit||height>limit)throw new Error(`BOARD_SURFACE_BUDGET: layer exceeds ${limit} backing pixels per dimension.`);
     buffer??=document.createElement('canvas');
     if(buffer.width!==width)buffer.width=width;if(buffer.height!==height)buffer.height=height;
     const layer=buffer.getContext('2d');if(!layer)throw new Error('Canvas 2D unavailable');
     surfaceIndex=0;
-    renderCanvas(frame,layer,{background:'transparent',createSurface:surface,paintNode:options.paintNode});
+    renderer.render(frame,layer,{background:'transparent',createSurface:surface,paintNode:options.paintNode});
     ctx.save();
     try {ctx.resetTransform();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
       ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.filter='none';
@@ -80,6 +83,7 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
     return rect;
   },dispose(){
     if(disposed)return;disposed=true;
+    renderer.dispose();
     if(buffer){buffer.width=0;buffer.height=0;buffer=undefined;}
     for(const surface of opacitySurfaces){surface.canvas.width=0;surface.canvas.height=0;}
     opacitySurfaces.length=0;

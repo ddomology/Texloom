@@ -67,6 +67,18 @@ test('JSON input limits and accessor rejection precede any observable property a
   assert.ok(validateScenePackage(tooMany).some(d=>d.code==='ASSET_ENTRIES'));
 });
 
+test('projected TeX overlays preflight manifest references before hydration',()=>{
+  const p=scenePackage();
+  p.scene.space3d={version:1,units:'m',handedness:'right',upAxis:'z',nodes:[],
+    overlays:[{id:'label',resourceId:'formula',position:[0,0,0]}]};
+  assert.deepEqual(validateScenePackage(p),[]);
+  p.scene.space3d.overlays![0].resourceId='absent';
+  assert.ok(validateScenePackage(p).some(d=>d.code==='ASSET_REFERENCE'&&d.path==='$.scene.space3d.overlays[0].resourceId'));
+  p.scene.space3d.overlays![0].resourceId='formula';
+  p.assets.entries[0].kind='scalar-field';p.assets.entries[0].bounds=[0,0,1,1];
+  assert.ok(validateScenePackage(p).some(d=>d.code==='ASSET_KIND'&&d.path==='$.scene.space3d.overlays[0].resourceId'));
+});
+
 test('entry metadata validates ranges, finite bounds, hashes and scalar normalization',()=>{
   const e=entry();e.source={kind:'external',uri:'atlas.bin',byteRange:{offset:123,length:e.byteLength}};
   assert.deepEqual(validateAssetEntry(e),[]);
