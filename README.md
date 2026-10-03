@@ -22,8 +22,16 @@ Canvas2D rendering, and a Chalkspace board placement adapter.
 
 Both SVG and Canvas consume the same `EvaluatedFrame`. See the
 [runtime contract and dual-consumer demo instructions](docs/runtime-contract.md).
-Full lecture scheduler, chalk strokes, eraser and export-cache integration remain
-explicit follow-up gates; 3D and general simulation operations are planned.
+The real lecture consumer, export cache and explicit chalk presentation intents
+are integrated. 3D and general simulation operations remain planned.
+
+### Chalk presentation intent (PR28)
+
+TeX can declare optional draw/erase intent over native geometry. Pure sampled
+metadata supplies bounds, contact poses, progress and seeds; Chalkspace supplies
+strong grain, tools, target masks and a deterministic effects track. The clean
+web renderer retains the same geometry. Glyph outline reveal is explicitly
+separate from handwriting reconstruction. See the [contract and authoring guide](docs/presentation-intent.md).
 
 ### Packaged assets and preparation (PR 24)
 

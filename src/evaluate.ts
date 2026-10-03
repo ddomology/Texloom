@@ -9,6 +9,7 @@ import {OperationValidationError} from './ir/operations.js';
 import {evaluateTrack} from './timeline/track.js';
 import {assertBundle} from './schema.js';
 import {prepareTraceProgram,type PreparedTraceProgram} from './timeline/trace.js';
+import {preparePresentationProgram,type PreparedPresentationProgram} from './ir/presentation-intent.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -37,7 +38,7 @@ function sampleField(resource: ScalarFieldResource, time: number): number[] {
   const [a, b, t] = interval(resource.times, time);
   return mix(resource.samples[a], resource.samples[b], resource.interpolation === 'step' ? 0 : t) as number[];
 }
-function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, parameters?:Readonly<Record<string,ExpressionValue>>,traces?:PreparedTraceProgram,display=true): EvaluatedFrame {
+function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, parameters?:Readonly<Record<string,ExpressionValue>>,traces?:PreparedTraceProgram,display=true,presentation?:PreparedPresentationProgram): EvaluatedFrame {
   if (!Number.isFinite(time)) throw new RangeError('Evaluation time must be finite.');
   const clamped = Math.max(0, Math.min(bundle.duration, time));
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
@@ -84,7 +85,9 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   }
   for (const node of nodes) if (node.kind === 'field') (node as FieldNode).values = sampleField(bundle.resources[node.resourceId] as ScalarFieldResource, clamped);
   // Resources are immutable shared data; frame-local geometry and camera are independent.
-  return { time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources,...(fields ? {fields} : {}),...metadata };
+  const frame:EvaluatedFrame={ time: clamped, viewport: { ...bundle.viewport }, camera, nodes, resources: bundle.resources,...(fields ? {fields} : {}),...metadata };
+  if(presentation)frame.presentation=presentation.evaluate(frame);
+  return frame;
 }
 
 /** Convenience evaluation at an absolute time. Treat returned resources as immutable. */
@@ -128,5 +131,6 @@ function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvalua
   const {traces:input,...base}=snapshot;
   const plan=prepareExecutionPlan(base);
   const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
-  return (time,parameters) => evaluatePrepared(base, time, plan, parameters,traces);
+  const presentation=snapshot.presentation?preparePresentationProgram(snapshot.presentation,snapshot):undefined;
+  return (time,parameters) => evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
 }

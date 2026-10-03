@@ -1,5 +1,6 @@
-import type {EvaluatedFrame} from '../src/schema.js';
-import {renderCanvas} from '../src/render-canvas.js';
+import type {EvaluatedFrame, Matrix} from '../src/schema.js';
+import {renderCanvas, type CanvasOptions} from '../src/render-canvas.js';
+import {multiplyMatrix,localMatrix,transformPoint} from '../src/geometry.js';
 import type {BoardPlacement} from './chalkspace.js';
 export * from './chalkspace-lecture.js';
 
@@ -10,6 +11,21 @@ export interface BoardView {
   cameraY: number;
 }
 export interface BoardScreenRect {x: number; y: number; width: number; height: number}
+
+/** Exact native layer projection, including rounded backing size and the scene
+ * camera. Input is scene-world bp, output is host backing pixels. */
+export function boardProjectionMatrix(frame:EvaluatedFrame,placement:BoardPlacement,view:BoardView,pixelWidth:number):Matrix {
+  const r=boardScreenRect(frame.viewport,placement,view,pixelWidth),w=Math.max(1,Math.ceil(r.width)),h=Math.max(1,Math.ceil(r.height));
+  const scale=Math.min(w/frame.viewport.width,h/frame.viewport.height),camera=frame.camera;
+  let m:Matrix=[r.width/w,0,0,r.height/h,r.x,r.y];
+  for(const next of [localMatrix({translate:[(w-frame.viewport.width*scale)/2,(h-frame.viewport.height*scale)/2],scale:[scale,scale]}),
+    localMatrix({translate:[frame.viewport.width/2,frame.viewport.height/2],scale:[camera.zoom,camera.zoom],rotate:-(camera.rotation??0)}),
+    localMatrix({translate:[-frame.viewport.width/2-camera.x,-frame.viewport.height/2-camera.y]})])m=multiplyMatrix(m,next);
+  return m;
+}
+export function scenePointToBoard(frame:EvaluatedFrame,point:[number,number],placement:BoardPlacement,view:BoardView,pixelWidth:number):[number,number] {
+  return transformPoint(boardProjectionMatrix(frame,placement,view,pixelWidth),point);
+}
 
 /** Scene placement is x=center and y=top, in board-world units. */
 export function boardScreenRect(viewport: {width: number; height: number}, placement: BoardPlacement,
@@ -42,7 +58,7 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
     }
     return opacitySurfaces[index];
   };
-  return {draw(frame:EvaluatedFrame,ctx:CanvasRenderingContext2D,view:BoardView):BoardScreenRect {
+  return {draw(frame:EvaluatedFrame,ctx:CanvasRenderingContext2D,view:BoardView,options:Pick<CanvasOptions,'paintNode'>={}):BoardScreenRect {
     if(disposed)throw new Error('BOARD_DISPOSED: layer has been disposed.');
     const rect=boardScreenRect(frame.viewport,placed,view,ctx.canvas.width);
     // Current Chalkspace host has a fixed 16:9 board viewport. Avoid silently
@@ -55,7 +71,7 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
     if(buffer.width!==width)buffer.width=width;if(buffer.height!==height)buffer.height=height;
     const layer=buffer.getContext('2d');if(!layer)throw new Error('Canvas 2D unavailable');
     surfaceIndex=0;
-    renderCanvas(frame,layer,{background:'transparent',createSurface:surface});
+    renderCanvas(frame,layer,{background:'transparent',createSurface:surface,paintNode:options.paintNode});
     ctx.save();
     try {ctx.resetTransform();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
       ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.filter='none';

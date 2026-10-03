@@ -1,6 +1,6 @@
 import type {Clip, EvaluatedFrame, Matrix, Node, PaintItem, PathNode, Style, Transform} from './schema.js';
 import {fieldColor} from './render-svg.js';
-import {pathGeometryData} from './path-geometry.js';
+import {pathGeometryData, type PathGeometry} from './path-geometry.js';
 import {legacyArrowPoints} from './geometry/arrowheads.js';
 
 export interface CanvasOptions {
@@ -12,7 +12,12 @@ export interface CanvasOptions {
   clear?: boolean;
   /** Return an independent context. Its canvas is reset before every use. */
   createSurface?: (width: number, height: number) => CanvasRenderingContext2D;
+  /** Optional consumer presentation of a leaf. The context already carries its
+   * local transform and clip; ancestor/group opacity remains renderer-owned.
+   * drawNative does not reapply transforms, camera or opacity. */
+  paintNode?: (node:Node, context:CanvasRenderingContext2D, drawNative:NativeNodePainter)=>void;
 }
+export type NativeNodePainter=(context:CanvasRenderingContext2D, display?:{strokePrefix:PathGeometry})=>void;
 
 interface PaintState {
   fill: string; stroke: string; color: string;
@@ -242,6 +247,16 @@ export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2
       try {
         nodeTransform(surface, node.transform);
         clipPath(surface, node.clip);
+        const drawNative:NativeNodePainter=(surface,display)=>{
+        surface.save();
+        const original=node;
+        try {
+        if(display){
+          if(original.kind!=='path'&&original.kind!=='line')throw new Error('CANVAS_PRESENTATION: stroke prefix requires a path or line.');
+          node={...original,kind:'path',d:pathGeometryData(display.strokePrefix),arrowEnd:false,
+            ...(original.kind==='path'&&original.resolvedArrows?{resolvedArrows:{...original.resolvedArrows,
+              shaft:display.strokePrefix,endTip:{contours:[]}}}:{})} as PathNode;
+        }
         switch (node.kind) {
           case 'group':
             for (const child of children.get(node.id) ?? []) renderNode(child, surface, paint);
@@ -310,6 +325,10 @@ export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2
           }
           default: throw new Error(`Unsupported scene object: ${(node as {kind: string}).kind}`);
         }
+        } finally {node=original;surface.restore();}
+        };
+        if(node.kind!=='group'&&options.paintNode)options.paintNode(node,surface,drawNative);
+        else drawNative(surface);
       } finally {surface.restore();}
     });
   };
