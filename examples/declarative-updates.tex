@@ -1,0 +1,73 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-relations,texloom-intersections}
+\loomsetup{
+  \definecolor{mint}{HTML}{71DFC2}
+  \definecolor{gold}{HTML}{F3CB84}
+  \definecolor{coral}{HTML}{EE8D82}
+  \definecolor{ink}{HTML}{E5F1EF}
+  \definecolor{muted}{HTML}{91ACB5}
+  \definecolor{rule}{HTML}{31505C}
+}
+\loomset{
+  heading/.style={text=ink,font=\sffamily\bfseries\fontsize{27}{32}\selectfont},
+  subtitle/.style={text=muted,font=\sffamily\fontsize{11}{15}\selectfont},
+  label/.style={text=mint,font=\sffamily\bfseries\fontsize{9}{12}\selectfont},
+  small/.style={text=muted,font=\sffamily\fontsize{10}{14}\selectfont},
+  formula/.style={text=ink,font=\fontsize{14}{18}\selectfont}
+}
+\begin{document}
+\begin{loomscene}[width=960,height=540,duration=12,title={Describe the relationship}]
+\loomnode[heading] (heading) at (480,47) {Describe the relationship};
+\loomnode[subtitle] (subtitle) at (480,82) {Follow a point. Align a direction. Reveal the same trace at any time.};
+\loompath (rules) {\draw[rule,line width=.65bp] (55,112)--(905,112) (55,339)--(905,339) (55,492)--(905,492) (558,130)--(558,321);};
+\loomnode[label] (follow-heading) at (308,140) {01 / FOLLOW + TRACE};
+\loomnode[label,text=gold] (direction-heading) at (738,140) {02 / ALIGN IN A MOVING PARENT};
+
+% Scene coordinates are in bp. The amplitude control regenerates the complete
+% fixed-domain trace, independently of playback frame rate and seek history.
+\loomparameter[unit=bp,min=35,max=72]{amplitude}|55|
+\loompath (guides) {
+  \draw[rule,line width=.65bp] (115,230)--(505,230) (310,147)--(310,302);
+  \draw[rule,dashed,line width=.65bp] (740,227) circle[radius=48bp];
+  \fill[muted] (310,230) circle[radius=2bp] (740,227) circle[radius=2bp];
+};
+\TLNode{orbit-trace}{path}{"d":"M0 0","style":{"fill":"none","stroke":"#71DFC2","strokeWidth":2.5,"lineCap":"round","lineJoin":"round"}}
+\TLNode{P}{point}{"x":485,"y":230,"r":5,"style":{"fill":"#71DFC2","stroke":"#E5F1EF","strokeWidth":1.3}}
+\loomexpr{P}{position}|vec2(310bp+175bp*cos(2*pi*1rad*time/12s),230bp-amplitude*sin(2*pi*1rad*time/12s))|
+\TLMath{P-label-art}{P(t)}
+\TLNode{P-label}{tex}{"resourceId":"P-label-art","x":0,"y":0,"scale":1.1,"style":{"fill":"#71DFC2"}}
+\loomfollow{P-label}|{"point":"P","offset":[12,-10]}|
+\loomtrace{orbit-trace}|{"source":{"kind":"node","node":"P","property":"position","space":{"kind":"scene"}},"domain":[0,12],"step":0.2,"tolerance":0.15,"maxSamples":4096}|
+\loomnode[formula] (position-formula) at (309,314) {$P(t)=(310+175\cos\theta,\;230-a\sin\theta)$};
+
+% A hidden lookAt producer supplies a scene-equivalent direction chart. The
+% arrow's parent rotates and stretches; loomalign converts the direction into
+% that parent basis before binding the arrow's own rotation. Own x-scale is
+% fixed and positive. This never reads the arrow's rotation as its own input.
+\TLNode{guide}{line}{"x1":0,"y1":0,"x2":1,"y2":0,"visible":false}
+\loomlookat[id=point-direction]{guide}|{"from":[310,230],"to":"P"}|
+\TLNode{compass-frame}{group}{"transform":{"translate":[740,227],"scale":[1.2,0.8]}}
+\loomexpr{compass-frame}{transform.rotate}|0.25rad*sin(2*pi*1rad*time/12s)|
+\TLNode{compass}{path}{"parent":"compass-frame","d":"M0 0L42 0","geometry":{"contours":[{"id":"shaft","start":[0,0],"segments":[{"id":"shaft","kind":"line","to":[42,0]}]}]},"arrowEnd":true,"arrowSize":8,"style":{"fill":"none","stroke":"#F3CB84","strokeWidth":2.6,"lineCap":"round"}}
+\loomalign[space=parent:guide]{compass}|{"direction":{"operation":"point-direction","socket":"direction"}}|
+\loomnode[small,text=gold] (direction-caption) at (740,294) {The visible axis points from the center to $P$.};
+\loomnode[formula] (time-formula) at (740,317) {$\theta=2\pi t/(12\,\mathrm{s})$};
+
+\loomnode[label,text=coral] (intersection-heading) at (480,365) {03 / NO INTERSECTION, NO MARKER};
+\loomgeometry[draw=rule,line width=2bp] (horizontal) {(240,424)--(720,424)};
+\loomgeometry[draw=ink,line width=1.6bp] (scan) {(470,397)--(470,451)};
+\loomexpr{scan}{transform.translate}|vec2(330bp*sin(2*pi*1rad*time/12s),0bp)|
+\loomintersections{contacts}|{"a":"horizontal","b":"scan"}|
+\TLNode{intersection-trace}{path}{"d":"M0 0","style":{"fill":"none","stroke":"#EE8D82","strokeWidth":3.2,"lineCap":"round"}}
+\TLNode{I}{point}{"x":470,"y":424,"r":5,"style":{"fill":"#EE8D82","stroke":"#E5F1EF","strokeWidth":1.1}}
+\loomintersectionpoint[along=a,missing=hide]{I}|{"intersections":"contacts"}|
+\TLMath{I-label-art}{I(t)}
+\TLNode{I-label}{tex}{"resourceId":"I-label-art","x":0,"y":0,"scale":1.05,"style":{"fill":"#EE8D82"}}
+\loomfollow{I-label}|{"point":"I","offset":[8,-14]}|
+\loomvisibility{I-label}|{"value":{"operation":"intersection:I","socket":"found"}}|
+\loomtrace{intersection-trace}|{"source":{"kind":"node","node":"I","property":"position","space":{"kind":"scene"}},"domain":[0,12],"step":0.2,"tolerance":0.15,"maxDepth":10,"maxSamples":4096}|
+\loomnode[small,text=coral] (missing-caption) at (480,469) {The moving line misses the segment. Its marker and label are hidden.};
+\loomvisibility{missing-caption}|{"value":0,"threshold":{"operation":"intersection:I","socket":"found"}}|
+\loomnode[small] (footer) at (480,520) {TEXLOOM / EXPLICIT DEPENDENCIES / ABSOLUTE TIME / NO PLAYBACK MEMORY};
+\end{loomscene}
+\end{document}

@@ -7,6 +7,8 @@ import type {ExpressionValue} from './fields/ast.js';
 import {createArrowGeometry,ARROW_DEFAULTS,type ArrowGeometryResult} from './geometry/arrowheads.js';
 import {OperationValidationError} from './ir/operations.js';
 import {evaluateTrack} from './timeline/track.js';
+import {assertBundle} from './schema.js';
+import {prepareTraceProgram,type PreparedTraceProgram} from './timeline/trace.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -35,7 +37,7 @@ function sampleField(resource: ScalarFieldResource, time: number): number[] {
   const [a, b, t] = interval(resource.times, time);
   return mix(resource.samples[a], resource.samples[b], resource.interpolation === 'step' ? 0 : t) as number[];
 }
-function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, parameters?:Readonly<Record<string,ExpressionValue>>): EvaluatedFrame {
+function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, parameters?:Readonly<Record<string,ExpressionValue>>,traces?:PreparedTraceProgram,display=true): EvaluatedFrame {
   if (!Number.isFinite(time)) throw new RangeError('Evaluation time must be finite.');
   const clamped = Math.max(0, Math.min(bundle.duration, time));
   const nodes = structuredClone(bundle.nodes), camera = structuredClone(bundle.camera);
@@ -47,6 +49,10 @@ function evaluatePrepared(bundle: Bundle, time: number, plan: ExecutionPlan, par
   for (const track of bundle.tracks) setValue(track.target === '$camera' ? camera : byId.get(track.target)!, track.property, evaluateTrack(track, clamped));
   const metadata:ExecutionMetadata={};
   const fields = plan.execute(byId, bundle.resources, camera, clamped, parameters, metadata);
+  if(traces)metadata.traces=traces.apply({time:clamped,viewport:bundle.viewport,camera,nodes,resources:bundle.resources},parameters);
+  // Source probes need the executed scene state, not serialized display paths,
+  // arrow tessellation or raster-field values. They reuse this same plan.
+  if(!display)return {time:clamped,viewport:{...bundle.viewport},camera,nodes,resources:bundle.resources,...(fields?{fields}:{}),...metadata};
   for(const node of nodes) if(node.kind==='path'&&node.geometry) {
     // Full editable geometry survives reveal: dependent points keep sampling the
     // mathematical curve, while both renderers receive the same visible prefix.
@@ -92,8 +98,11 @@ function freezeDeep(value: any): void {
 }
 /** Validate and snapshot once for playback/export; seeking has no playback-history state. */
 export function createEvaluator(bundle: Bundle): (time: number, parameters?:Readonly<Record<string,ExpressionValue>>) => EvaluatedFrame {
-  const plan = prepareExecutionPlan(bundle);
+  assertBundle(bundle);
   const snapshot = structuredClone(bundle);
   freezeDeep(snapshot);
-  return (time,parameters) => evaluatePrepared(snapshot, time, plan, parameters);
+  const {traces:input,...base}=snapshot;
+  const plan=prepareExecutionPlan(base);
+  const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
+  return (time,parameters) => evaluatePrepared(base, time, plan, parameters,traces);
 }

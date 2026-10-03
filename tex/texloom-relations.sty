@@ -1,0 +1,26 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-relations}[2026/10/03 Declarative updates and deterministic traces]
+\RequirePackage{texloom-expressions}
+\newcount\TLRserial
+\TLRserial=0
+\def\TLRstart#1{%
+  \global\advance\TLRserial by 1
+  \edef\TLEbase{\jobname.tl-relation-\the\TLRserial}%
+  \immediate\write\TLrecords{\string{"type":"relation-file","kind":"#1","file":"\TLEbase"\string}}}
+% Options: id=stable-operation-id, space=scene|local:node|parent:node|plot:group.
+% JSON is verbatim. Point inputs accept a node ID, [x,y], an output reference,
+% or {"expression":"vec2(...)"}; vectors accept [x,y] or an output reference.
+% Angles align the target's positive local x-axis, after parent-space transport.
+\NewDocumentCommand\loomfollow{O{} m +v}{%
+  \TLRstart{followPoint}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}\TLEwrite{inputs}{#3}}
+\NewDocumentCommand\loomalign{O{} m +v}{%
+  \TLRstart{alignDirection}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}\TLEwrite{inputs}{#3}}
+\NewDocumentCommand\loomlookat{O{} m +v}{%
+  \TLRstart{lookAt}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}\TLEwrite{inputs}{#3}}
+\NewDocumentCommand\loomvisibility{O{} m +v}{%
+  \TLRstart{thresholdOpacity}\TLEmetadata{options}{#1}\TLEmetadata{target}{#2}\TLEwrite{inputs}{#3}}
+% Traces observe a scene-space node position on an authored fixed time domain.
+% No callback or frame-history state is recorded in the portable declaration.
+\NewDocumentCommand\loomtrace{m +v}{%
+  \TLRstart{trace}\TLEmetadata{target}{#1}\TLEwrite{inputs}{#2}}
+\endinput
