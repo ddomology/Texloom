@@ -20,8 +20,10 @@ class PresentationCanvasTests(unittest.TestCase):
             f"export {{createChalkspaceCanvasLayer,boardProjectionMatrix}} from {json.dumps((ROOT / 'adapters/chalkspace-canvas.ts').as_posix())};\n",
             encoding='utf8')
         cls.script = folder / 'browser.js'
-        command = ['node', str(ROOT / 'node_modules/esbuild/bin/esbuild'), str(entry), '--bundle',
-                   '--format=iife', '--global-name=API', '--outfile=' + str(cls.script)]
+        # esbuild/bin/esbuild is a JS launcher on Windows but can be an ELF
+        # executable on Linux. Use its public Node API on both platforms.
+        command = ['node', '-e', "require('esbuild').buildSync({entryPoints:[process.argv[1]],bundle:true,"
+                   "format:'iife',globalName:'API',outfile:process.argv[2]})", str(entry), str(cls.script)]
         result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
         if result.returncode:
             raise RuntimeError(result.stderr)
