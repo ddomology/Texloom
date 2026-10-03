@@ -1,5 +1,4 @@
 import {build} from 'esbuild';
-import ts from 'typescript';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {mkdir, readFile, writeFile, readdir} from 'node:fs/promises';
@@ -21,19 +20,15 @@ const entryPoints = {index:resolve(root,'src/index.ts'), lemniro:resolve(root,'a
 await build({entryPoints, outdir:out, outExtension:{'.js':'.mjs'}, bundle:true,
   platform:'browser', format:'esm', target:'es2022', splitting:true,
   minify:true, sourcemap:false, legalComments:'none'});
-const config = ts.parseJsonConfigFileContent({compilerOptions:{
+const config = {compilerOptions:{
   target:'ES2022', module:'NodeNext', moduleResolution:'NodeNext', strict:true,
   declaration:true, emitDeclarationOnly:true, allowImportingTsExtensions:true,
   skipLibCheck:true, rootDir:root, declarationDir:resolve(out,'types'),
-  lib:['ES2022','DOM'], types:[],
-}, files:Object.values(entryPoints)}, ts.sys, root);
-const program = ts.createProgram(config.fileNames, config.options);
-const diagnostics = [...config.errors, ...ts.getPreEmitDiagnostics(program)];
-if (diagnostics.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(diagnostics, {
-  getCanonicalFileName:f=>f, getCurrentDirectory:()=>root, getNewLine:()=> '\n',
-}));
-const result = program.emit();
-if (result.emitSkipped || result.diagnostics.length) throw new Error('Declaration generation failed.');
+  lib:['ES2022','DOM'], types:[], removeComments:true,
+}, files:Object.values(entryPoints)};
+const configPath = `${out}.tsconfig.json`;
+await writeFile(configPath, JSON.stringify(config,null,2)+'\n');
+execFileSync(process.execPath, [resolve(root,'node_modules/typescript/bin/tsc'), '--project', configPath], {cwd:root,stdio:'inherit'});
 
 const packageJson = JSON.parse(await readFile(resolve(root,'package.json'),'utf8'));
 await writeFile(resolve(out,'package.json'), JSON.stringify({
@@ -51,7 +46,7 @@ await writeFile(resolve(out,'provenance.json'), JSON.stringify({
   contract:'texloom-lemniro-distribution/1', repository:'ddomology/Texloom', sourceCommit:commit,
   generator:'tools/build-lemniro-package.mjs', node:process.version,
   esbuild:JSON.parse(await readFile(resolve(root,'node_modules/esbuild/package.json'),'utf8')).version,
-  typescript:ts.version, files:hashes,
+  typescript:JSON.parse(await readFile(resolve(root,'node_modules/typescript/package.json'),'utf8')).version, files:hashes,
 },null,2)+'\n');
 console.log(JSON.stringify({directory:out,sourceCommit:commit,files:files.length,
   pack:`npm pack ${relative(process.cwd(),out)} --pack-destination <output-directory>`}));
