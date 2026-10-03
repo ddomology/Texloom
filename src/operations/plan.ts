@@ -21,6 +21,7 @@ import {isIntersectionOperator,type IntersectionEvaluation} from './intersection
 import {preparePlotProgram,type PlotEvaluation} from './plot.js';
 import {prepareMorphProgram,type MorphEvaluation} from '../timeline/morph.js';
 import {prepareMathTransformProgram,type MathTransformEvaluation} from '../timeline/math-transform.js';
+import type {TraceEvaluation} from '../timeline/trace.js';
 
 interface StepBase {
   id: string; path: string; sourceSpan?: DeepReadonly<SourceSpan>;
@@ -30,10 +31,16 @@ type Step = StepBase & ({kind:'relation'; lowered:LoweredRelation} |
   {kind:'operation'; operation:DeepReadonly<Operation>} | {kind:'binding'; binding:DeepReadonly<OperationBinding>} |
   {kind:'expression'; prepared:PreparedExpressionBinding} | {kind:'fields'} | {kind:'deformation'; index:number} | {kind:'plot';index:number} | {kind:'morph';index:number} | {kind:'math-transform';index:number});
 /** Optional frame metadata sink preserves the existing execute return contract. */
-export interface ExecutionMetadata {deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
+export interface ExecutionMetadata {deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation;shapes?:ShapeEvaluation;anchors?:AnchorEvaluation;curves?:CurveEvaluation;intersections?:IntersectionEvaluation}
+/** Immutable property dependencies for consumers preparing derived scene data. */
+export interface ExecutionAccess {
+  id:string; path:string; sourceSpan?:SourceSpan;
+  reads:PropertyAccess[]; writes:PropertyAccess[];
+}
 export interface ExecutionPlan {
   readonly contract: 'texloom-execution/1';
   readonly order: readonly string[];
+  readonly accesses: readonly DeepReadonly<ExecutionAccess>[];
   /** Each execution receives new frame nodes/camera; no state survives this call. */
   execute(nodes: Map<string, Node>, resources: Bundle['resources'], camera: Camera, time:number, parameters?:Readonly<Record<string,ExpressionValue>>, metadata?:ExecutionMetadata): FieldEvaluation|undefined;
 }
@@ -156,7 +163,12 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
   const hasShapes=graph?.operations.some(operation=>isShapeOperator(operation.operator,operation.version));
   const hasCurves=graph?.operations.some(operation=>isCurveOperator(operation.operator,operation.version));
   const hasIntersections=graph?.operations.some(operation=>isIntersectionOperator(operation.operator,operation.version));
-  return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>,metadata?:ExecutionMetadata) {
+  const accesses=freezeSnapshot([
+    ...bundle.tracks.map((track,index)=>({id:`track:${index}`,path:`$.tracks[${index}]`,sourceSpan:track.sourceSpan,
+      reads:[],writes:[{node:track.target,property:track.property}]})),
+    ...steps.map(({id,path,sourceSpan,reads,writes})=>({id,path,sourceSpan,reads,writes})),
+  ]);
+  return Object.freeze({contract:'texloom-execution/1',order:Object.freeze(order),accesses,execute(frameNodes: Map<string,Node>,resources: Bundle['resources'],camera: Camera,time:number,overrides?:Readonly<Record<string,ExpressionValue>>,metadata?:ExecutionMetadata) {
     const parameters = expressions.resolveParameters(overrides);
     let fieldResult:FieldEvaluation|undefined;
     const deformationResults:Record<string,DeformationEvaluation[string]>=Object.create(null);
@@ -167,7 +179,7 @@ export function prepareExecutionPlan(input: Bundle): ExecutionPlan {
     const anchors:AnchorEvaluation=Object.create(null);
     const curves:CurveEvaluation={operations:Object.create(null),samples:Object.create(null)};
     const intersections:IntersectionEvaluation={sets:Object.create(null),selections:Object.create(null)};
-    if(metadata){delete metadata.deformations;delete metadata.plots;delete metadata.morphs;delete metadata.mathTransforms;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
+    if(metadata){delete metadata.deformations;delete metadata.plots;delete metadata.morphs;delete metadata.mathTransforms;delete metadata.traces;delete metadata.shapes;delete metadata.anchors;delete metadata.curves;delete metadata.intersections;}
     const values = new Map<string,Record<string,LiteralValue>>();
     const context: LegacyFrameContext = {nodes:frameNodes,resources,samples:new Map()};
     for (const frozen of ordered) {

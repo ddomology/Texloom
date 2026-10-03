@@ -458,6 +458,18 @@ the transition. Shared frame metadata describes the same semantic state used
 by SVG accessibility. See the [formula transform guide](docs/math-transforms.md)
 and [three-stage algebra example](examples/math-transformations.tex).
 
+### Declarative updates and traces (PR 23)
+
+`texloom-relations` adds following, direction alignment, look-at and
+value-controlled opacity through the shared typed operation graph. Parent-space
+transport keeps orientation correct under affine parent transforms. Shapes and
+their dependents regenerate from validated parameters and absolute scene time.
+`\loomtrace` prepares a bounded, adaptive path over an authored time domain;
+seeking and output fps do not accumulate or choose its vertices. Observed gaps
+remain separate contours. See the [update and trace guide](docs/declarative-updates.md)
+and [real TeX example](examples/declarative-updates.tex) for authoring, error
+estimates, budgets and the terminal trace-output contract.
+
 ## Core API
 
 ```ts

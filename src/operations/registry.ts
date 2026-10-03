@@ -10,6 +10,7 @@ import {arrowOperatorDefinitions} from './arrows.js';
 import {decorationOperatorDefinitions} from './decorations.js';
 import {layoutOperatorDefinitions} from './layout.js';
 import {axesOperatorDefinitions} from './axes.js';
+import {constraintOperatorDefinitions} from './constraints.js';
 
 export interface OperatorRegistry {
   get(name: string, version: number): DeepReadonly<OperatorDefinition> | undefined;
@@ -116,6 +117,7 @@ export const defaultOperatorRegistry: OperatorRegistry = createOperatorRegistry(
   ...decorationOperatorDefinitions,
   ...layoutOperatorDefinitions,
   ...axesOperatorDefinitions,
+  ...constraintOperatorDefinitions,
   {
     name: 'sampleCurve', version: 1, spaces: ['curve'], pure: true, deterministic: true,
     inputs: {

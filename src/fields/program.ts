@@ -148,8 +148,14 @@ export function validateExpressionProgramInContext(program:unknown,bundle:Bundle
 export function prepareExpressionProgram(program:ExpressionProgram|undefined,bundle:Bundle):PreparedExpressionProgram {
   const checked = program ? inspect(program,bundle) : {diagnostics:[],bindings:[]};
   if (checked.diagnostics.some(d => d.severity === 'error')) throw new OperationValidationError(checked.diagnostics);
-  const definitions = freezeSnapshot(program?.parameters ?? {});
-  return Object.freeze({bindings:freezeSnapshot(checked.bindings),resolveParameters(overrides:Readonly<Record<string,ExpressionValue>> = {}) {
+  return Object.freeze({bindings:freezeSnapshot(checked.bindings),resolveParameters:prepareParameterResolver(program?.parameters ?? {})});
+}
+
+/** @internal Declarations have passed expression validation. Share the exact
+ * override contract between ordinary frames and prepared derived data. */
+export function prepareParameterResolver(input:ExpressionProgram['parameters']):PreparedExpressionProgram['resolveParameters'] {
+  const definitions = freezeSnapshot(input);
+  return (overrides:Readonly<Record<string,ExpressionValue>> = {}) => {
     const diagnostics = validateJsonData(overrides,'$.parameters');
     if (!object(overrides)) diagnostics.push({severity:'error',code:'EXPRESSION_PARAMETER_OVERRIDES',message:'Expected a parameter override dictionary.',path:'$.parameters'});
     if (diagnostics.length) throw new OperationValidationError(diagnostics);
@@ -162,7 +168,7 @@ export function prepareExpressionProgram(program:ExpressionProgram|undefined,bun
     }
     if (diagnostics.length) throw new OperationValidationError(diagnostics);
     return values;
-  }});
+  };
 }
 
 /** Resolve one expression to the same typed values used by operation bindings. */

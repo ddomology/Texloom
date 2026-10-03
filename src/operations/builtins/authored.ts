@@ -13,6 +13,7 @@ import {isArrowOperator,executeArrowOperation} from '../arrows.js';
 import {isDecorationOperator,executeDecorationOperation} from '../decorations.js';
 import {isLayoutOperator,executeLayoutOperation} from '../layout.js';
 import {isAxesOperator,executeAxesOperation} from '../axes.js';
+import {isConstraintOperator,executeConstraintOperation} from '../constraints.js';
 
 type AuthoredOperation = DeepReadonly<Operation>;
 type Inputs = Readonly<Record<string, LiteralValue>>;
@@ -166,6 +167,7 @@ const implementations = new Map<string, ReadonlyMap<number, Executor>>([
 
 /** Fail during preparation if metadata describes an operation this runtime cannot execute. */
 export function requireAuthoredImplementation(name: string, version: number): void {
+  if(isConstraintOperator(name,version))return;
   if(isAxesOperator(name,version))return;
   if(isArrowOperator(name,version))return;
   if(isDecorationOperator(name,version))return;
@@ -182,6 +184,8 @@ export function requireAuthoredImplementation(name: string, version: number): vo
 
 /** Execute already-resolved literals independently of other calls and caller-owned data. */
 export function executeAuthoredOperation(operation: AuthoredOperation, inputs: Inputs,shapes?:ShapeEvaluation,curves?:CurveEvaluation,intersections?:IntersectionEvaluation): Record<string, LiteralValue> {
+  const constraint=executeConstraintOperation(operation,inputs);
+  if(constraint)return constraint;
   const axes=executeAxesOperation(operation,inputs);
   if(axes)return axes;
   const arrows=executeArrowOperation(operation,inputs);
