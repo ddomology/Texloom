@@ -9,10 +9,19 @@ solver. The checked-in example is an analytic sample producer, not a PDE result.
 Run from the repository root:
 
 ```sh
+# Reproduce the imported binary assets in a new output directory.
 python tools/import_samples.py examples/data/temporal-samples/samples.json --out build/imported-samples --chunk-frames 2
+# Compile the example using its checked-in data/temporal-samples/bake/manifest.json.
 python tools/compile.py examples/temporal-samples.tex --out build/temporal-samples
 node tools/build-gpu-player.mjs build/temporal-samples/bundle.json build/temporal-samples/player.html
 ```
+
+The import and example build above are independent checks: the example's
+`\loombake` still reads `examples/data/temporal-samples/bake/manifest.json`.
+To use a new import, write it into a new directory beneath your TeX source's
+directory, then set `\loombake` to that manifest's relative path. Chunk paths
+remain relative to the manifest. Copying a manifest alone is insufficient;
+keep its referenced chunks alongside it.
 
 The output directory must be new. All validation and encoding complete before
 one staged directory is renamed into place; existing output is preserved. Use

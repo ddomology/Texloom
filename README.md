@@ -37,10 +37,16 @@ vector and position channels are retained independently from display colors.
 Compilation verifies local payloads and embeds them for an offline player.
 
 ```sh
+# Reproduce the imported binary assets in a new output directory.
 python tools/import_samples.py examples/data/temporal-samples/samples.json --out build/imported-samples --chunk-frames 2
+# Compile the example using its checked-in data/temporal-samples/bake/manifest.json.
 python tools/compile.py examples/temporal-samples.tex --out build/temporal-samples
 node tools/build-gpu-player.mjs build/temporal-samples/bundle.json build/temporal-samples/player.html
 ```
+
+The first command is an independent import check. To render newly imported data,
+place its output beneath the TeX source directory and update `\loombake` to that
+manifest's relative path; the example does not read `build/imported-samples`.
 
 The example uses independently generated analytic samples, **not a PDE solver**.
 Its original geometry and sampled positions share the same imported scalar
