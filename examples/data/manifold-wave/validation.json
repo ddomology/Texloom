@@ -1,0 +1,137 @@
+{
+  "interpolation": {
+    "amplitudeErrorBound": 0.0012047856934923533,
+    "maxGap": 0.125,
+    "maxSecondDerivative": 0.6168502750680849,
+    "measuredExactKnotLinearError": 0.0012030928690740517,
+    "measuredTotalLinearError": 0.0012030928730291102,
+    "scope": "Amplitude; |F|<=1 gives the same scalar bound. Not a solver error.",
+    "totalAmplitudeBound": 0.0012047857504205377
+  },
+  "limits": [
+    "One exact spatial eigenspace with numerically integrated time coefficients.",
+    "No general mesh PDE solver or spatial discretization convergence is claimed.",
+    "The radial displacement is a display mapping; the PDE domain stays the original sphere.",
+    "Finite differences avoid coordinate poles; angular gradients use their finite pole limits.",
+    "Checks sample floating-point expressions and are not a formal proof."
+  ],
+  "provenance": {
+    "bake": {
+      "manifestSha256": "93f8cceaa51e29ecb052227695b3576c639418ae0cc7bf748544da24438d5c87",
+      "verifiedChunks": 9,
+      "verifiedPayloadBytes": 1754480
+    },
+    "files": {
+      "bake/chunk-000.bin": "3d0edb09f5bf15209fdecd53276f42e42f645d666057eca904ab6a9b78e67974",
+      "bake/chunk-001.bin": "8cdcddf94b2a150acfef8648bec1cc40a17c9c10277931a0123e4c4aefbdb3ec",
+      "bake/chunk-002.bin": "96647c68fd2c70748800be375b9e0bdce185bc05085131a1a35df2b05d0a2067",
+      "bake/chunk-003.bin": "bbf5652ffe50c88c0b499aeb19764d83eea2ee846c1a0bfb567d986cb61294e9",
+      "bake/chunk-004.bin": "0771bc08f28b047f4538fe502a7816ed9e6b56723db3cfcf1646e9f1133f63b3",
+      "bake/chunk-005.bin": "8986f9bd7c278961b018c72ccc0b7725fcc06fe325d790f78931f2a6c181e375",
+      "bake/chunk-006.bin": "12ad7b7a21a55971afda4593380719f62868e1aabb5ba1b6a0ba163c531285e6",
+      "bake/chunk-007.bin": "a170454491f49e626fada2d46c146917d252dc51de514c19ce4c1414ef24893d",
+      "bake/chunk-008.bin": "bdfe52edb660a1f4298da144bc1373ff9c03922f0d4ba77f053583b57a2b3d6c",
+      "bake/import-report.json": "695acc0ef545a2b9ad6089328d2f5fb45338e974f07383c2317718745e4c7980",
+      "bake/manifest.json": "93f8cceaa51e29ecb052227695b3576c639418ae0cc7bf748544da24438d5c87",
+      "domain.tex": "38d3775779e8437ef608220c03aa1388664c8b3783666c704b30d6209ef3b8af",
+      "mesh.json": "244df6f579f0229a34494c079a3d489494cde4d76e64c5c7031608ab30b3e3c6",
+      "mode-states.json": "a1d7876f5600a6a1f57ec5012d8032ffa9fd91e2bd7e6599bfff4ea1191d1340",
+      "model.json": "835f31594c32b3404b07e1c226062a47018662df9f7843baeecad2f955c26264",
+      "samples.json": "c1152b3976b905cbbe52b66cd05024269b9b1b462c03ecb0cb2f834abdb21f8f"
+    },
+    "producerReportSha256": "a3ac07e753b655467161f0c4aa1694156d2d94aee420ab332d439bbaa1f08a8d",
+    "sourceProfile": {
+      "generator": {
+        "path": "tools/wave_samples.py",
+        "sha256": "c4cbf9bffb3df83922586537e5c76e007ec3adcd6018475117b5d5736a92dc35"
+      },
+      "importer": {
+        "path": "tools/import_samples.py",
+        "sha256": "9b4579de573761a56c790205f52c4dc0c94bf562f924043cfc1b90d80875d538"
+      }
+    }
+  },
+  "reference": {
+    "coordinateFormula": "sin(theta)^2*sin(2*phi)",
+    "independence": "No producer closed-form, gradient, normalization or energy helper is imported.",
+    "path": "tools/reference_wave.py",
+    "sha256": "6328c26522fcd573e3963fe193fded0c53426af75a1f6afbb0bc7dde7c72b244"
+  },
+  "referenceChecks": {
+    "angularEigenResidual": 8.881784197001252e-16,
+    "finiteDifferenceObservedOrder": [
+      1.9999461752816396,
+      1.9999847729274982
+    ],
+    "finiteDifferencePde": [
+      {
+        "h": 0.02,
+        "maxPdeResidual": 2.7159192985237723e-05
+      },
+      {
+        "h": 0.01,
+        "maxPdeResidual": 6.790051567895361e-06
+      },
+      {
+        "h": 0.005,
+        "maxPdeResidual": 1.6975308086419894e-06
+      }
+    ],
+    "initialAmplitude": 1.0,
+    "initialVelocity": -0.0,
+    "l2Squared": 3.3510321638291125,
+    "omega": 0.7853981633974483,
+    "peakAmplitude": 1.0,
+    "period": 8.0,
+    "quadratureDirichletEnergy": 20.10619294496065,
+    "quadratureL2Squared": 3.351032163830815,
+    "quadratureRule": {
+      "phi": "periodic trapezoidal",
+      "phiIntervals": 64,
+      "theta": "composite Simpson",
+      "thetaIntervals": 256
+    },
+    "radius": 1.0,
+    "speed": 0.320637457540466
+  },
+  "rk4Convergence": {
+    "norm": "max over all steps of hypot(q-cos(w*t), qdot/w+sin(w*t))",
+    "observedOrder": [
+      3.9995776233752425,
+      3.9998962683937966
+    ],
+    "runs": [
+      {
+        "maxScaledPhaseSpaceError": 7.779459494610212e-05,
+        "stepSize": 0.25,
+        "steps": 32
+      },
+      {
+        "maxScaledPhaseSpaceError": 4.86358588369933e-06,
+        "stepSize": 0.125,
+        "steps": 64
+      },
+      {
+        "maxScaledPhaseSpaceError": 3.039959746421945e-07,
+        "stepSize": 0.0625,
+        "steps": 128
+      }
+    ]
+  },
+  "sampleChecks": {
+    "integrationAmplitudeBound": 7.421954185344934e-11,
+    "maxAmplitudeError": 5.6928184388738146e-11,
+    "maxDisplayAssemblyError": 2.220446049250313e-16,
+    "maxDisplayPositionError": 1.2244760760893314e-11,
+    "maxGradientAssemblyError": 8.881784197001252e-16,
+    "maxGradientError": 1.1385636877747629e-10,
+    "maxGradientNormalDot": 4.996003610813204e-16,
+    "maxScalarAssemblyError": 4.440892098500626e-16,
+    "maxScalarError": 5.6928184388738146e-11,
+    "maxVelocityError": 5.82920154991702e-11,
+    "storedKnots": 65,
+    "vertices": 482
+  },
+  "status": "passed",
+  "version": 1
+}

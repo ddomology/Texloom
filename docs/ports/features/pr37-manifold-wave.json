@@ -1,0 +1,39 @@
+{
+  "schemaVersion":1,
+  "id":"pr37-manifold-wave",
+  "title":"A spherical wave eigenmode: live reference, imported RK4 samples and shared consumers",
+  "implementation":{
+    "mode":"independent-regression-baseline",
+    "supportedProfile":["One spherical eigenmode with explicit radius, speed, eigenvalue, initial conditions and eight-second period","Fixed-step RK4 modal integration stored at65 time knots on one fixed482-vertex sphere","Live analytic color and tangent-gradient arrows compared with imported scalar/vector/display-position channels"],
+    "excluded":["A general PDE solver on arbitrary triangulated manifolds or changing topology","Physical radial deformation or feedback from display geometry to the wave equation","Blender simulation equivalence or general spatial discretization convergence"]
+  },
+  "upstream":[{
+    "project":"ddomology/Texloom",
+    "revision":"9fb6ab23c6638389c0ea7e90187421c3f2b27d4e",
+    "path":"src/resources/bake.ts",
+    "symbols":["validateBakeManifest","prepareInlineBake"],
+    "documentation":["https://github.com/ddomology/Texloom/blob/9fb6ab23c6638389c0ea7e90187421c3f2b27d4e/src/resources/bake.ts"],
+    "role":"Pinned existing native sample contract: fixed topology, explicit units, verified typed payloads and absolute-time interpolation. The scene exercises this implementation while separate tests compute reference values from original data.",
+    "license":{"status":"review-required","note":"Own-repository contract reference; no third-party implementation is copied or translated. Reuse outside this repository requires the applicable repository permissions."}
+  },{
+    "project":"ddomology/Texloom",
+    "revision":"9fb6ab23c6638389c0ea7e90187421c3f2b27d4e",
+    "path":"src/operations/field-visualization.ts",
+    "symbols":["prepareFieldVisualizationProgram"],
+    "documentation":["https://github.com/ddomology/Texloom/blob/9fb6ab23c6638389c0ea7e90187421c3f2b27d4e/src/operations/field-visualization.ts"],
+    "role":"Pinned mesh-vertex field and shared-arrow consumer. Analytic expressions are evaluated on the original sphere; sampled attributes are read unchanged for numerical display.",
+    "license":{"status":"review-required","note":"Own-repository contract reference. The new example and independent checks do not copy an external solver."}
+  }],
+  "contract":{
+    "inputs":["R=1m, F=2xy/R², Laplace-Beltrami eigenvalue -6/R², c=pi/(4sqrt6)m/s, u(0)=F and u_t(0)=0","Genuine single-mode RK4 integration with h=1/128s and65 stored knots spaced1/8s, plus explicit seed and solver metadata","A fixed482-vertex sphere, typed scalar/gradient/position channels, native TeX labels and24 declared tangent-arrow sample sites"],
+    "outputs":["A live analytic left panel u=Fcos(pi*t/4) with fixed-range linear RGB color and tangential gradient arrows","An imported right panel whose raw scalar/vector and visual positions come from the stored samples and explicit linear interpolation","The same immutable numerical frame for web, Chalkspace and video at a given source time"],
+    "coordinates":["The PDE and gradient are defined on the original radius-one sphere in meters","Display position is p+(0.28m)*u_RK4*n0; this is visual radial displacement, not a different physical manifold","Stored gradient is tangent and has unit1/m; arrow local+X follows the live tangent gradient with declared display length scaling","Solver time error, playback interpolation error and visual mesh resolution are separate quantities"],
+    "errorPolicy":["Reject missing or corrupt chunks, invalid units, altered topology and nonfinite data through the existing strict bake contract","Compare analytic left values directly with the closed formula and numerical right values with original data, never assuming they are identical","Require independent PDE/initial-condition/period/normalization and RK4 convergence evidence for solver-accuracy claims","No hidden solver execution, mesh-PDE accuracy claim or previous-frame state accumulation"]
+  },
+  "fixtures":["manifold-wave"],
+  "verification":{
+    "command":"python -m unittest tests.manifold_wave_port_spec_test tests.manifold_wave_player_test tests.scientific.manifold_wave_test -v; npm test",
+    "claims":["Actual native TeX labels and compiled geometry distinguish live analytic and imported numerical data","Independent browser arithmetic checks every left scalar, right scalar/vector/position, color, tangent vector and selected-arrow orientation","Off-knot numerical samples intentionally differ from direct analytic evaluation, exposing playback interpolation rather than hiding it","Reverse PNG captures, stable arrow identities,30/60 fps histories and actual mobile time/speed controls are checked","Independent scientific reference checks separately establish the declared single-mode PDE and temporal-solver contract"],
+    "notEstablished":["General finite-element or finite-difference PDE accuracy on a mesh","Arbitrary manifold geometry, multiple interacting modes or nonlinear wave dynamics","A physically deforming sphere or feedback from display positions into the solver","Identical raster bytes across browsers or GPU hardware"]
+  }
+}

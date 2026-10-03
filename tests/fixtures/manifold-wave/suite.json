@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "manifold-wave",
+      "source": "examples/manifold-wave.tex",
+      "inputs": [
+        "examples/manifold-wave.tex",
+        "tools/wave_samples.py",
+        "tools/reference_wave.py",
+        "examples/data/manifold-wave/domain.tex",
+        "examples/data/manifold-wave/mesh.json",
+        "examples/data/manifold-wave/samples.json",
+        "examples/data/manifold-wave/model.json",
+        "examples/data/manifold-wave/mode-states.json",
+        "examples/data/manifold-wave/report.json",
+        "examples/data/manifold-wave/validation.json",
+        "examples/data/manifold-wave/bake/manifest.json",
+        "examples/data/manifold-wave/bake/import-report.json",
+        "examples/data/manifold-wave/bake/chunk-000.bin",
+        "examples/data/manifold-wave/bake/chunk-001.bin",
+        "examples/data/manifold-wave/bake/chunk-002.bin",
+        "examples/data/manifold-wave/bake/chunk-003.bin",
+        "examples/data/manifold-wave/bake/chunk-004.bin",
+        "examples/data/manifold-wave/bake/chunk-005.bin",
+        "examples/data/manifold-wave/bake/chunk-006.bin",
+        "examples/data/manifold-wave/bake/chunk-007.bin",
+        "examples/data/manifold-wave/bake/chunk-008.bin"
+      ],
+      "tests": [
+        "tests/manifold_wave_player_test.py",
+        "tests/manifold_wave_port_spec_test.py",
+        "tests/scientific/manifold_wave_test.py"
+      ]
+    }
+  ]
+}
