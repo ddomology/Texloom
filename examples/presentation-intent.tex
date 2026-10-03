@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{texloom-tikz,texloom-animation,texloom-presentation}
+\loomsetup{\usepackage{cmbright}\definecolor{gold}{HTML}{EACB8D}}
+\begin{document}
+\begin{loomscene}[width=640,height=280,duration=16,title={Hausdorff separation: presentation intent}]
+\TLText{sentence-ink}{\fontsize{20}{24}\selectfont Let $X$ be Hausdorff, and fix distinct points $x,y\in X$.}
+\TLText{explanation-ink}{\fontsize{19}{23}\selectfont Choose disjoint open neighborhoods $U_y$ and $V_y$.}
+\TLText{formula-ink}{\fontsize{24}{28}\selectfont $y\in U_y,\qquad x\in V_y,\qquad U_y\cap V_y=\varnothing.$}
+\TLNode{sentence}{tex}{"resourceId":"sentence-ink","x":25,"y":48,"style":{"fill":"#edeee5"}}
+\TLNode{explanation}{tex}{"resourceId":"explanation-ink","x":25,"y":102,"style":{"fill":"#edeee5"}}
+\TLNode{formula}{tex}{"resourceId":"formula-ink","x":85,"y":198,"style":{"fill":"#a8dcc7"}}
+\loomgeometry[draw=gold,line width=2bp] (underline)
+  {(270,112) .. controls (328,114) and (385,110) .. (432,112)};
+\loomgeometry[draw=gold,line width=2bp] (direction)
+  {(524,115) .. controls (560,141) and (551,168) .. (527,181)};
+\TLNode{arrowhead}{path}{"d":"M 522 178 L 527 188 L 535 178 Z","geometry":{"contours":[{"id":"tip","start":[522,178],"segments":[{"kind":"line","id":"a","to":[527,188]},{"kind":"line","id":"b","to":[535,178]}],"closed":true}]},"style":{"fill":"#eacb8d"}}
+\loompresentation{
+{"version":1,"seed":2803,"events":[
+ {"kind":"draw","id":"write-sentence","target":"sentence","start":0.5,"end":3,"mode":"glyph-outline"},
+ {"kind":"draw","id":"write-explanation","target":"explanation","start":3.6,"end":6.4,"mode":"glyph-outline"},
+ {"kind":"draw","id":"underline-disjoint","target":"underline","start":6.8,"end":7.6,"mode":"stroke"},
+ {"kind":"draw","id":"point-to-formula","target":"direction","start":8,"end":8.8,"mode":"stroke"},
+ {"kind":"draw","id":"finish-arrow","target":"arrowhead","start":8.8,"end":9,"mode":"fill","tool":"none","contact":"none"},
+ {"kind":"draw","id":"write-formula","target":"formula","start":9.3,"end":11.6,"mode":"glyph-outline"},
+ {"kind":"erase","id":"erase-annotations","targets":["underline","direction","arrowhead"],"start":12.2,"end":14.6}
+]}
+}
+\begin{loomanimation}
+ \loomwait{3.6}\loomcue{explain-disjoint-neighborhoods}
+ \loomwait{5.7}\loomcue{read-the-three-conditions}
+\end{loomanimation}
+\end{loomscene}
+\end{document}

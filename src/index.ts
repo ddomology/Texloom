@@ -58,3 +58,4 @@ export * from './operations/text-parts.js';
 export * from './timeline/math-transform.js';
 export * from './operations/constraints.js';
 export * from './timeline/trace.js';
+export * from './ir/presentation-intent.js';

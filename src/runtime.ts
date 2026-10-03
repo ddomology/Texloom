@@ -246,10 +246,14 @@ export interface SceneClip {
   /** Inclusive source endpoints preserve terminal markers, independently of
    * the half-open active frame interval. Hosts decide which cues to dispatch. */
   readonly cues: readonly ClipCue[];
+  /** Intersection with the active clip, expressed on both clocks. Held frames
+   * never extend a contact/sound interval. Empty intersections return null. */
+  mapInterval(sourceStart:number,sourceEnd:number):ClipInterval|null;
   /** Pure clock mapping: no geometry evaluation or event dispatch. */
   describe(hostSeconds: number): ClipDescription;
   sample(hostSeconds: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample;
 }
+export interface ClipInterval {hostStart:number;hostEnd:number;sourceStart:number;sourceEnd:number}
 export interface ClipCue {
   readonly name:string;
   readonly sourceTime:number;
@@ -284,7 +288,18 @@ export function bindSceneClip(runtime: SceneRuntime, input: ClipTiming): SceneCl
     const sourceTime = Math.min(runtime.manifest.duration, sourceStart + Math.max(0, Math.min(duration, hostTime - timing.start)) * rate);
     return {hostTime,sourceTime,phase,visible};
   };
-  return Object.freeze({timing,cues,describe, sample(hostTime: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample {
+  const mapInterval=(begin:number,end:number):ClipInterval|null=>{
+    if(![begin,end].every(Number.isFinite)||begin<0||end<begin||end>runtime.manifest.duration)
+      throw new Error('CLIP_INTERVAL: ordered finite source interval must stay inside the scene.');
+    const a=Math.max(begin,sourceStart),b=Math.min(end,sourceEnd);
+    if(b<=a)return null;
+    const hostStart=Math.max(timing.start,timing.start+(a-sourceStart)/rate);
+    const hostEnd=Math.min(timing.start+duration,timing.start+(b-sourceStart)/rate);
+    if(![hostStart,hostEnd].every(Number.isFinite)||hostEnd<=hostStart)
+      throw new Error('CLIP_INTERVAL: source interval cannot be represented at this host clock precision.');
+    return {sourceStart:a,sourceEnd:b,hostStart,hostEnd};
+  };
+  return Object.freeze({timing,cues,describe,mapInterval, sample(hostTime: number, parameters?:Readonly<Record<string,ExpressionValue>>): ClipSample {
     const description=describe(hostTime);
     return {...description,frame:description.visible?runtime.sample(description.sourceTime,parameters):null};
   }});

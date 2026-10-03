@@ -1,4 +1,5 @@
-import {BundleValidationError, type Bundle} from '../src/schema.js';
+import {BundleValidationError, type Bundle, type EvaluatedFrame, type Node, type Matrix} from '../src/schema.js';
+import type {NativeNodePainter} from '../src/render-canvas.js';
 import {beginPrepareScene, bindSceneClip, type ScenePreparation, type SceneManifest,
   type SceneClip, type ClipTiming, type ClipSample, type ClipDescription} from '../src/runtime.js';
 import {CANVAS_2D_PROFILE} from '../src/capabilities.js';
@@ -7,7 +8,8 @@ import {validateAssetJson, sha256Bytes, type ScenePackage} from '../src/resource
 import {freezeSnapshot} from '../src/operations/values.js';
 import type {DeepReadonly} from '../src/ir/operations.js';
 import type {BoardPlacement} from './chalkspace.js';
-import {createChalkspaceCanvasLayer, type BoardView, type BoardScreenRect} from './chalkspace-canvas.js';
+import {createChalkspaceCanvasLayer,boardScreenRect,boardProjectionMatrix, type BoardView, type BoardScreenRect} from './chalkspace-canvas.js';
+export {boardProjectionMatrix,boardScreenRect,scenePointToBoard} from './chalkspace-canvas.js';
 
 export interface ChalkspaceLectureClip {id:string; scene:string; timing:ClipTiming; placement:BoardPlacement}
 export interface ChalkspaceLecture {
@@ -17,6 +19,18 @@ export interface ChalkspaceLectureSample extends ClipSample {id:string; scene:st
 export interface ChalkspaceLectureDescription extends ClipDescription {id:string; scene:string}
 export interface ChalkspaceLectureDrawState {
   id:string; scene:string; sourceTime:number; phase:ClipSample['phase']; visible:boolean; rect?:BoardScreenRect;
+}
+export interface LecturePaintContext {
+  clipId:string;scene:string;frame:EvaluatedFrame;rect:BoardScreenRect;projection:Matrix;
+  placement:BoardPlacement;timing:Readonly<Required<ClipTiming>>;
+}
+export interface LectureDrawOptions {
+  paintNode?:(node:Node,ctx:CanvasRenderingContext2D,drawNative:NativeNodePainter,context:LecturePaintContext)=>void;
+}
+export interface LectureIntentInterval {
+  clipId:string;scene:string;eventId:string;kind:'write'|'erase';seed:number;
+  hostStart:number;hostEnd:number;sourceStart:number;sourceEnd:number;originalStart:number;originalEnd:number;
+  tool:'chalk'|'eraser'|'none';contact:'continuous'|'none';
 }
 export interface ChalkspaceLectureManifest {
   contract:'texloom-lecture-runtime/1'; revision:string; scenes:Record<string,SceneManifest>;
@@ -28,7 +42,8 @@ export interface ChalkspaceLectureRuntime {
   /** Clock metadata only; does not evaluate any scene geometry. */
   describe(hostSeconds:number):ChalkspaceLectureDescription[];
   sample(hostSeconds:number):ChalkspaceLectureSample[];
-  draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView):ChalkspaceLectureDrawState[];
+  draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView,options?:LectureDrawOptions):ChalkspaceLectureDrawState[];
+  intentSchedule():LectureIntentInterval[];
   /** Exact identity including source content, clock state and host quality tag. */
   frameKey(hostSeconds:number,quality?:string):string|null;
   dispose():void;
@@ -120,11 +135,30 @@ export async function prepareChalkspaceLecture(input:unknown,options:{signal?:Ab
     const describe=(hostSeconds:number):ChalkspaceLectureDescription[]=>{
       live(hostSeconds);return entries.map(({declaration,clip})=>({id:declaration.id,scene:declaration.scene,...clip.describe(hostSeconds)}));
     };
+    const schedule:LectureIntentInterval[]=[];
+    for(const {declaration,clip} of entries){
+      const input=data.scenes[declaration.scene],scene='contract' in input?input.scene:input;
+      for(const event of scene.presentation?.events??[]){
+        const interval=clip.mapInterval(event.start,event.end);if(!interval)continue;
+        schedule.push({clipId:declaration.id,scene:declaration.scene,eventId:event.id,
+          kind:event.kind==='draw'?'write':'erase',seed:scene.presentation!.seed,...interval,
+          originalStart:event.start,originalEnd:event.end,tool:event.tool??(event.kind==='draw'?'chalk':'eraser'),
+          contact:event.kind==='draw'?(event.contact??'continuous'):'continuous'});
+      }
+    }
     return Object.freeze({manifest,revision,get state(){return disposed?'disposed' as const:'ready' as const;},describe,sample,
-      draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView){
-        return sample(hostSeconds).map(({frame,hostTime:_hostTime,...state},index)=>({
-          ...state,...(frame?{rect:entries[index].layer.draw(frame,ctx,view)}:{}),
-        }));
+      intentSchedule(){live();return structuredClone(schedule);},
+      draw(ctx:CanvasRenderingContext2D,hostSeconds:number,view:BoardView,options:LectureDrawOptions={}){
+        if(options.paintNode!==undefined&&typeof options.paintNode!=='function')fail('paintNode must be a function.');
+        return sample(hostSeconds).map(({frame,hostTime:_hostTime,...state},index)=>{
+          if(!frame)return state;
+          const entry=entries[index],placement=entry.declaration.placement;
+          const context:LecturePaintContext={clipId:state.id,scene:state.scene,frame,placement,timing:entry.clip.timing,
+            rect:boardScreenRect(frame.viewport,placement,view,ctx.canvas.width),
+            projection:boardProjectionMatrix(frame,placement,view,ctx.canvas.width)};
+          return {...state,rect:entry.layer.draw(frame,ctx,view,{paintNode:options.paintNode?
+            (node,canvas,drawNative)=>options.paintNode!(node,canvas,drawNative,context):undefined})};
+        });
       },
       frameKey(hostSeconds:number,quality=''){
         live(hostSeconds);

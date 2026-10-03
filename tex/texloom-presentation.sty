@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-presentation}[2026/10/03 Consumer presentation intent]
+\RequirePackage{texloom-expressions}
+\newcount\TLPresentationSerial
+\TLPresentationSerial=0
+% Literal JSON is captured after TeX execution; arbitrary macros are not
+% expanded inside the verbatim body. The shared IR validator owns semantics.
+\NewDocumentCommand\loompresentation{+v}{%
+  \global\advance\TLPresentationSerial by 1
+  \edef\TLEbase{\jobname.tl-presentation-\the\TLPresentationSerial}%
+  \immediate\write\TLrecords{\string{"type":"presentation-file","file":"\TLEbase"\string}}%
+  \TLEwrite{program}{#1}}
+\endinput

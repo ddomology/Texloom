@@ -16,6 +16,7 @@ import {validateMorphProgramInContext,type MorphProgram,type MorphEvaluation} fr
 import {validateMathTransformProgramInContext,type MathTransformProgram,type MathTransformEvaluation} from './timeline/math-transform.js';
 import {validateTextPartsInContext,type TextParts} from './ir/text-parts.js';
 import {validateTraceProgramInContext,type TraceProgram,type TraceEvaluation} from './timeline/trace.js';
+import {validatePresentationProgramInContext,type PresentationProgram,type PresentationEvaluation} from './ir/presentation-intent.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only Texloom scene contract. All dimensions are bp. */
 export interface Style {
@@ -75,8 +76,9 @@ export interface Bundle {
   morphs?: MorphProgram;
   mathTransforms?: MathTransformProgram;
   traces?: TraceProgram;
+  presentation?: PresentationProgram;
 }
-export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
+export interface EvaluatedFrame { time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>; fields?:FieldEvaluation; deformations?:DeformationEvaluation;plots?:PlotEvaluation;morphs?:MorphEvaluation;mathTransforms?:MathTransformEvaluation;traces?:TraceEvaluation;presentation?:import('./ir/operations.js').DeepReadonly<PresentationEvaluation>; shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation }
 
 type Obj = Record<string, any>;
 const object = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -513,6 +515,7 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.morphs !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMorphProgramInContext(b.morphs,b as Bundle));
   if (b.mathTransforms !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateMathTransformProgramInContext(b.mathTransforms,b as Bundle));
   if (b.traces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateTraceProgramInContext(b.traces,b as Bundle));
+  if (b.presentation !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePresentationProgramInContext(b.presentation,b as Bundle));
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');
     else errors.push(...validateTimelineMetadata(b.timeline,b.duration));
