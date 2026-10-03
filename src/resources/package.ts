@@ -1,13 +1,19 @@
-import type {Bundle, Resource} from '../schema.js';
+import type {Bundle} from '../schema.js';
 import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
+import type {MeshBounds} from '../ir/mesh.js';
 import {freezeSnapshot} from '../operations/values.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
-export interface AssetEntry {
-  id: string; kind: Resource['kind']; mediaType: typeof RESOURCE_MEDIA_TYPE;
-  byteLength: number; sha256: string; bounds: [number, number, number, number];
+interface AssetEntryData {
+  id: string; mediaType: typeof RESOURCE_MEDIA_TYPE;
+  byteLength: number; sha256: string;
   source: {kind:'inline';data:string} | {kind:'external';uri:string;byteRange?:{offset:number;length:number}};
 }
+/** Mesh bounds use their object-space chart; 2D resources retain the original tuple contract. */
+export type AssetEntry = AssetEntryData & (
+  {kind:'vector'|'scalar-field';bounds:[number,number,number,number]} |
+  {kind:'mesh';bounds:MeshBounds|null}
+);
 export interface AssetManifest {version:1;requiredFeatures:string[];entries:AssetEntry[]}
 export interface ScenePackage {contract:'texloom-package/1';scene:Omit<Bundle,'resources'>;assets:AssetManifest}
 export interface AssetErrorContext {assetId?:string;uri?:string;path?:string;diagnostics?:readonly DeepReadonly<Diagnostic>[];cause?:unknown}
@@ -71,12 +77,22 @@ function entryDiagnostics(input:unknown,path:string,out:Diagnostic[]):void {
   if(!object(input)){error(out,'ASSET_ENTRY','Expected an asset entry.',path);return;}
   keys(input,['id','kind','mediaType','byteLength','sha256','bounds','source'],path,out);
   if(!text(input.id)||input.id.length>512)error(out,'ASSET_ID','Asset ID must contain 1–512 characters.',`${path}.id`);
-  if(!['vector','scalar-field'].includes(input.kind as string))error(out,'ASSET_KIND','Expected vector or scalar-field.',`${path}.kind`);
+  if(!['vector','scalar-field','mesh'].includes(input.kind as string))error(out,'ASSET_KIND','Expected vector, scalar-field or mesh.',`${path}.kind`);
   if(input.mediaType!==RESOURCE_MEDIA_TYPE)error(out,'ASSET_MEDIA_TYPE',`Expected ${RESOURCE_MEDIA_TYPE}.`,`${path}.mediaType`);
   if(!Number.isSafeInteger(input.byteLength)||(input.byteLength as number)<=0)error(out,'ASSET_SIZE','byteLength must be a positive safe integer.',`${path}.byteLength`);
   if(typeof input.sha256!=='string'||!/^[0-9a-f]{64}$/.test(input.sha256))error(out,'ASSET_HASH','Expected a lowercase SHA-256 hex digest.',`${path}.sha256`);
   const b=input.bounds;
-  if(!Array.isArray(b)||b.length!==4||!b.every(finite)||b[2]<0||b[3]<0||!finite(b[0]+b[2])||!finite(b[1]+b[3]))
+  if(input.kind==='mesh'){
+    if(b!==null){
+      if(!object(b))error(out,'ASSET_BOUNDS','Mesh bounds must be null or finite ordered min/max triples.',`${path}.bounds`);
+      else {
+        keys(b,['min','max'],`${path}.bounds`,out);
+        if(!Array.isArray(b.min)||!Array.isArray(b.max)||b.min.length!==3||b.max.length!==3||
+           !b.min.every(finite)||!b.max.every(finite)||b.min.some((n,i)=>n>(b.max as number[])[i]))
+          error(out,'ASSET_BOUNDS','Mesh bounds must be null or finite ordered min/max triples.',`${path}.bounds`);
+      }
+    }
+  }else if(!Array.isArray(b)||b.length!==4||!b.every(finite)||b[2]<0||b[3]<0||!finite(b[0]+b[2])||!finite(b[1]+b[3]))
     error(out,'ASSET_BOUNDS','Bounds must be finite [x,y,width,height] with nonnegative size.',`${path}.bounds`);
   else if(input.kind==='scalar-field'&&b.some((n,i)=>n!==[0,0,1,1][i]))error(out,'ASSET_BOUNDS','Scalar field bounds are normalized [0,0,1,1].',`${path}.bounds`);
   const s=input.source;
@@ -141,6 +157,12 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
     if(!asset)error(out,'ASSET_REFERENCE',`No manifest asset for resource ${String(node.resourceId)}.`,`$.scene.nodes[${i}].resourceId`);
     else if(asset.kind!==(node.kind==='tex'?'vector':'scalar-field'))error(out,'ASSET_KIND','Node and asset resource kinds disagree.',`$.scene.nodes[${i}].resourceId`);
+  });
+  if(object(scene.space3d)&&Array.isArray(scene.space3d.nodes))scene.space3d.nodes.forEach((node,i)=>{
+    if(!object(node)||node.kind!=='mesh')return;
+    const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
+    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
+    else if(asset.kind!=='mesh')error(out,'ASSET_KIND','3D mesh nodes require mesh assets.',`$.scene.space3d.nodes[${i}].resourceId`);
   });
   return out;
 }

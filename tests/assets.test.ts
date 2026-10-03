@@ -5,17 +5,19 @@ import {setImmediate as tick} from 'node:timers/promises';
 import {AssetError,RESOURCE_MEDIA_TYPE,snapshotScenePackage,validateScenePackage,validateAssetEntry,validateAssetJson,
   type AssetEntry,type ScenePackage} from '../src/resources/package.ts';
 import {createAssetStore,type AssetResolver,type AssetStore} from '../src/resources/store.ts';
-import type {Resource,VectorResource} from '../src/schema.ts';
+import type {ScalarFieldResource,VectorResource} from '../src/schema.ts';
+
+type LegacyAssetEntry=Extract<AssetEntry,{kind:'vector'|'scalar-field'}>;
 
 const vector=():VectorResource=>({kind:'vector',items:[{kind:'path',d:'M0 0L12 4',style:{stroke:'#fff',fill:'none'}}],
   metrics:{width:12,height:4,depth:0},inkBounds:[0,0,12,4],sourceTex:'x + λ'});
 const bytes=(resource:unknown)=>new TextEncoder().encode(JSON.stringify(resource)+'\n');
 const hash=(value:Uint8Array)=>createHash('sha256').update(value).digest('hex');
-function entry(payload:Uint8Array=bytes(vector()),id='formula'):AssetEntry {
+function entry(payload:Uint8Array=bytes(vector()),id='formula'):LegacyAssetEntry {
   return {id,kind:'vector',mediaType:RESOURCE_MEDIA_TYPE,byteLength:payload.byteLength,sha256:hash(payload),
     bounds:[0,0,12,4],source:{kind:'external',uri:`assets/${id}.json`}};
 }
-const inline=(resource:Resource=vector(),id='formula'):AssetEntry=>{
+const inline=(resource:VectorResource|ScalarFieldResource=vector(),id='formula'):LegacyAssetEntry=>{
   const payload=bytes(resource),out=entry(payload,id);out.kind=resource.kind;
   out.bounds=resource.kind==='vector'?[...resource.inkBounds]:[0,0,1,1];
   out.source={kind:'inline',data:new TextDecoder().decode(payload)};return out;
@@ -33,6 +35,7 @@ const empty=(store:AssetStore)=>{
 
 test('portable package snapshots preserve exact payload strings and reject structural ambiguity',()=>{
   const authored=scenePackage(),frozen=snapshotScenePackage(authored);assert.deepEqual(validateScenePackage(authored),[]);
+  assert.ok(authored.assets.entries[0].kind!=='mesh');assert.ok(frozen.assets.entries[0].kind!=='mesh');
   authored.scene.title='changed';authored.assets.entries[0].bounds[0]=9;
   assert.equal(frozen.scene.title,'Assets');assert.equal(frozen.assets.entries[0].bounds[0],0);
   assert.ok(Object.isFrozen(frozen.assets.entries[0].source));assert.equal(Object.isFrozen(authored),false);
@@ -76,7 +79,7 @@ test('entry metadata validates ranges, finite bounds, hashes and scalar normaliz
 });
 
 test('inline vector and scalar resources are fully validated, detached and recursively frozen',async()=>{
-  const scalar:Resource={kind:'scalar-field',columns:2,rows:1,times:[0,1],samples:[[0,1],[1,2]],range:[0,2],interpolation:'linear'};
+  const scalar:ScalarFieldResource={kind:'scalar-field',columns:2,rows:1,times:[0,1],samples:[[0,1],[1,2]],range:[0,2],interpolation:'linear'};
   const store=createAssetStore();const a=await store.acquire(inline()),b=await store.acquire(inline(scalar,'heat'));
   assert.deepEqual(a.resource,vector());assert.deepEqual(b.resource,scalar);
   assert.ok(Object.isFrozen(a.resource));assert.ok(Object.isFrozen((a.resource as VectorResource).items[0].style));
