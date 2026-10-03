@@ -27,6 +27,27 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Lecture authoring harness (PR40)
+
+An authored `.tex` note declares semantic blocks, paired narration, and optional
+native animated scenes. One compiler produces measured TeX paragraph vectors,
+an offline web reading view, a revision-bound correspondence map, and a normal
+Chalkspace lesson. The companion consumer measures narration before scheduling
+figures and checks correspondence, timing, and occupied board footprints.
+
+```sh
+python tools/lecture.py capabilities
+python tools/lecture.py syntax hausdorff-compact-closed
+python tools/lecture.py compile examples/lectures/hausdorff-compact-closed.tex --out build/lecture
+python tools/lecture.py validate build/lecture --check-inputs
+python tools/lecture.py video build/lecture --chalkspace ../Chalkspace --out build/lecture.mp4 --end 12
+```
+
+Each build uses a new output directory. Source repairs require the current
+source/artifact revisions and exact source span. Compilation checks rendering
+and declared correspondence; mathematical correctness and spoken equivalence
+remain explicit review items. See [the authoring guide](docs/lecture-authoring.md).
+
 ### glTF interchange (PR39)
 
 `\usepackage{texloom-gltf}` adds `\loomgltf{model}{data/gltf-profile/scene.gltf}`.

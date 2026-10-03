@@ -5,6 +5,7 @@ TeX is executed with shell escape disabled. Run untrusted TeX in an OS sandbox.
 """
 from __future__ import annotations
 import argparse
+from contextvars import ContextVar
 import hashlib
 import json
 import math
@@ -51,6 +52,7 @@ from gltf_capture import lower_gltf
 
 ROOT=Path(__file__).resolve().parents[1]
 PT_TO_BP=72/72.27
+_TRACE_INPUTS=ContextVar('texloom_trace_inputs',default=False)
 
 class CompileDiagnostic(ValueError): pass
 
@@ -67,6 +69,8 @@ def write_json(path,data):
     temporary.replace(path)
 
 def run(command,cwd,env=None):
+    if _TRACE_INPUTS.get() and Path(str(command[0])).stem.lower()=='latex' and '-recorder' not in command:
+        command=[command[0],'-recorder',*command[1:]]
     start=time.perf_counter()
     p=subprocess.run(command,cwd=cwd,env=env,capture_output=True,text=True,encoding='utf8',errors='replace')
     log=' '.join(map(str,command))+'\n'+p.stdout+'\n'+p.stderr
@@ -185,7 +189,15 @@ def scalar_resource(path):
     r.setdefault('provenance',{}).update({'fileSha256':digest(path),'sourceFile':path.name})
     return r
 
-def compile_scene(source,out):
+def compile_scene(source,out,*,trace_inputs=False):
+    """Compile a scene; opt-in recorder traces leave the normal profile unchanged."""
+    token=_TRACE_INPUTS.set(bool(trace_inputs))
+    try:
+        return _compile_scene(source,out)
+    finally:
+        _TRACE_INPUTS.reset(token)
+
+def _compile_scene(source,out):
     source=Path(source).resolve(); out=Path(out).resolve(); out.mkdir(parents=True,exist_ok=True)
     # Each run owns fresh TeX state. In particular removing TLSetup from a source
     # must not retain an earlier generated preamble, aux, or asset body.

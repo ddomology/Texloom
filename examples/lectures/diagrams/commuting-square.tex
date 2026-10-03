@@ -1,0 +1,38 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\loomsetup{\usepackage{cmbright}
+  \definecolor{mint}{HTML}{9BD6BF}
+  \definecolor{gold}{HTML}{EACB8D}
+  \definecolor{ink}{HTML}{EDEEE5}
+  \definecolor{muted}{HTML}{A5B9AD}}
+\loomset{label/.style={text=ink,font=\fontsize{20}{24}\selectfont},
+  small/.style={text=muted,font=\fontsize{13}{17}\selectfont}}
+\begin{document}
+\begin{loomscene}[width=780,height=480,duration=8,title={Two routes through a commuting square}]
+\loomnode[label] (title) at (390,34) {Two routes, one function};
+\loomnode[label] (A) at (160,98) {$A=\mathbb R$};
+\loomnode[label] (B) at (620,98) {$B=\mathbb R$};
+\loomnode[label] (C) at (160,411) {$C=\mathbb R$};
+\loomnode[label] (D) at (620,411) {$D=\mathbb R$};
+\loompath (edges) {
+  \draw[muted,->,line width=1.5bp] (171,145)--(609,145);
+  \draw[muted,->,line width=1.5bp] (160,156)--(160,359);
+  \draw[muted,->,line width=1.5bp] (620,156)--(620,359);
+  \draw[muted,->,line width=1.5bp] (171,370)--(609,370);};
+\loomnode[label,text=gold] (f-label) at (390,119) {$f(x)=x+1$};
+\loomnode[label,text=mint] (g-label) at (68,257) {$g(x)=2x$};
+\loomnode[label,text=gold] (h-label) at (709,257) {$h(y)=2y$};
+\loomnode[label,text=mint] (k-label) at (390,405) {$k(z)=z+2$};
+\TLNode{a-dot}{point}{"x":160,"y":145,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{b-dot}{point}{"x":620,"y":145,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{c-dot}{point}{"x":160,"y":370,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{d-dot}{point}{"x":620,"y":370,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{upper-route}{point}{"x":160,"y":145,"r":7,"style":{"fill":"#EACB8D","fillOpacity":0.85}}
+\TLNode{lower-route}{point}{"x":160,"y":145,"r":5,"style":{"fill":"#9BD6BF"}}
+\TLTrack{upper-route}{x}{linear}{[[0,160],[1,160],[3,620],[5,620],[8,620]]}
+\TLTrack{upper-route}{y}{linear}{[[0,145],[1,145],[3,145],[5,370],[8,370]]}
+\TLTrack{lower-route}{x}{linear}{[[0,160],[1,160],[3,160],[5,620],[8,620]]}
+\TLTrack{lower-route}{y}{linear}{[[0,145],[1,145],[3,370],[5,370],[8,370]]}
+\loomnode[label] (identity) at (390,455) {$h(f(x))=2x+2=k(g(x))$};
+\end{loomscene}
+\end{document}

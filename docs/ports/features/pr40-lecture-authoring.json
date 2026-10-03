@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "pr40-lecture-authoring",
+  "title": "Revision-bound TeX lecture authoring and consumer validation",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": ["Executed single-file TeX semantic blocks with explicit paired narration", "Native scene associations, measured paragraph vectors and standalone web reading view", "Source/artifact/span-checked repairs and a verified Chalkspace export contract"],
+    "excluded": ["Automatic proof certification or spoken equivalence checking", "Automatic conversion of arbitrary unannotated lecture PDFs", "Automatic recovery of handwriting stroke order or narration word timestamps"]
+  },
+  "contract": {
+    "inputs": ["texloom-lecture wrappers, native scene sources and optional explicit TeX setup", "Exact revision-bound repair requests", "Existing Texloom runtime and Chalkspace rendering APIs"],
+    "outputs": ["notes.json, lesson.json, authoring-map.json and artifact manifest", "Measured SVG paragraphs, native scene players and validation report", "Optional Chalkspace plan, measured/estimated timing audit and video"],
+    "coordinates": ["TeX paragraphs retain native box metrics in bp", "Chalkspace placement uses board units and actual compiled beat times", "Source spans use half-open Unicode code point offsets with stated precision"],
+    "errorPolicy": ["Reject stale source or artifacts before repair", "Reject incomplete or reordered block correspondence and text overflow", "Keep mathematical review unresolved independently of render success"]
+  },
+  "fixtures": ["hausdorff-compact-closed", "commuting-square", "uniform-limit-continuity"],
+  "verification": {
+    "command": "python -m unittest tests.lecture_source_test tests.lecture_harness_test -v",
+    "claims": ["Three actual TeX lecture sources compile through the public API", "Native source spans, revision-bound repairs and immutable output builds are checked", "No renderer code branches on lecture IDs or mathematical examples"],
+    "notEstablished": ["Mathematical correctness certification", "Automatic generation of pedagogy or natural narration from raw notes", "Sample-accurate spoken word alignment without external timestamps"]
+  }
+}
