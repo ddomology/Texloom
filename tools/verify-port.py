@@ -111,7 +111,7 @@ def suite_and_specs():
 def toolchain(logs, runtime_only):
     result = {'platform': platform.platform(), 'python': sys.version, 'pythonExecutable': sys.executable,
               'packages': {key: package_version(key) for key in ('playwright', 'Pillow')},
-              'dependencyFiles': {p: sha(ROOT / p) for p in ('package-lock.json', 'requirements-port.txt')}}
+              'dependencyFiles': {p: sha(ROOT / p) for p in ('package-lock.json', 'requirements-port.txt', 'tools/blender/toolchain.json')}}
     result['node'] = command(['node', '--version'], logs, 'node-version')
     result['implementationFiles'] = {
         p.relative_to(ROOT).as_posix(): sha(p)
@@ -120,6 +120,14 @@ def toolchain(logs, runtime_only):
         if p.is_file() and p.suffix in ('.py', '.ts', '.mjs', '.sty')
     }
     if not runtime_only:
+        blender = os.environ.get('BLENDER_EXE')
+        if blender:
+            binary = Path(blender).resolve()
+            result['blender'] = {'version': command([str(binary), '--version'], logs, 'blender-version').splitlines()[0],
+                                 'executable': str(binary), 'sha256': sha(binary),
+                                 'pinSha256': sha(ROOT / 'tools/blender/toolchain.json')}
+        elif os.environ.get('TEXLOOM_REQUIRE_BLENDER') == '1':
+            raise RuntimeError('BLENDER_EXE is required for the complete Blender producer gate.')
         result['latex'] = command(['latex', '--version'], logs, 'latex-version').splitlines()[0]
         result['dvisvgm'] = command(['dvisvgm', '--version'], logs, 'dvisvgm-version').splitlines()[0]
         result['texFiles'] = {}
@@ -271,9 +279,9 @@ def run(args, output, report):
     pattern = 'port_*_test.py' if args.runtime_only else '*_test.py'
     # Real-TeX integration cases compile several assets each; allow the growing
     # suite to finish on Windows as well as CI without weakening any assertions.
-    # PR36 took 993 seconds on Windows; the wave browser fixture adds about 126.
-    # Keep headroom for native compilation and software GPU scheduling.
-    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=1500)
+    # PR37 took 1159 seconds on Windows. PR38 adds actual Blender processes,
+    # native import and browser checks; retain headroom for the complete suite.
+    command([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', pattern, '-v'], logs, 'python-tests', timeout=1800)
     report['tests'] = {'typecheck': True, 'typescript': True, 'pythonPattern': pattern, 'passed': True}
     if args.record:
         artifacts = {}

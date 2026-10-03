@@ -49,7 +49,7 @@ jobs:
   full:
     name: TeX compilation and full regression
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -64,7 +64,27 @@ jobs:
       - name: Install TeX and vector conversion tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra lmodern dvisvgm ffmpeg
+          sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra lmodern dvisvgm ffmpeg libgl1 libxi6 libxrender1 libxxf86vm1 libxfixes3 libxkbcommon0 libsm6
+      - name: Install checksum-pinned Blender producer
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, tarfile, urllib.request
+          pin = json.loads(pathlib.Path('tools/blender/toolchain.json').read_text())
+          platform = pin['platforms']['linux-x64']
+          folder = pathlib.Path(os.environ['RUNNER_TEMP']) / 'texloom-blender'
+          folder.mkdir()
+          archive = folder / 'blender.tar.xz'
+          urllib.request.urlretrieve(platform['url'], archive)
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == platform['sha256'], 'Blender checksum mismatch'
+          with tarfile.open(archive) as source:
+              source.extractall(folder, filter='data')
+          binary = folder / ('blender-' + pin['version'] + '-linux-x64') / 'blender'
+          assert binary.is_file()
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write('BLENDER_EXE=' + str(binary) + '\nTEXLOOM_REQUIRE_BLENDER=1\n')
+          PY
+          "$RUNNER_TEMP/texloom-blender/blender-4.5.9-linux-x64/blender" --version
       - name: Install locked Node dependencies
         run: npm ci
       - name: Install pinned verification packages

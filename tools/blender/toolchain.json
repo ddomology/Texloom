@@ -1,0 +1,15 @@
+{
+  "version": "4.5.9",
+  "buildHash": "8bf95cbd38d1",
+  "source": "https://download.blender.org/release/Blender4.5/blender-4.5.9.sha256",
+  "platforms": {
+    "linux-x64": {
+      "url": "https://download.blender.org/release/Blender4.5/blender-4.5.9-linux-x64.tar.xz",
+      "sha256": "dcdc3eca6c9825bb35a8033b689c053f3cb5a9b0cd2a61b2eac2a49436b4ad3d"
+    },
+    "windows-x64": {
+      "url": "https://download.blender.org/release/Blender4.5/blender-4.5.9-windows-x64.zip",
+      "sha256": "41da973b9bf95bb312cbeff4d1982feb13259b43c821686b9bafea4dfe5477cf"
+    }
+  }
+}

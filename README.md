@@ -27,6 +27,35 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### Evaluated Blender assets (PR38)
+
+`\usepackage{texloom-blender}` adds
+`\loomblender{model}{data/blender-evaluated/manifest.json}`. The pinned Blender
+4.5.9 producer exports evaluated meshes, shared geometry, affine transforms and
+declared time samples. The TeX compiler verifies the portable manifest and lowers
+it to the existing resource, spatial and bake contracts. Compilation and playback
+require no Blender installation.
+
+An authored 3D group named `model` can position the imported scene. Its camera,
+native TeX labels and other objects remain ordinary Texloom declarations. Shared
+instances retain one mesh resource; this profile lowers instance records to
+individual mesh nodes. Materials use an explicitly reported opaque unlit subset.
+Unsupported shaders require a declared fallback or fail; changing topology fails
+before publication.
+
+The optional `[wireframe]` or `[solid]` import presentation selects the existing
+unlit material display without changing the producer's source geometry or data.
+
+```sh
+python tools/compile.py examples/blender-evaluated.tex --out build/blender-evaluated
+node tools/build-gpu-player.mjs build/blender-evaluated/bundle.json build/blender-evaluated/player.html
+```
+
+The [producer guide](docs/ports/blender-producer.md) describes `.blend` export,
+units, normals, sample interpolation, source hashes and the independent Blender
+coordinate oracle. Blender graphs are evaluated offline; their editable nodes
+and arbitrary shader execution are not transported into the player.
+
 ### A validated wave mode on the sphere (PR37)
 
 `examples/manifold-wave.tex` compares a live analytic spherical mode with

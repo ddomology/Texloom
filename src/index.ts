@@ -81,3 +81,4 @@ export * from './operations/field-visualization.js';
 export * from './operations/field-visualization-data.js';
 export * from './operations/sampled-field.js';
 export * from './resources/bake.js';
+export * from './resources/blender-manifest.js';

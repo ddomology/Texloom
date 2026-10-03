@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "id": "pr38-blender-producer",
+  "title": "Pinned Blender evaluated geometry, instances and temporal position bakes",
+  "implementation": {
+    "mode": "upstream-execution",
+    "supportedProfile": [
+      "Blender4.5.9 evaluated meshes and genuine dependency-graph instances",
+      "Explicit right-handed Z-up metre conversion, reflection and normal policy",
+      "Fixed topology position bakes and native sampled TRS with immutable shared prototypes"
+    ],
+    "excluded": [
+      "Executing Blender or Geometry Nodes inside a browser",
+      "Editable graph interchange and complete Blender materials",
+      "Topology-changing or exact between-knot Blender simulation equivalence"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "Blender",
+      "revision": "8bf95cbd38d1456c94e9d751f3804eea4d5b137b",
+      "path": "source/blender/makesrna/intern/rna_object_api.cc",
+      "symbols": [
+        "rna_Object_to_mesh",
+        "rna_Object_to_mesh_clear"
+      ],
+      "documentation": [
+        "https://docs.blender.org/api/4.5/bpy.types.Object.html",
+        "https://docs.blender.org/api/4.5/bpy.types.Depsgraph.html",
+        "https://docs.blender.org/api/4.5/bpy.types.UnitSettings.html"
+      ],
+      "role": "Execute the pinned Blender Python API offline to obtain modifier-evaluated geometry and temporary meshes. Runtime data remains renderer-independent and temporary meshes are explicitly released.",
+      "license": {
+        "status": "review-required",
+        "note": "Blender upstream is GPL-2.0-or-later. This feature invokes a separately obtained pinned binary; no Blender implementation is copied into Texloom. Redistribution or changes to that binary require the upstream license review applicable to that distribution."
+      }
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "An identified .blend source file and pinned Blender4.5.9 executable",
+      "Explicit increasing source-second sample times, metre conversion and material failure/fallback policy",
+      "Actual modifier, collection-instance, reflected-transform and topology-changing fixtures"
+    ],
+    "outputs": [
+      "A validated blender-evaluated/1 manifest with source/producer/configuration hashes",
+      "Shared mesh resources, transforms and verified fixed-topology position bakes",
+      "Scoped native Texloom scene data plus a preserved/converted/baked/unsupported report"
+    ],
+    "coordinates": [
+      "Right-handed Z-up throughout; multiply local positions and translation by the recorded scene unit factor",
+      "Normals use inverse transpose independently from reflected winding",
+      "Static corner normals are preserved; changing geometry explicitly uses recomputed triangle normals",
+      "Source seconds map to frame_start + time*fps/fps_base; no previous-frame accumulation"
+    ],
+    "errorPolicy": [
+      "Reject unsupported materials unless fallback is explicitly requested and reported",
+      "Reject animated topology, unsupported animated affine decomposition and nonfinite data",
+      "Verify imported geometry and typed bakes before publication; conversion failures preserve prior output",
+      "Compare evaluated Blender and Texloom world vertices at every selected sample time with stated floating-point tolerance",
+      "Reject visible unsupported non-mesh geometry and connected volume unless its material fallback is explicitly recorded",
+      "Bound retained raw samples during collection; large translation does not relax animated shear checks"
+    ]
+  },
+  "fixtures": [
+    "blender-producer"
+  ],
+  "verification": {
+    "command": "TEXLOOM_REQUIRE_BLENDER=1 python -m unittest tests.blender_producer_test -v; npm test",
+    "claims": [
+      "The generated real Blender fixture contains modifier-derived vertices, shared dependency-graph instances, negative scale and nontrivial units",
+      "An independent Blender oracle records world vertices and normals without importing exporter helpers",
+      "The manifest is lowered and evaluated by the actual shared Texloom runtime before comparison",
+      "Repeated exports, reverse sampling, hashes and atomic rejection paths are checked",
+      "Actual Blender negative fixtures check visible curves, connected volume, raw sample memory limits and large-translation shear rejection"
+    ],
+    "notEstablished": [
+      "Exact Blender animation between the declared knots",
+      "General shader, Geometry Nodes graph, physics-cache or editable scene interchange",
+      "Identical GPU raster bytes to Blender's renderer",
+      "Support for topology-changing meshes"
+    ]
+  }
+}
