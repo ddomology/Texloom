@@ -132,6 +132,7 @@ function update(){
 }
 
 try{
+  controls.vertex.setAttribute('aria-label','Vertex index');
   controls.instance.replaceChildren(...meshNodes.map(node=>option(node.id,node.id)));
   controls.instance.addEventListener('change',()=>{selected=controls.instance.value;vertex=0;update();});
   controls.scale.addEventListener('input',()=>{scaleEdits.set(selected,Number(controls.scale.value));update();});
