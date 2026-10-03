@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "pr32-curve-frames",
+  "title": "Discrete 3D curve sampling, transported frames and absolute-time followers",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": [
+      "Bundle 0.3 curve program version1, three typed scalar coordinate expressions over a finite one-dimensional parameter domain",
+      "Fixed parameter samples, normalized cumulative chord-length lookup, explicit up/quaternion seed and discrete shortest-rotation parallel transport",
+      "Explicit total twist and preserve/distribute closed-seam policies; native GPU line strips plus mesh/group followers and native TeX anchors",
+      "Immutable line resources and deterministic source-time/parameter evaluation shared by the web and lecture consumers"
+    ],
+    "excluded": [
+      "General Blender curve types, Geometry Nodes graphs, spline evaluation or Blender output equivalence",
+      "Analytical arc-length integration, Frenet frames, between-sample singularity detection and arbitrary self-intersection guarantees",
+      "Tubes, profile sweeps, ribbons, surface generation and continuous differential-geometric certificates",
+      "Screen-space wide lines, dashed lines, line lighting, and identical raster bytes across GPU/browser implementations"
+    ]
+  },
+  "upstream": [
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_curve_sample.cc",
+      "symbols": [
+        "blender::nodes::node_geo_curve_sample_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_curve_sample.cc"
+      ],
+      "role": "Sample Curve motivates a normalized total-length query with separately sampled tangent data; Texloom uses its explicitly documented sampled chord-length policy.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and symbol inspected for conceptual scope. No source is copied or translated; file-level reuse review is required before later adaptation."
+      }
+    },
+    {
+      "project": "blender/blender",
+      "revision": "8931427c0a55f25a462c8bc657a9a1a31a746266",
+      "path": "source/blender/nodes/geometry/nodes/node_geo_curve_resample.cc",
+      "symbols": [
+        "blender::nodes::node_geo_curve_resample_cc::node_geo_exec"
+      ],
+      "documentation": [
+        "https://github.com/blender/blender/blob/8931427c0a55f25a462c8bc657a9a1a31a746266/source/blender/nodes/geometry/nodes/node_geo_curve_resample.cc"
+      ],
+      "role": "Resample Curve motivates an explicit finite sampling resolution; Texloom samples authored parameter values uniformly and does not claim uniform arc-length vertices.",
+      "license": {
+        "status": "review-required",
+        "note": "Pinned primary source and symbol inspected for conceptual scope. No source is copied or translated; file-level reuse review is required before later adaptation."
+      }
+    }
+  ],
+  "mathematicalReferences": [
+    {
+      "title": "Parallel Transport Approach to Curve Framing",
+      "authors": [
+        "Andrew J. Hanson",
+        "Hui Ma"
+      ],
+      "publication": "Indiana University Computer Science technical report 425 (1995)",
+      "url": "https://hdl.handle.net/2022/34260",
+      "role": "Discrete frame transport and cumulative-length distribution of closed-curve angular mismatch inform the explicit policies. Quaternion interpolation is used between sampled frames. This is an independent implementation and does not claim the report's complete tube or graphics pipeline."
+    }
+  ],
+  "contract": {
+    "inputs": [
+      "Explicit operation/resource IDs, unit/m/cm/mm units, finite increasing domain and integer segments",
+      "Dimensionless u, time in seconds and typed scene parameters; scalar1 coordinate expressions interpreted in operation.units",
+      "An up seed not parallel to the first sampled tangent, or a quaternion with +X aligned to that tangent; optional total radians of twist",
+      "Followers reference a curve node and a mesh/group with the same parent. Curve local transform must be identity. Progress is dimensionless within[0,1]",
+      "At most16 operations,8192 segments per curve,32768 total segments and256 followers"
+    ],
+    "outputs": [
+      "Generated curve3d resources live in sampled frame.resources; authored packages retain only declarative operations and ordinary resources",
+      "frame.curves3d retains sampled positions, cumulative lengths, vertex tangents, orientation frames, reports and per-follower samples",
+      "Followers replace local translation/rotation, retain local scale and move native TeX children through the common evaluated3D hierarchy",
+      "Original TeX JSON bodies and decoded position/progress expressions have exact archived generated-source spans"
+    ],
+    "coordinates": [
+      "Curve resources are object-local right-handed XYZ in explicit units; GPU projection and node/ancestor transforms follow numerical sampling",
+      "Frame +X=tangent,+Y=normal,+Z=binormal; orientation is a unit quaternion",
+      "Position travels linearly along sampled chords. Orientation interpolates neighboring quaternions; its tangent can differ from the active chordTangent",
+      "Closed seam preserve retains transport holonomy; distribute corrects angular mismatch by cumulative length before applying explicit twist"
+    ],
+    "errorPolicy": [
+      "Reject nonfinite outputs, zero-length chords, reversing/cusp configurations without an unambiguous frame, invalid seeds and resource/unit conflicts",
+      "Closed endpoints must meet declared closureTolerance; accepted endpoints are made exactly identical",
+      "No clamping of invalid progress or silent conversion of distance/parameter values into normalized progress",
+      "Strict JSON capture rejects duplicate keys, nonfinite literals, unsafe paths, oversized captures, reserved metadata and duplicate resource/operation IDs",
+      "Follower target transform tracks conflict with derived translation/rotation and are diagnosed"
+    ]
+  },
+  "fixtures": [
+    "curve-frames"
+  ],
+  "verification": {
+    "command": "python -m unittest tests.curve3d_port_spec_test tests.curve3d_capture_test tests.curve_frames_player_test -v; npm test",
+    "claims": [
+      "Real TeX captures the helix and follower program without authored line vertices, alongside a shared native arrow mesh and CM Bright labels",
+      "Browser tests independently calculate helix vertex/chord positions, verify right-handed orthonormal axes and project native label anchors",
+      "Reverse seeks match exact PNGs in the same browser; a radius control regenerates the curve while preserving the static arrow resource",
+      "Curve-only GPU scenes do not require dummy mesh triangles; nested fixture registration avoids rewriting historical2D golden images"
+    ],
+    "notEstablished": [
+      "Blender execution or equivalence to its evaluated splines, frame algorithms or full test corpus",
+      "Exact analytical arc length, curvature-normal construction or undetected between-sample degeneracies",
+      "Global frame continuity at undeclared cusps or all possible floating-point extremes",
+      "Cross-device/browser/driver byte-for-byte raster equality"
+    ]
+  }
+}

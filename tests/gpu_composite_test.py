@@ -19,6 +19,9 @@ class GpuCompositeTests(unittest.TestCase):
     def test_generated_surfaces_share_exact_pixels_and_source_clock_with_board(self):
         self.assert_scene_composites('parametric-surfaces.tex')
 
+    def test_curve_frames_share_exact_pixels_and_source_clock_with_board(self):
+        self.assert_scene_composites('curve-frames.tex')
+
     def assert_scene_composites(self, source):
         with tempfile.TemporaryDirectory() as temporary:
             folder=Path(temporary)
@@ -33,9 +36,14 @@ class GpuCompositeTests(unittest.TestCase):
 const runtime=prepareScene(bundle),renderer=createSceneCanvasRenderer();
 const ink=document.createElement('canvas');ink.width=640;ink.height=Math.round(640*bundle.viewport.height/bundle.viewport.width);
 const board=document.createElement('canvas');board.width=1280;board.height=720;
-const a=ink.getContext('2d'),b=board.getContext('2d');
+// This is a readback/capture host: pin the software backend before the first
+// paint. Chromium can otherwise migrate after reads and round fractional-alpha
+// native outline pixels differently across capture histories.
+const a=ink.getContext('2d',{willReadFrequently:true}),b=board.getContext('2d',{willReadFrequently:true});
+window.captureBackends=()=>[a,b].map(ctx=>ctx.getContextAttributes().willReadFrequently);
 const placement={x:0,y:2.25,width:8},view={frameWidth:16,frameHeight:9,cameraY:4.5};
 const layer=createChalkspaceCanvasLayer(placement);
+const referencePixels=new Map();
 window.checkFrame=(time)=>{
   const frame=runtime.sample(time);renderer.render(frame,a,{background:'transparent'});
   b.resetTransform();b.clearRect(0,0,1280,720);b.translate(3,7);b.globalAlpha=.3;
@@ -43,7 +51,10 @@ window.checkFrame=(time)=>{
   const expected=a.getImageData(0,0,ink.width,ink.height).data;
   const actual=b.getImageData(rect.x,rect.y,ink.width,ink.height).data;
   let differing=0,painted=0;for(let i=0;i<expected.length;i++){if(expected[i]!==actual[i])differing++;if(i%4===3&&expected[i]>0)painted++;}
-  return {differing,painted,state,rect,png:ink.toDataURL(),overlays:frame.space3d.overlays};
+  let reverseDifferences=0,maxDifference=0;const examples=[],before=referencePixels.get(time);
+  if(before){for(let i=0;i<expected.length;i++)if(expected[i]!==before[i]){reverseDifferences++;maxDifference=Math.max(maxDifference,Math.abs(expected[i]-before[i]));if(examples.length<8)examples.push({x:Math.floor(i/4)%ink.width,y:Math.floor(i/4/ink.width),channel:i%4,before:before[i],after:expected[i]});}}
+  else referencePixels.set(time,new Uint8ClampedArray(expected));
+  return {differing,painted,state,rect,png:ink.toDataURL(),overlays:frame.space3d.overlays,reverseDifferences,maxDifference,examples};
 };
 window.checkLecture=async()=>{
   const lecture=await prepareChalkspaceLecture({contract:'texloom-lecture/1',scenes:{solid:bundle},clips:[
@@ -73,6 +84,7 @@ window.checkBackground=()=>{
                 page=browser.new_page();errors=[]
                 page.on('pageerror',lambda error:errors.append(str(error)))
                 page.goto(html.as_uri())
+                self.assertEqual(page.evaluate('captureBackends()'),[True,True])
                 images={}
                 for time in [0,1,2.3,4,7.2]:
                     state=page.evaluate('(t)=>checkFrame(t)',time)
@@ -84,7 +96,10 @@ window.checkBackground=()=>{
                     images[time]=state['png']
                 self.assertGreater(len(set(images.values())),3)
                 for time in [7.2,0,2.3,1,4]:
-                    self.assertEqual(page.evaluate('(t)=>checkFrame(t)',time)['png'],images[time])
+                    state=page.evaluate('(t)=>checkFrame(t)',time)
+                    self.assertEqual(state['differing'],0,{'time':time,'webBoardChannels':state['differing']})
+                    self.assertEqual(state['reverseDifferences'],0,{'time':time,**{k:state[k] for k in ('reverseDifferences','maxDifference','examples')}})
+                    self.assertEqual(state['png'],images[time])
                 self.assertEqual(page.evaluate('checkLecture()'),{'parity':True,'distinct':True,'held':True,'disposed':True})
                 self.assertEqual(page.evaluate('checkBackground()'),{'noneSame':True,'error':True,'unchanged':True})
                 self.assertTrue(page.evaluate('finish()'))

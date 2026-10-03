@@ -152,7 +152,7 @@ function defaultSurface(width: number, height: number): CanvasRenderingContext2D
  */
 export function renderCanvas(frame: EvaluatedFrame, ctx: CanvasRenderingContext2D,
   options: CanvasOptions = {}): void {
-  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'))throw new Error('RENDER_CAPABILITY: Canvas 2D cannot render mesh/space3d. Use the explicit GPU scene compositor for projected 3D scenes.');
+  if(frame.space3d||Object.values(frame.resources).some(r=>r.kind==='mesh'||r.kind==='curve3d'))throw new Error('RENDER_CAPABILITY: Canvas 2D cannot render mesh/curve3d/space3d. Use the explicit GPU scene compositor for projected 3D scenes.');
   const {width: logicalWidth, height: logicalHeight} = frame.viewport;
   const width = options.width ?? ctx.canvas.width;
   const height = options.height ?? ctx.canvas.height;

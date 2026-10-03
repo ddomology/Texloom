@@ -25,7 +25,7 @@ const context=(entry:DeepReadonly<AssetEntry>)=>({assetId:entry.id,
 const fail=(entry:DeepReadonly<AssetEntry>,code:string,message:string,cause?:unknown)=>new AssetError(code,message,{...context(entry),cause});
 // Bounds object insertion order is not resource identity. Payload bytes remain exact.
 const identity=(e:DeepReadonly<AssetEntry>)=>JSON.stringify([e.sha256,e.kind,e.mediaType,e.byteLength,
-  e.kind==='mesh'?(e.bounds===null?null:[e.bounds.min,e.bounds.max]):e.bounds]);
+  e.kind==='mesh'||e.kind==='curve3d'?(e.bounds===null?null:[e.bounds.min,e.bounds.max]):e.bounds]);
 
 /** A content-addressed, reference-counted store. Transport and URI policy belong to the host. */
 export function createAssetStore(options:AssetStoreOptions={}):AssetStore {
@@ -96,11 +96,11 @@ export function createAssetStore(options:AssetStoreOptions={}):AssetStore {
       const r=resource as Resource;
       if(r.kind!==e.kind)throw fail(e,'ASSET_KIND','Payload kind differs from the manifest entry.');
       let matchingBounds:boolean;
-      if(r.kind==='mesh'&&e.kind==='mesh'){
+      if((r.kind==='mesh'||r.kind==='curve3d')&&(e.kind==='mesh'||e.kind==='curve3d')){
         const actual=r.bounds,declared=e.bounds;
         matchingBounds=actual===null||declared===null?actual===declared:
           actual.min.every((value,i)=>value===declared.min[i])&&actual.max.every((value,i)=>value===declared.max[i]);
-      }else if(r.kind!=='mesh'&&e.kind!=='mesh'){
+      }else if(r.kind!=='mesh'&&r.kind!=='curve3d'&&e.kind!=='mesh'&&e.kind!=='curve3d'){
         const bounds=r.kind==='vector'?r.inkBounds:[0,0,1,1];
         matchingBounds=bounds.every((value,i)=>value===e.bounds[i]);
       }else matchingBounds=false;

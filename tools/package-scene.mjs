@@ -34,7 +34,7 @@ export async function packageScene(input,out,{mode='external'}={}){
     if(previous&&!previous.bytes.equals(bytes))throw new Error('PACKAGE_HASH_COLLISION: resource bytes differ.');
     if(!previous)byHash.set(sha256,{data,bytes});
     entries.push({id,kind:resource.kind,mediaType:'application/vnd.texloom.resource+json',byteLength:bytes.length,sha256,
-      bounds:resource.kind==='mesh'?(resource.bounds===null?null:{min:[...resource.bounds.min],max:[...resource.bounds.max]}):
+      bounds:resource.kind==='mesh'||resource.kind==='curve3d'?(resource.bounds===null?null:{min:[...resource.bounds.min],max:[...resource.bounds.max]}):
         resource.kind==='vector'?[...resource.inkBounds]:[0,0,1,1],
       source:mode==='inline'?{kind:'inline',data}:{kind:'external',uri:`assets/${sha256}.json`}});
   }

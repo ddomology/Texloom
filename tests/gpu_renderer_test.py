@@ -31,10 +31,10 @@ class GpuRendererTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        report = {'success':len(cls.reports)==6 and not cls.browser_errors, 'browser':cls.browser.version,
+        report = {'success':len(cls.reports)==7 and not cls.browser_errors, 'browser':cls.browser.version,
             'browserErrors':cls.browser_errors, 'checks':cls.reports,
             'files':{name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in
-                ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','tests/gpu-browser.ts',
+                ('src/renderers/gpu/index.ts','src/renderers/gpu/data.ts','src/renderers/gpu/curve-data.ts','tests/gpu-browser.ts',
                  'tests/gpu-reference.ts','tests/gpu_renderer_test.py','src/ir/scene3d.ts',
                  'src/geometry/projection3d.ts','package-lock.json')}}
         folder = ROOT/'build/gpu-conformance'
@@ -85,6 +85,21 @@ class GpuRendererTests(unittest.TestCase):
         self.assertEqual(report['dimensions'], [96,64])
         self.assertTrue(report['restoredSizeSame'])
         self.reports['historyAndResize'] = report
+
+    def test_curve_lines_depth_clip_affine_camera_lifecycle_and_primitive_replacement(self):
+        report = self.page.evaluate('gpuQa.curves()')
+        for record in report['records']:
+            self.assertEqual(record['changed'], 0, record)
+            self.assertGreater(record['green'], 5)
+            self.assertEqual(record['stats']['segments'], 2)
+            self.assertEqual(record['stats']['geometries'], 3)
+        self.assertTrue(report['reverse'] and report['sameAfterRestore'] and report['sourceUnchanged'])
+        self.assertEqual(report['mutationError'], 'GPU_RESOURCE_MUTABLE')
+        self.assertEqual(report['swappedStats']['instances'], 1)
+        for state in ('lostStats','emptyStats','disposed'):
+            self.assertEqual(report[state]['bufferBytes'], 0)
+            self.assertEqual(report[state]['instances'], 0)
+        self.reports['curveLines'] = report
 
     def test_wireframe_preserves_empty_interiors_edges_material_separation_and_seek(self):
         report = self.page.evaluate('gpuQa.wireframe()')

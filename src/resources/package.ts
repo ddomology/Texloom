@@ -3,6 +3,7 @@ import type {DeepReadonly, Diagnostic} from '../ir/operations.js';
 import type {MeshBounds} from '../ir/mesh.js';
 import {freezeSnapshot} from '../operations/values.js';
 import {surfaceResourceDeclarations} from '../operations/surface.js';
+import {curveResourceDeclarations} from '../operations/curve3d.js';
 
 export const RESOURCE_MEDIA_TYPE = 'application/vnd.texloom.resource+json' as const;
 interface AssetEntryData {
@@ -13,7 +14,8 @@ interface AssetEntryData {
 /** Mesh bounds use their object-space chart; 2D resources retain the original tuple contract. */
 export type AssetEntry = AssetEntryData & (
   {kind:'vector'|'scalar-field';bounds:[number,number,number,number]} |
-  {kind:'mesh';bounds:MeshBounds|null}
+  {kind:'mesh';bounds:MeshBounds|null} |
+  {kind:'curve3d';bounds:MeshBounds|null}
 );
 export interface AssetManifest {version:1;requiredFeatures:string[];entries:AssetEntry[]}
 export interface ScenePackage {contract:'texloom-package/1';scene:Omit<Bundle,'resources'>;assets:AssetManifest}
@@ -78,12 +80,12 @@ function entryDiagnostics(input:unknown,path:string,out:Diagnostic[]):void {
   if(!object(input)){error(out,'ASSET_ENTRY','Expected an asset entry.',path);return;}
   keys(input,['id','kind','mediaType','byteLength','sha256','bounds','source'],path,out);
   if(!text(input.id)||input.id.length>512)error(out,'ASSET_ID','Asset ID must contain 1–512 characters.',`${path}.id`);
-  if(!['vector','scalar-field','mesh'].includes(input.kind as string))error(out,'ASSET_KIND','Expected vector, scalar-field or mesh.',`${path}.kind`);
+  if(!['vector','scalar-field','mesh','curve3d'].includes(input.kind as string))error(out,'ASSET_KIND','Expected vector, scalar-field, mesh or curve3d.',`${path}.kind`);
   if(input.mediaType!==RESOURCE_MEDIA_TYPE)error(out,'ASSET_MEDIA_TYPE',`Expected ${RESOURCE_MEDIA_TYPE}.`,`${path}.mediaType`);
   if(!Number.isSafeInteger(input.byteLength)||(input.byteLength as number)<=0)error(out,'ASSET_SIZE','byteLength must be a positive safe integer.',`${path}.byteLength`);
   if(typeof input.sha256!=='string'||!/^[0-9a-f]{64}$/.test(input.sha256))error(out,'ASSET_HASH','Expected a lowercase SHA-256 hex digest.',`${path}.sha256`);
   const b=input.bounds;
-  if(input.kind==='mesh'){
+  if(input.kind==='mesh'||input.kind==='curve3d'){
     if(b!==null){
       if(!object(b))error(out,'ASSET_BOUNDS','Mesh bounds must be null or finite ordered min/max triples.',`${path}.bounds`);
       else {
@@ -159,18 +161,23 @@ export function validateScenePackage(input:unknown):Diagnostic[] {
     if(!asset)error(out,'ASSET_REFERENCE',`No manifest asset for resource ${String(node.resourceId)}.`,`$.scene.nodes[${i}].resourceId`);
     else if(asset.kind!==(node.kind==='tex'?'vector':'scalar-field'))error(out,'ASSET_KIND','Node and asset resource kinds disagree.',`$.scene.nodes[${i}].resourceId`);
   });
-  const generated=new Set<string>();
+  const generated=new Map<string,'mesh'|'curve3d'>();
   for(const declaration of surfaceResourceDeclarations(scene.surfaces)){
     if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId))
       error(out,'ASSET_DUPLICATE',`Generated resource ID ${declaration.resourceId} must be unique and cannot replace a manifest asset.`,'$.scene.surfaces');
-    generated.add(declaration.resourceId);
+    generated.set(declaration.resourceId,'mesh');
+  }
+  for(const declaration of curveResourceDeclarations(scene.curves3d)){
+    if(generated.has(declaration.resourceId)||entries.has(declaration.resourceId))
+      error(out,'ASSET_DUPLICATE',`Generated resource ID ${declaration.resourceId} must be unique and cannot replace a manifest asset.`,'$.scene.curves3d');
+    generated.set(declaration.resourceId,'curve3d');
   }
   if(object(scene.space3d)&&Array.isArray(scene.space3d.nodes))scene.space3d.nodes.forEach((node,i)=>{
-    if(!object(node)||node.kind!=='mesh')return;
+    if(!object(node)||!['mesh','curve'].includes(node.kind as string))return;
     const asset=typeof node.resourceId==='string'?entries.get(node.resourceId):undefined;
-    if(!asset&&generated.has(node.resourceId as string))return;
-    if(!asset)error(out,'ASSET_REFERENCE','Expected an existing manifest or generated surface resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
-    else if(asset.kind!=='mesh')error(out,'ASSET_KIND','3D mesh nodes require mesh assets.',`$.scene.space3d.nodes[${i}].resourceId`);
+    const kind=asset?.kind??generated.get(node.resourceId as string),expected=node.kind==='mesh'?'mesh':'curve3d';
+    if(!kind)error(out,'ASSET_REFERENCE','Expected an existing manifest or generated 3D resource ID.',`$.scene.space3d.nodes[${i}].resourceId`);
+    else if(kind!==expected)error(out,'ASSET_KIND',`3D ${String(node.kind)} nodes require ${expected} assets.`,`$.scene.space3d.nodes[${i}].resourceId`);
   });
   if(object(scene.space3d)&&Array.isArray(scene.space3d.overlays))scene.space3d.overlays.forEach((overlay,i)=>{
     if(!object(overlay))return;

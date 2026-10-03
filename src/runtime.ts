@@ -21,7 +21,7 @@ export interface SceneManifest {
   /** Metadata only: no transport URI, inline payload, object URL or GPU handle. */
   readonly assets?: readonly DeepReadonly<Omit<AssetEntry, 'source'>>[];
   /** Evaluated frame resources, with no asset transport or fixed bounds. */
-  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh';producer:'surface';operationId:string;units:MeshUnit}>[];
+  readonly generatedResources?:readonly Readonly<{id:string;kind:'mesh'|'curve3d';producer:'surface'|'curve3d';operationId:string;units:MeshUnit}>[];
 }
 export interface SceneRuntime {
   readonly manifest: SceneManifest;
@@ -47,7 +47,10 @@ function sceneManifest(bundle: Bundle, assets?: readonly AssetEntry[]): SceneMan
     features: Object.freeze(sceneFeatures(bundle)),
     ...(bundle.timeline ? {timeline:freezeSnapshot(bundle.timeline)} : {}),
     ...(assets ? {assets:freezeSnapshot(assets.map(({source: _source, ...metadata}) => metadata))} : {}),
-    ...(bundle.surfaces ? {generatedResources:freezeSnapshot(bundle.surfaces.operations.map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'surface' as const,operationId:o.id,units:o.units})))} : {}),
+    ...(bundle.surfaces||bundle.curves3d ? {generatedResources:freezeSnapshot([
+      ...(bundle.surfaces?.operations??[]).map(o=>({id:o.resourceId,kind:'mesh' as const,producer:'surface' as const,operationId:o.id,units:o.units})),
+      ...(bundle.curves3d?.operations??[]).map(o=>({id:o.resourceId,kind:'curve3d' as const,producer:'curve3d' as const,operationId:o.id,units:o.units})),
+    ])} : {}),
   });
 }
 

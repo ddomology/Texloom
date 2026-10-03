@@ -1,0 +1,19 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-curve3d}[2026/10/03 Spatial curves and transported frames]
+\RequirePackage{texloom-space3d}
+\newcount\TLCurveThreeSerial
+\TLCurveThreeSerial=0
+\def\TLCurveThreeStart#1{%
+  \global\advance\TLCurveThreeSerial by 1
+  \edef\TLEbase{\jobname.tl-curve3d-\the\TLCurveThreeSerial}%
+  \immediate\write\TLrecords{\string{"type":"curve3d-file","kind":"#1","file":"\TLEbase"\string}}}
+% JSON and identifiers are captured separately and are never expanded.
+\NewDocumentCommand\loomspatialcurve{m +v}{%
+  \TLCurveThreeStart{curve}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\NewDocumentCommand\loomfollowcurve{m +v}{%
+  \TLCurveThreeStart{follower}%
+  \TLEmetadata{id}{#1}%
+  \TLEwrite{body}{#2}}
+\endinput

@@ -70,6 +70,12 @@ function draw(time:number){
     const resource=evaluated.resources[node.resourceId];
     return sum+(resource.kind==='mesh'?resource.indices.count/3:0);
   },0));
+  const curves=evaluated.space3d?.curves??[];
+  el('curve-fact').hidden=curves.length===0;el('curve-count').textContent=String(curves.length);
+  el('segment-fact').hidden=curves.length===0;el('segment-count').textContent=String(curves.reduce((sum,node)=>{
+    const resource=evaluated.resources[node.resourceId];
+    return sum+(resource.kind==='curve3d'?Math.max(0,resource.positions.count-1):0);
+  },0));
   el('loading').hidden=true;return evaluated;
 }
 function seek(time:number){pause();try{return draw(time);}catch(error){failure(error);throw error;}}

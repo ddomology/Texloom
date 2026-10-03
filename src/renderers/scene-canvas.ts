@@ -25,7 +25,7 @@ export function createSceneCanvasRenderer(){
       // publish a successful but empty composite or silently use a stale frame.
       gpu.render(frame,{width:Math.max(1,Math.ceil(fittedWidth)),height:Math.max(1,Math.ceil(fittedHeight)),background:'transparent'});
       if(lastResources!==frame.resources){
-        inkResources=Object.fromEntries(Object.entries(frame.resources).filter(([,r])=>r.kind!=='mesh'));
+        inkResources=Object.fromEntries(Object.entries(frame.resources).filter(([,r])=>r.kind!=='mesh'&&r.kind!=='curve3d'));
         lastResources=frame.resources;
       }
       const {space3d,...base}=frame;

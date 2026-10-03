@@ -10,8 +10,8 @@ export async function buildGpuPlayer(input,output){
   const core=await build({entryPoints:[resolve(root,'src/index.ts')],bundle:true,platform:'node',format:'esm',write:false});
   const api=await import('data:text/javascript;base64,'+Buffer.from(core.outputFiles[0].text).toString('base64'));
   api.assertBundle(bundle);const frame=api.prepareScene(bundle).sample(0);
-  if(!frame.space3d?.instances.length||!bundle.space3d?.camera?.projection)
-    throw new Error('GPU_PLAYER_SCENE: a scene with mesh instances and an explicit camera projection is required.');
+  if(!(frame.space3d?.instances.length||frame.space3d?.curves.length)||!bundle.space3d?.camera?.projection)
+    throw new Error('GPU_PLAYER_SCENE: a scene with mesh or curve instances and an explicit camera projection is required.');
   const license=await readFile(resolve(root,'node_modules/three/LICENSE'),'utf8');
   const js=await build({entryPoints:[resolve(root,'web/gpu-player.ts')],bundle:true,platform:'browser',format:'iife',target:'es2022',write:false,minify:true,
     banner:{js:'/*! Three.js — MIT license\n'+license.replace(/\*\//g,'* /')+'\n*/'}});
@@ -21,7 +21,7 @@ export async function buildGpuPlayer(input,output){
     .replace('__BUNDLE__',()=>data).replace('__SCRIPT__',()=>js.outputFiles[0].text.replace(/<\/script/gi,'<\\/script'));
   const destination=resolve(output);await mkdir(dirname(destination),{recursive:true});
   await writeFile(destination+'.tmp',html,'utf8');await rename(destination+'.tmp',destination);
-  return {output:destination,bytes:Buffer.byteLength(html),instances:frame.space3d.instances.length,duration:bundle.duration,renderer:'WebGL2 + native TeX Canvas2D'};
+  return {output:destination,bytes:Buffer.byteLength(html),instances:frame.space3d.instances.length,curves:frame.space3d.curves.length,duration:bundle.duration,renderer:'WebGL2 + native TeX Canvas2D'};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   const [input,output,...extra]=process.argv.slice(2);

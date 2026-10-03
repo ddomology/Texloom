@@ -47,6 +47,31 @@ async function hash(bytes:Uint8Array):Promise<string>{return [...new Uint8Array(
 function withRenderer<T>(run:(r:GpuRenderer)=>T):T {const r=createGpuRenderer({antialias:false});try{return run(r);}finally{r.dispose();}}
 
 (window as any).gpuQa={fixture,
+ async curves(){const r=createGpuRenderer({antialias:false});try{
+  const bundle=fixture('depth');bundle.resources.path={kind:'curve3d',version:1,primitive:'line-strip',units:'unit',coordinateSpace:'object',topologyRevision:'line-1',closed:false,
+   positions:{version:1,componentType:'float64',components:3,count:3,byteOffset:0,byteStride:24,data:[-.9,0,-3,0,0,-3,.9,0,-3]},bounds:{min:[-.9,0,-3],max:[.9,0,-3]}};
+  bundle.space3d!.nodes.push({kind:'curve',id:'path',resourceId:'path',color:'#00ff00'});
+  const source=JSON.stringify(bundle),records=[];
+  for(const mode of ['depth','clip','camera-affine']){
+   const b=structuredClone(bundle);
+   if(mode==='clip')b.space3d!.clippingPlanes=[{normal:[1,0,0],constant:0}];
+   if(mode==='camera-affine')b.space3d!.camera!.transform={translation:[.2,0,0],scale:[2,.5,1]};
+   const f=createEvaluator(b)(0),draws=referenceDraws(f),i=f.space3d!.curves[0],c=f.resources.path;
+   if(c.kind!=='curve3d')throw Error('fixture');
+   draws.push({positions:[...c.positions.data],indices:[],model:[...i.worldMatrix],viewProjection:[...f.space3d!.camera!.viewProjectionMatrix!],color:i.color,side:'double',orientation:1,primitive:'line-strip'});
+   r.render(f,{width:128,height:128});const actual=pixels(r),reference=renderRawReference(document.createElement('canvas'),draws,128,128,f.space3d!.clippingPlanes.map(p=>[...p.normal,p.constant]));
+   records.push({mode,changed:actual.reduce((n,v,j)=>n+Number(v!==reference[j]),0),green:actual.reduce((n,v,j)=>n+Number(j%4===1&&v===255&&actual[j-1]===0),0),stats:r.stats(),hash:await hash(actual)});
+  }
+  const base=createEvaluator(bundle)(0);r.render(base,{width:128,height:128});const reverse=await hash(pixels(r))===records[0].hash;
+  const mutable=structuredClone(base),mutationError=errorCode(()=>r.render(mutable,{width:128,height:128}));
+  const swapped=fixture();swapped.space3d!.nodes[0].id='path';r.render(createEvaluator(swapped)(0),{width:128,height:128});const swappedStats=r.stats();
+  r.render(base,{width:128,height:128});const before=await hash(pixels(r)),extension=r.canvas.getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+  const lost=new Promise<void>(yes=>r.canvas.addEventListener('webglcontextlost',()=>yes(),{once:true}));extension.loseContext();await lost;const lostStats=r.stats();
+  const restored=new Promise<void>(yes=>r.canvas.addEventListener('webglcontextrestored',()=>yes(),{once:true}));await new Promise(yes=>setTimeout(yes,50));extension.restoreContext();await restored;
+  r.render(base,{width:128,height:128});const sameAfterRestore=before===await hash(pixels(r));
+  const empty=structuredClone(bundle);empty.space3d!.nodes=[];r.render(createEvaluator(empty)(0),{width:128,height:128});const emptyStats=r.stats();r.dispose();
+  return {records,reverse,mutationError,swappedStats,lostStats,sameAfterRestore,emptyStats,disposed:r.stats(),sourceUnchanged:JSON.stringify(bundle)===source};
+ }finally{r.dispose();}},
  async wireframe(){const r=createGpuRenderer({antialias:false});try{
   const bundle=fixture(),wire=structuredClone(bundle);(wire.space3d!.nodes[0] as any).material.wireframe=true;
   const filled=createEvaluator(bundle)(0),outline=createEvaluator(wire)(0);

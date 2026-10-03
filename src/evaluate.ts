@@ -12,6 +12,7 @@ import {prepareTraceProgram,type PreparedTraceProgram} from './timeline/trace.js
 import {preparePresentationProgram,type PreparedPresentationProgram} from './ir/presentation-intent.js';
 import {prepareSpace3DSampler} from './ir/scene3d.js';
 import {prepareSurfaceProgram} from './operations/surface.js';
+import {prepareCurveProgram3D} from './operations/curve3d.js';
 
 /** Upper bound makes exact key times right-continuous, including step tracks. */
 function interval(times: readonly number[], time: number): [number, number, number] {
@@ -135,13 +136,17 @@ function evaluatorFromSnapshot(snapshot: Bundle): ReturnType<typeof createEvalua
   const traces=input?prepareTraceProgram(input,snapshot,(time,parameters)=>evaluatePrepared(base,time,plan,parameters,undefined,false),plan.accesses):undefined;
   const presentation=snapshot.presentation?preparePresentationProgram(snapshot.presentation,snapshot):undefined;
   const surfaces=snapshot.surfaces?prepareSurfaceProgram(snapshot.surfaces,snapshot):undefined;
-  const spatialResources=surfaces?{...snapshot.resources,...surfaces.baseResources} as Bundle['resources']:snapshot.resources;
-  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,spatialResources,{viewport:snapshot.viewport,duration:snapshot.duration},surfaces?.resourceIds):undefined;
+  const curves=snapshot.curves3d?prepareCurveProgram3D(snapshot.curves3d,snapshot):undefined;
+  const spatialResources=surfaces||curves?{...snapshot.resources,...surfaces?.baseResources,...curves?.baseResources} as Bundle['resources']:snapshot.resources;
+  const space3d=snapshot.space3d?prepareSpace3DSampler(snapshot.space3d,spatialResources,{viewport:snapshot.viewport,duration:snapshot.duration},[...(surfaces?.resourceIds??[]),...(curves?.resourceIds??[])],curves?.baseTransforms):undefined;
   return (time,parameters) => {
     const frame=evaluatePrepared(base, time, plan, parameters,traces,true,presentation);
     const generated=surfaces?.sample(frame.time,parameters);
-    if(generated){frame.resources=Object.freeze({...snapshot.resources,...generated.resources}) as Bundle['resources'];frame.surfaces=generated.surfaces;}
-    if(space3d)frame.space3d=space3d(frame.time,generated?Object.fromEntries(Object.entries(generated.resources).map(([id,r])=>[id,{bounds:r.bounds,topologyRevision:r.topologyRevision}])):undefined);
+    const generatedCurves=curves?.sample(frame.time,parameters);
+    if(generated||generatedCurves)frame.resources=Object.freeze({...snapshot.resources,...generated?.resources,...generatedCurves?.resources}) as Bundle['resources'];
+    if(generated)frame.surfaces=generated.surfaces;
+    if(generatedCurves)frame.curves3d=generatedCurves.curves3d;
+    if(space3d)frame.space3d=space3d(frame.time,generated||generatedCurves?Object.fromEntries(Object.entries({...generated?.resources,...generatedCurves?.resources}).map(([id,r])=>[id,{bounds:r.bounds,topologyRevision:r.topologyRevision}])):undefined,generatedCurves?.transforms);
     return frame;
   };
 }

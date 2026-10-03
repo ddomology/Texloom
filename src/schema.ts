@@ -18,8 +18,10 @@ import {validateTextPartsInContext,type TextParts} from './ir/text-parts.js';
 import {validateTraceProgramInContext,type TraceProgram,type TraceEvaluation} from './timeline/trace.js';
 import {validatePresentationProgramInContext,type PresentationProgram,type PresentationEvaluation} from './ir/presentation-intent.js';
 import {validateMeshResource,type MeshResource} from './ir/mesh.js';
+import {validateCurve3DResource,type Curve3DResource} from './ir/curve3d.js';
 import {validateSpace3DInContext,type Space3D,type Space3DEvaluation} from './ir/scene3d.js';
 import {validateSurfaceProgramInContext,surfaceValidationResources,type SurfaceProgram,type SurfaceEvaluation} from './operations/surface.js';
+import {validateCurveProgram3DInContext,curveValidationResources,type CurveProgram3D,type CurveEvaluation3D} from './operations/curve3d.js';
 export type {Diagnostic, SourceSpan} from './ir/operations.js';
 /** Portable, JSON-only scene contract. Legacy 2D dimensions are bp; space3d declares its own units. */
 export interface Style {
@@ -47,7 +49,7 @@ export type Matrix = [number, number, number, number, number, number];
 export interface PaintItem { kind: 'path' | 'group'; d?: string; transform?: Matrix; style?: Style; clip?: Clip & { transform?: Matrix }; children?: PaintItem[] }
 export interface VectorResource { kind: 'vector'; items: PaintItem[]; metrics: { width: number; height: number; depth: number }; inkBounds: [number, number, number, number]; sourceTex?: string; glyphs?: unknown[]; capabilities?: string[];textParts?:TextParts }
 export interface ScalarFieldResource { kind: 'scalar-field'; columns: number; rows: number; times: number[]; samples: number[][]; range: [number, number]; interpolation: 'linear' | 'step'; provenance?: Record<string, unknown> }
-export type Resource = VectorResource | ScalarFieldResource | MeshResource;
+export type Resource = VectorResource | ScalarFieldResource | MeshResource | Curve3DResource;
 export type TrackValue = number | number[];
 export interface Track { target: string; property: string; keys: [number, TrackValue][]; interpolation?: Easing;
   /** Outgoing interval easing; omitted entries are not allowed. */
@@ -83,6 +85,7 @@ export interface Bundle {
   /** Explicit 3D world chart, independent of the legacy document bp coordinates. */
   space3d?: Space3D;
   surfaces?:SurfaceProgram;
+  curves3d?:CurveProgram3D;
 }
 export interface EvaluatedFrame {
   time: number; viewport: Bundle['viewport']; camera: Camera; nodes: Node[]; resources: Record<string, Resource>;
@@ -91,6 +94,7 @@ export interface EvaluatedFrame {
   presentation?:import('./ir/operations.js').DeepReadonly<PresentationEvaluation>;
   space3d?:import('./ir/operations.js').DeepReadonly<Space3DEvaluation>;
   surfaces?:import('./ir/operations.js').DeepReadonly<SurfaceEvaluation>;
+  curves3d?:import('./ir/operations.js').DeepReadonly<CurveEvaluation3D>;
   shapes?:import('./operations/shapes.js').ShapeEvaluation;anchors?:import('./operations/anchors.js').AnchorEvaluation;
   curves?:import('./operations/curves.js').CurveEvaluation;intersections?:import('./operations/intersections.js').IntersectionEvaluation;
 }
@@ -247,7 +251,12 @@ export function validateBundle(input: unknown): Diagnostic[] {
       if(id.length>512)error('MESH_RESOURCE_ID','Mesh resource IDs cannot exceed 512 characters.',path);
       errors.push(...validateMeshResource(r,path));
     }
-    else error('RESOURCE_KIND', 'Expected vector, scalar-field or mesh resource.', `${path}.kind`);
+    else if(r.kind==='curve3d') {
+      if(b.version!=='0.3')error('CURVE3D_BUNDLE_VERSION','3D curve resources require Bundle 0.3.',path);
+      if(id.length>512)error('CURVE3D_RESOURCE_ID','Curve resource IDs cannot exceed 512 characters.',path);
+      errors.push(...validateCurve3DResource(r,path));
+    }
+    else error('RESOURCE_KIND', 'Expected vector, scalar-field, mesh or curve3d resource.', `${path}.kind`);
   }
   const nodes = new Map<string, Obj>();
   if (!Array.isArray(b.nodes)) error('NODES', 'Expected a nodes array.', '$.nodes');
@@ -537,9 +546,10 @@ export function validateBundle(input: unknown): Diagnostic[] {
   if (b.traces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateTraceProgramInContext(b.traces,b as Bundle));
   if (b.presentation !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validatePresentationProgramInContext(b.presentation,b as Bundle));
   if (b.surfaces !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateSurfaceProgramInContext(b.surfaces,b as Bundle));
+  if (b.curves3d !== undefined && !errors.some(d => d.severity === 'error')) errors.push(...validateCurveProgram3DInContext(b.curves3d,b as Bundle));
   if (b.space3d !== undefined && !errors.some(d => d.severity === 'error')) {
     if(b.version!=='0.3')error('SPACE3D_VERSION','3D spaces require Bundle 0.3.','$.space3d');
-    else errors.push(...validateSpace3DInContext(b.space3d,surfaceValidationResources(b.surfaces,b.resources),'$.space3d',{viewport:b.viewport,duration:b.duration}));
+    else errors.push(...validateSpace3DInContext(b.space3d,curveValidationResources(b.curves3d,surfaceValidationResources(b.surfaces,b.resources)),'$.space3d',{viewport:b.viewport,duration:b.duration}));
   }
   if(b.timeline!==undefined&&!errors.some(d=>d.severity==='error')){
     if(b.version!=='0.3')error('TIMELINE_VERSION','Timeline metadata requires Bundle 0.3.','$.timeline');
