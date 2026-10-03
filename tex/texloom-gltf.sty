@@ -1,0 +1,13 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-gltf}[2026/10/04 Bounded glTF interchange]
+\RequirePackage{texloom-space3d}
+\newcount\TLGltfSerial
+\TLGltfSerial=0
+\NewDocumentCommand\loomgltf{O{} m m}{%
+  \global\advance\TLGltfSerial by 1
+  \edef\TLEbase{\jobname.tl-gltf-\the\TLGltfSerial}%
+  \immediate\write\TLrecords{\string{"type":"gltf-file","file":"\TLEbase"\string}}%
+  \TLEmetadata{options}{#1}%
+  \TLEmetadata{id}{#2}%
+  \TLEmetadata{body}{#3}}
+\endinput

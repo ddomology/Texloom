@@ -27,6 +27,31 @@ are integrated. Mesh instances now render through a shared WebGL2 adapter in the
 web player and Chalkspace. Parametric surfaces now generate shared mesh resources;
 general simulation operations remain planned.
 
+### glTF interchange (PR39)
+
+`\usepackage{texloom-gltf}` adds `\loomgltf{model}{data/gltf-profile/scene.gltf}`.
+Local `.gltf` with binary buffers and single-file `.glb` assets become shared
+native meshes, hierarchy and animation tracks. The profile explicitly converts
+right-handed Y-up metres to right-handed Z-up metres. STEP and LINEAR TRS
+animation use the same evaluator in the web player and Chalkspace.
+
+The supported material profile is opaque unlit color. Unsupported shading or
+extensions produce diagnostics; optional `material=fallback` records the defined
+material approximation. `[wireframe]`, `[animation=0]` and `[camera=0]` are explicit
+authoring choices. The default keeps the TeX scene's authored camera.
+
+```sh
+python tools/compile.py examples/gltf-profile.tex --out build/gltf-profile
+node tools/build-gpu-player.mjs build/gltf-profile/bundle.json build/gltf-profile/player.html
+node tools/export-gltf.mjs build/gltf-profile/bundle.json --out build/gltf-export
+```
+
+The export command writes a supported glTF delivery asset, a conversion report,
+and a Texloom metadata sidecar. It does not claim a complete authoring-scene round
+trip. See the [profile guide](docs/ports/gltf-profile.md) for precision, camera,
+accessor, unsupported-feature and source-archive rules. The fixture and exported
+assets are checked with the pinned independent Khronos validator.
+
 ### Evaluated Blender assets (PR38)
 
 `\usepackage{texloom-blender}` adds

@@ -6,3 +6,4 @@
 *.pdf binary
 *.bin binary
 *.blend binary
+*.glb binary

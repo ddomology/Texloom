@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "pr39-gltf-profile",
+  "title": "Limited glTF 2.0 mesh, hierarchy and animation interchange",
+  "implementation": {
+    "mode": "independent-implementation",
+    "supportedProfile": ["Triangle mesh accessors, hierarchy, shared primitives and reflected nonuniform transforms", "Opaque KHR_materials_unlit base colors and explicit limited material fallback", "Selected STEP or LINEAR translation/scale and shortest-path quaternion SLERP", "External-buffer glTF and equivalent binary GLB; optional finite static camera with a proper rigid global basis"],
+    "excluded": ["Full AuthorScene, math relations or lecture-cue round trips", "Skinning, morph targets, compressed geometry, textures and general shaders", "Cubic spline animation, dynamic topology and implicit remote asset loading"]
+  },
+  "upstream": [{
+    "project": "KhronosGroup/glTF",
+    "revision": "8e691206fa2e981fc3b8c8bc57e671595576c971",
+    "path": "specification/2.0/Specification.adoc",
+    "symbols": ["Coordinate System and Units", "Transformations", "Accessors", "Animation Sampler Interpolation Modes"],
+    "documentation": ["https://github.com/KhronosGroup/glTF/blob/8e691206fa2e981fc3b8c8bc57e671595576c971/specification/2.0/Specification.adoc", "https://github.com/KhronosGroup/glTF/blob/8e691206fa2e981fc3b8c8bc57e671595576c971/extensions/2.0/Khronos/KHR_materials_unlit/README.md"],
+    "role": "Primary format and unlit-material contracts for an independently written bounded importer, exporter and numeric oracle. No upstream implementation or fixture is copied.",
+    "license": {"status": "reviewed", "note": "The pinned specification source declares CC-BY-4.0. This work links and attributes the primary sources and implements the format independently; it does not redistribute specification text or upstream code/assets."}
+  }],
+  "contract": {
+    "inputs": ["An explicit glTF JSON document and resolved binary buffers, or native .gltf/.glb capture", "A selected supported animation, optional camera and explicit material policy", "Self-authored faceted shared-mesh fixture with external and embedded equivalent containers"],
+    "outputs": ["Validated shared mesh resources, scoped hierarchy and numeric animation tracks", "A preserved/converted/unsupported report and explicit sidecar boundary for native math metadata", "Bounded glTF delivery export for the declared supported subset"],
+    "coordinates": ["Right-handed Y-up metres become right-handed Z-up metres using (x,y,z) -> (x,-z,y)", "Local geometry and node bases are converted consistently; camera optical axes require separate basis accounting", "Normals use inverse transpose; negative determinant affects winding independently", "STEP is right-continuous; quaternion LINEAR channels use shortest-path SLERP"],
+    "errorPolicy": ["Reject malformed accessor bounds/alignment and missing or mismatched buffer payloads", "Reject unsupported required extensions, unsupported animation channels and hierarchy cycles", "Reject unsupported materials unless fallback is explicit and recorded", "Reject non-rigid or animated global camera transforms whose native affine view would change under glTF camera rules", "Record float32 accessor rounding; reject distinct animation knots that collapse after conversion", "Do not run external assets as code or claim full Texloom semantic round-trip preservation"]
+  },
+  "fixtures": ["gltf-profile"],
+  "verification": {
+    "command": "python -m unittest tests.gltf_fixture_test -v; npm test",
+    "claims": ["Actual .gltf and .glb fixture payloads are equivalent and independently reproducible", "Both containers pass pinned official Khronos gltf-validator2.0.0-dev.3.10 with zero errors and warnings", "Independent Python reference computes source hierarchy, normals, reflections, SLERP and STEP boundaries from float32 bytes", "Actual shared-runtime world coordinates and normals match the independent oracle at knots and intermediate times", "Reverse sampling preserves the source and shared mesh identity; selected camera optical axes are checked"],
+    "notEstablished": ["Full glTF extension coverage or general rendering conformance", "Skinned/morphed/textured or physically based asset interchange", "Recovery of mathematical relations, anonymous field graphs or lecture cues from glTF", "Identical GPU pixels across browsers or graphics drivers"]
+  }
+}
