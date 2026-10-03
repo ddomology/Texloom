@@ -1,6 +1,7 @@
 import type {EvaluatedFrame} from '../src/schema.js';
 import {renderCanvas} from '../src/render-canvas.js';
 import type {BoardPlacement} from './chalkspace.js';
+export * from './chalkspace-lecture.js';
 
 export interface BoardView {
   frameWidth: number;
@@ -31,6 +32,7 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
   let buffer: HTMLCanvasElement | undefined;
   const opacitySurfaces: CanvasRenderingContext2D[]=[];
   let surfaceIndex=0;
+  let disposed=false;
   const surface=(w:number,h:number):CanvasRenderingContext2D=>{
     const index=surfaceIndex++;
     if(!opacitySurfaces[index]) {
@@ -41,10 +43,11 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
     return opacitySurfaces[index];
   };
   return {draw(frame:EvaluatedFrame,ctx:CanvasRenderingContext2D,view:BoardView):BoardScreenRect {
+    if(disposed)throw new Error('BOARD_DISPOSED: layer has been disposed.');
     const rect=boardScreenRect(frame.viewport,placed,view,ctx.canvas.width);
     // Current Chalkspace host has a fixed 16:9 board viewport. Avoid silently
     // stretching when the caller provides a different camera/canvas aspect.
-    if(Math.abs(ctx.canvas.height/ctx.canvas.width-view.frameHeight/view.frameWidth)>1e-6)
+    if(Math.abs(ctx.canvas.height-ctx.canvas.width*view.frameHeight/view.frameWidth)>1)
       throw new Error('BOARD_ASPECT: canvas and board viewport must have the same aspect ratio.');
     const width=Math.max(1,Math.ceil(rect.width)),height=Math.max(1,Math.ceil(rect.height));
     if(width>8192||height>8192)throw new Error('BOARD_SURFACE_BUDGET: layer exceeds 8192 backing pixels per dimension.');
@@ -59,5 +62,10 @@ export function createChalkspaceCanvasLayer(placement: BoardPlacement) {
       ctx.drawImage(buffer,rect.x,rect.y,rect.width,rect.height);
     } finally {ctx.restore();}
     return rect;
+  },dispose(){
+    if(disposed)return;disposed=true;
+    if(buffer){buffer.width=0;buffer.height=0;buffer=undefined;}
+    for(const surface of opacitySurfaces){surface.canvas.width=0;surface.canvas.height=0;}
+    opacitySurfaces.length=0;
   }};
 }
