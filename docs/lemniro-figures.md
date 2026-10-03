@@ -88,8 +88,25 @@ the runtime, animation frame, observers and event handlers. PDF output can use
 an optional static poster PDF; the same note remains readable without scripts.
 
 The React component, TeX macro and note compiler live in the Lemniro repository.
-Lemniro pins this repository to a full Git commit in its package and lock files;
-its Next build transpiles `texloom` source exports. The package remains private.
+Because Texloom is private and Lemniro is public, the site uses a vendored npm
+archive containing compiled runtime ES modules and generated type declarations.
+It includes no TypeScript implementations, TeX tools, tests, source maps or
+private documentation. The package remains private; it is not an npm release.
+
+From a clean, committed Texloom checkout, create the distributable in an empty
+directory, then pack it with npm:
+
+```sh
+node tools/build-lemniro-package.mjs build/lemniro-package
+npm pack ./build/lemniro-package --pack-destination build
+```
+
+`provenance.json` records the exact source commit, generator/tool versions and
+hashes of every generated module and declaration. Lemniro stores that provenance
+beside its vendored archive; `package-lock.json` pins the archive integrity.
+Public site builds therefore require no private repository credentials. Future
+updates regenerate the archive from a new reviewed commit. Next consumes the
+`texloom` package without copying adapter implementation into site components.
 
 Rebuild the actual integration scene from this checkout:
 
