@@ -137,6 +137,50 @@ class LectureHarnessTests(unittest.TestCase):
         for source, original in self.input_bytes.items():
             self.assertEqual(source.read_bytes(), original)
 
+    def test_mobile_paragraphs_are_natively_retypeset_at_the_same_font_size_and_manifest_bound(self):
+        for name, expected in EXPECTED.items():
+            with self.subTest(lecture=name):
+                output = self.outputs[name]
+                manifest = lecture.verify_artifacts(output)
+                desktop = read(output / 'vectors/metrics.json')
+                mobile = read(output / 'vectors/mobile/metrics.json')
+                self.assertEqual([row['id'] for row in mobile], expected)
+                self.assertGreater(sum(row['height'] for row in mobile), sum(row['height'] for row in desktop))
+                for relative in ('sources/paragraphs-mobile.tex', 'paragraphs-mobile/bundle.json', 'vectors/mobile/metrics.json'):
+                    self.assertIn(relative, manifest['files'])
+                for profile, width in (('', 640), ('-mobile', 320)):
+                    source = (output / f'sources/paragraphs{profile}.tex').read_text(encoding='utf8')
+                    self.assertEqual(source.count(r'\fontsize{19}{27}'), len(expected))
+                    self.assertEqual(source.count(r'\parbox{' + str(width) + 'bp}'), len(expected))
+                for row in mobile:
+                    self.assertAlmostEqual(row['metrics']['width'], 320, places=2)
+                    self.assertIn('vectors/mobile/' + row['file'], manifest['files'])
+                    svg = ET.fromstring((output / 'vectors/mobile' / row['file']).read_text(encoding='utf8'))
+                    self.assertEqual([float(v) for v in svg.attrib['viewBox'].split()], [0, 0, row['width'], row['height']])
+                page = (output / 'index.html').read_text(encoding='utf8')
+                self.assertEqual(page.count('<source media="(max-width:650px)"'), len(expected))
+                self.assertIn('.math{display:block;max-width:none;width:var(--paragraph-width);height:auto}', page)
+                self.assertIn('.math{width:var(--mobile-paragraph-width)}', page)
+                self.assertIn('.paragraph{max-width:100%;overflow-x:auto}', page)
+                for row in mobile:
+                    self.assertIn('--mobile-paragraph-width:' + str(row['width']) + 'px', page)
+                report = lecture.validate_lecture(output)
+                self.assertTrue(report['renderValidation']['passed'], report)
+                self.assertEqual(report['layout']['paragraphProfiles']['mobile']['fontSizePt'], 19)
+                self.assertEqual(report['layout']['mobileScrollableParagraphs'], [
+                    {'block': row['id'], 'overflowBp': row['overflow']} for row in mobile if row['overflow'] > 1])
+
+    def test_resealed_mobile_metrics_cannot_disagree_with_actual_native_geometry(self):
+        output = self.outputs['commuting-square']
+        with self.changed_artifacts(output, 'vectors/mobile/metrics.json'):
+            metrics = read(output / 'vectors/mobile/metrics.json')
+            metrics[0]['width'] += 20
+            lecture.save(output / 'vectors/mobile/metrics.json', metrics)
+            self.reseal(output)
+            report = lecture.validate_lecture(output)
+            self.assertFalse(report['renderValidation']['passed'])
+            self.assertIn('LECTURE_PARAGRAPH_METRICS', [d['code'] for d in report['renderValidation']['diagnostics']])
+
     def test_old_artifact_bytes_and_changed_source_fail_the_correct_validation_boundary(self):
         output = self.outputs['commuting-square']
         with self.changed_artifacts(output, 'vectors/composition.svg'):

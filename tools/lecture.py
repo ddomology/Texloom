@@ -16,6 +16,7 @@ import re
 import shutil
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
 from compile import compile_scene
 from lecture_source import capture_lecture, apply_repair, scene_dependencies
@@ -103,13 +104,13 @@ def snapshot_package(root, output):
     return result
 
 
-def paragraph_source(notes):
+def paragraph_source(notes, *, width=640):
     lines = [r'\documentclass{article}', r'\usepackage{texloom}', '\\TLSetup{' + notes['setup'] + '}',
              r'\begin{document}', r'\TLScene{Lecture paragraphs}{660}{480}{1}']
     for block in notes['blocks']:
         identifier = block['id']
         # This is a genuine TeX paragraph box. No TeX-to-HTML token substitutions.
-        body = r'\parbox{640bp}{\fontsize{19}{27}\selectfont\raggedright ' + block['tex'] + '}'
+        body = r'\parbox{' + str(width) + r'bp}{\fontsize{19}{27}\selectfont\raggedright ' + block['tex'] + '}'
         lines += ['\\TLText{' + identifier + '-ink}{' + body + '}',
                   '\\TLNode{' + identifier + '}{tex}{' + json.dumps({'resourceId': identifier + '-ink',
                     'x': 4, 'y': 40, 'style': {'fill': '#e9eee5'}}, separators=(',', ':'))[1:-1] + '}']
@@ -141,12 +142,14 @@ def build_lesson(notes, scene_rows):
     return lesson, mapping
 
 
-def web_preview(notes, metrics, scenes):
+def web_preview(notes, metrics, scenes, mobile_metrics):
     esc = html.escape
     metrics = {row['id']: row for row in metrics}
+    mobile_metrics = {row['id']: row for row in mobile_metrics}
     cards = []
     for block in notes['blocks']:
         row = metrics[block['id']]
+        mobile = mobile_metrics[block['id']]
         figures = []
         for scene in scenes:
             if scene['block'] != block['id']:
@@ -154,8 +157,14 @@ def web_preview(notes, metrics, scenes):
             figures.append(f'<figure><iframe loading="lazy" title="{esc(scene["caption"])}" src="scenes/{scene["id"]}/player.html"></iframe>'
                            f'<figcaption>{esc(scene["caption"])}</figcaption></figure>')
         cards.append(f'<article id="{block["id"]}" class="block {block["kind"]}"><div class="eyebrow">{esc(block["kind"])} · {block["id"]}</div>'
-                     f'<h2>{esc(block["title"])}</h2><img class="math" src="vectors/{block["id"]}.svg" '
-                     f'width="{row["width"]}" height="{row["height"]}" alt="{esc(block["say"])}">'
+                     f'<h2>{esc(block["title"])}</h2><div class="paragraph" tabindex="0" role="region" '
+                     f'aria-label="{esc(block["title"])}. Scroll horizontally if needed." '
+                     f'style="--paragraph-width:{row["width"]}px;--mobile-paragraph-width:{mobile["width"]}px">'
+                     f'<picture><source media="(max-width:650px)" srcset="vectors/mobile/{block["id"]}.svg" '
+                     f'width="{mobile["width"]}" height="{mobile["height"]}">'
+                     f'<img class="math" src="vectors/{block["id"]}.svg" '
+                     f'width="{row["width"]}" height="{row["height"]}" alt="{esc(block["say"])}"></picture></div>'
+                     + ('<p class="scroll-hint">Scroll horizontally to read the full formula.</p>' if mobile['overflow'] > 1 else '')
                      + ''.join(figures) + f'<details><summary>Narration &amp; source</summary><p>{esc(block["say"])}</p>'
                      f'<pre>{esc(block["tex"])}</pre></details></article>')
     toc = ''.join(f'<a href="#{b["id"]}">{esc(b["title"])}</a>' for b in notes['blocks'])
@@ -167,10 +176,12 @@ def web_preview(notes, metrics, scenes):
         'p{line-height:1.7}.eyebrow,nav,summary,figcaption,.meta{font:12px/1.6 system-ui,sans-serif}.eyebrow{letter-spacing:.12em;text-transform:uppercase;color:#cbb888}' + \
         '.meta{color:#adbbb2}nav{display:flex;gap:10px 18px;flex-wrap:wrap;margin:24px 0}.block{padding:28px 30px;border:1px solid #344c41;' + \
         'border-radius:12px;background:#172925;margin:18px 0;scroll-margin-top:20px}.theorem,.definition{border-left:3px solid #d9c08a}' + \
-        '.math{display:block;max-width:100%;height:auto}figure{margin:24px 0 0}iframe{display:block;border:1px solid #3d5449;border-radius:10px;width:100%;height:420px;background:#152723}' + \
+        '.paragraph{max-width:100%;overflow-x:auto}.paragraph:focus-visible{outline:2px solid #9dd8bf;outline-offset:4px}' + \
+        '.math{display:block;max-width:none;width:var(--paragraph-width);height:auto}.scroll-hint{display:none;font:12px/1.6 system-ui,sans-serif;color:#afc4b6}' + \
+        'figure{margin:24px 0 0}iframe{display:block;border:1px solid #3d5449;border-radius:10px;width:100%;height:420px;background:#152723}' + \
         'figcaption{color:#afc4b6;padding:10px 0}details{border-top:1px solid #30483e;margin-top:24px;padding-top:14px}summary{cursor:pointer;color:#abc6b4}' + \
         'pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6}footer{padding:30px 0;color:#afbeb5}' + \
-        '@media(max-width:650px){main{padding:28px 12px}.block{padding:22px 14px}iframe{height:300px}}' + \
+        '@media(max-width:650px){main{padding:28px 12px}.block{padding:22px 14px}.math{width:var(--mobile-paragraph-width)}.scroll-hint{display:block}iframe{height:300px}}' + \
         '</style><main><header><div class="eyebrow">Texloom · Lecture authoring</div><h1>' + esc(notes['title']) + \
         f'</h1><p class="meta">{len(notes["blocks"])} semantic blocks · executed TeX typography · shared animated scenes</p>' + \
         '<p class="meta">Content review is pending. Captions are schematic where stated. Narration is a paired script; timing is estimated until audio is measured.</p>' + \
@@ -206,29 +217,34 @@ def compile_lecture(source: Path, output: Path) -> dict:
             dependencies = scene_dependencies(path, folder, package_root=source.parent)
             if any(package_before.get(name) != value for name, value in dependencies.items()):
                 raise ValueError('LECTURE_DEPENDENCY: recorded scene input differs from the source package snapshot')
-            player = 'build-gpu-player.mjs' if 'space3d' in bundle else 'build-player.mjs'
-            run(['node', ROOT / 'tools' / player, folder / 'bundle.json', folder / 'player.html'])
+            run(['node', ROOT / 'tools/build-lecture-player.mjs', folder / 'bundle.json', folder / 'player.html'])
             scene_rows.append({**scene, 'id': identifier, 'file': f'scenes/{identifier}/bundle.json',
                                'duration': bundle['duration'], 'viewport': bundle['viewport']})
         (output / 'sources').mkdir()
         shutil.copyfile(output / '_capture/lecture-sources' / source.name, output / 'sources/notes.tex')
         if sha(output / 'sources/notes.tex') != notes['sourceRevision']:
             raise ValueError('LECTURE_SOURCE_CHANGED: archived source differs from capture')
-        generated = output / 'sources/paragraphs.tex'
-        generated.write_text(paragraph_source(notes), encoding='utf8')
-        compile_scene(generated, output / 'paragraphs', trace_inputs=True)
-        dependencies = scene_dependencies(generated, output / 'paragraphs', package_root=source.parent)
-        if any(Path(name) != generated and package_before.get(name) != value for name, value in dependencies.items()):
-            raise ValueError('LECTURE_DEPENDENCY: recorded paragraph input differs from the source package snapshot')
-        metrics = json.loads(node('text', output / 'paragraphs/bundle.json', output / 'vectors'))
+        paragraph_metrics = {}
+        for profile, width in (('desktop', 640), ('mobile', 320)):
+            suffix = '' if profile == 'desktop' else '-mobile'
+            generated = output / ('sources/paragraphs' + suffix + '.tex')
+            paragraph_folder = output / ('paragraphs' + suffix)
+            vector_folder = output / ('vectors' if profile == 'desktop' else 'vectors/mobile')
+            generated.write_text(paragraph_source(notes, width=width), encoding='utf8')
+            compile_scene(generated, paragraph_folder, trace_inputs=True)
+            dependencies = scene_dependencies(generated, paragraph_folder, package_root=source.parent)
+            if any(Path(name) != generated and package_before.get(name) != value for name, value in dependencies.items()):
+                raise ValueError('LECTURE_DEPENDENCY: recorded paragraph input differs from the source package snapshot')
+            paragraph_metrics[profile] = json.loads(node('text', paragraph_folder / 'bundle.json', vector_folder))
         lesson, blocks = build_lesson(notes, scene_rows)
         save(output / 'notes.json', notes)
         save(output / 'lesson.json', lesson)
         save(output / 'scene-map.json', scene_rows)
-        (output / 'index.html').write_text(web_preview(notes, metrics, scene_rows), encoding='utf8')
+        (output / 'index.html').write_text(web_preview(notes, paragraph_metrics['desktop'], scene_rows, paragraph_metrics['mobile']), encoding='utf8')
         publish = [output / p for p in ('notes.json', 'lesson.json', 'scene-map.json', 'index.html', 'sources/notes.tex',
-                                       'sources/paragraphs.tex', 'paragraphs/bundle.json', 'vectors/metrics.json')]
-        publish += sorted((output / 'vectors').glob('*.svg'))
+                                       'sources/paragraphs.tex', 'paragraphs/bundle.json', 'vectors/metrics.json',
+                                       'sources/paragraphs-mobile.tex', 'paragraphs-mobile/bundle.json', 'vectors/mobile/metrics.json')]
+        publish += sorted((output / 'vectors').rglob('*.svg'))
         for scene in scene_rows:
             publish += [output / scene['file'], output / 'scenes' / scene['id'] / 'player.html']
         files = {p.relative_to(output).as_posix(): sha(p) for p in publish}
@@ -333,16 +349,51 @@ def validate_lecture(output: Path, *, check_inputs=False):
             errors.append({'code': 'LECTURE_REFERENCE', 'block': block['id'], 'message': 'Block, beat and object IDs must agree'})
         if any(scene not in mapping['scenes'] for scene in block['sceneIds']):
             errors.append({'code': 'LECTURE_SCENE_REFERENCE', 'block': block['id']})
-    overflow = [{'block': row['id'], 'overflowBp': row['overflow']} for row in read(output / 'vectors/metrics.json') if row['overflow'] > 1]
+    # Bind both responsive layouts to real TeX resources. The narrow variant is
+    # re-typeset at the same font size, never a scaled copy of the wide page.
+    overflow, mobile_overflow = [], []
+    for profile, width, suffix, vectors in (('desktop', 640, '', 'vectors'), ('mobile', 320, '-mobile', 'vectors/mobile')):
+        try:
+            generated = output / ('sources/paragraphs' + suffix + '.tex')
+            if generated.read_text(encoding='utf8') != paragraph_source(notes, width=width):
+                raise ValueError('Generated paragraph source differs from the captured blocks or typography profile')
+            bundle = read(output / ('paragraphs' + suffix) / 'bundle.json')
+            metrics = read(output / vectors / 'metrics.json')
+            if [r['id'] for r in metrics] != expected or [n['id'] for n in bundle['nodes']] != expected:
+                raise ValueError('Measured paragraph coverage differs from captured blocks')
+            for row, native in zip(metrics, bundle['nodes']):
+                resource = bundle['resources'][native['resourceId']]
+                m, bounds = resource['metrics'], resource['inkBounds']
+                ix, iy, iw, ih = bounds
+                values = [*bounds, m['width'], m['height'], m['depth'], row['width'], row['height'], row['overflow']]
+                if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in values):
+                    raise ValueError('Non-finite paragraph geometry')
+                measured_width = math.ceil(max(m['width'], ix + iw) - min(0, ix) + 8)
+                measured_height = math.ceil(max(m['depth'], iy + ih) - min(-m['height'], iy) + 8)
+                if (row['metrics'] != m or row['inkBounds'] != bounds or abs(m['width'] - width) > .01
+                    or row['width'] != measured_width or row['height'] != measured_height
+                    or abs(row['overflow'] - max(0, iw - m['width'])) > .000001
+                    or row['file'] != row['id'] + '.svg' or measured_width <= 0 or measured_height <= 0):
+                    raise ValueError('Paragraph metrics differ from the native TeX resource')
+                svg = ET.parse(output / vectors / row['file']).getroot()
+                if svg.tag != '{http://www.w3.org/2000/svg}svg' or [float(v) for v in svg.attrib['viewBox'].split()] != [0, 0, measured_width, measured_height]:
+                    raise ValueError('Paragraph vector viewport differs from measured ink')
+                if row['overflow'] > 1:
+                    target = overflow if profile == 'desktop' else mobile_overflow
+                    target.append({'block': row['id'], 'overflowBp': row['overflow']})
+        except (ValueError, KeyError, TypeError, OSError, ET.ParseError) as error:
+            errors.append({'code': 'LECTURE_PARAGRAPH_METRICS', 'profile': profile, 'message': str(error)})
     for row in overflow:
         errors.append({'code': 'LECTURE_TEXT_OVERFLOW', **row})
-    for path in [output / 'paragraphs/bundle.json', *[inside(output, s['file']) for s in mapping['scenes'].values()]]:
+    for path in [output / 'paragraphs/bundle.json', output / 'paragraphs-mobile/bundle.json', *[inside(output, s['file']) for s in mapping['scenes'].values()]]:
         run(['node', ROOT / 'tools/validate-bundle.mjs', path])
     return {'contract': 'texloom-authoring-report/1', 'sourceRevision': manifest['sourceRevision'],
             'artifactRevision': manifest['artifactRevision'], 'renderValidation': {'passed': not errors, 'diagnostics': errors},
             'semanticCoverage': {'expectedBlocks': len(expected), 'mappedBlocks': len(mapped), 'omissions': omissions,
                                  'scope': 'declared block/cue correspondence; no automatic theorem or spoken-equivalence proof'},
-            'layout': {'paragraphOverflow': overflow, 'overlaps': [],
+            'layout': {'paragraphOverflow': overflow, 'mobileScrollableParagraphs': mobile_overflow,
+                       'paragraphProfiles': {'desktop': {'widthBp': 640, 'fontSizePt': 19},
+                                             'mobile': {'widthBp': 320, 'fontSizePt': 19, 'overflowPolicy': 'local horizontal scroll'}}, 'overlaps': [],
                        'scope': 'Web paragraphs occupy separate CSS flow boxes; Chalkspace measured overlap audit is separate'},
             'manualRepairCount': manifest['manualRepairCount'],
             'mathReview': {'status': 'unresolved', 'required': 'Independent mathematical and spoken-script review'},

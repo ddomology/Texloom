@@ -108,10 +108,25 @@ The build directory contains:
 | `lesson.json` | Ordered paragraph objects and spoken beats for the consumer |
 | `authoring-map.json` | Block, beat, object, scene, and source correspondence |
 | `scene-map.json`, `scenes/` | Referenced native scenes and their playable builds |
-| `vectors/`, `paragraphs/bundle.json` | Measured native TeX paragraph rendering |
+| `vectors/`, `paragraphs/bundle.json` | Measured native TeX desktop paragraphs (640 bp width) |
+| `vectors/mobile/`, `paragraphs-mobile/bundle.json` | Separately typeset mobile paragraphs (320 bp width) |
 | `manifest.json` | Source and artifact revisions plus file hashes |
 | `report.json`, `status.json` | Validation evidence and build status |
 | `sources/` | The captured lecture source and generated paragraph scene source |
+
+The reading page selects mobile paragraph vectors at viewport widths of 650 px
+or less. Both layouts are genuinely typeset by TeX at the same 19 pt font size;
+the narrow version reflows prose instead of shrinking a desktop paragraph.
+Native geometry, metrics, generated TeX, and both sets of SVGs are included in
+the build manifest. Validation compares each metrics record with its measured
+native resource and SVG viewport.
+
+An intrinsically wide formula can extend beyond a mobile paragraph's 320 bp
+line width. Its full vector remains readable at the original scale in a
+keyboard-focusable horizontal scroll region, with a visible scrolling hint.
+These cases are recorded under `layout.mobileScrollableParagraphs`; they do
+not count as clipped content. Desktop paragraph overflow still fails the
+render validation gate. Text is not reduced to force either layout to fit.
 
 Sample a referenced animation through the same native runtime:
 
