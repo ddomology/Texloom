@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{texloom-lecture}
+\loomlecturesetup{\usepackage{amsmath,amssymb}}
+\begin{document}
+\loomlecture{commuting-square}{A commuting square: two routes, one function}
+
+\loomblock{composition}{definition}{Read composition from right to left}
+{For functions $f:A\to B$ and $h:B\to D$, their composite $h\circ f:A\to D$ is defined by $(h\circ f)(a)=h(f(a))$. The function $f$ is applied first.}
+{If f maps A to B and h maps B to D, the composite h after f maps A to D. At an input a, it has value h of f of a. We apply f first, even though it appears on the right in the composition symbol.}
+
+\loomblock{square}{definition}{What it means for a square to commute}
+{Consider functions $f:A\to B$, $g:A\to C$, $h:B\to D$, and $k:C\to D$. The square commutes when $h\circ f=k\circ g$ as functions $A\to D$. Equivalently, $h(f(a))=k(g(a))$ for every $a\in A$.}
+{A square consists of four functions with these matching domains and codomains. It commutes when the route through B and the route through C give the same function from A to D. The equality must hold for every input in A.}
+
+\loomblock{maps}{example}{Four explicitly defined functions}
+{Take $A=B=C=D=\mathbb R$, regarded as four labeled copies. Define
+\[f(x)=x+1,\qquad g(x)=2x,\qquad h(y)=2y,\qquad k(z)=z+2.\]
+Every displayed function has the domain and codomain specified by the square.}
+{For this example, all four sets are labeled copies of the real numbers. Define f of x to be x plus one, g of x to be two x, h of y to be two y, and k of z to be z plus two. Each formula defines a function along its indicated edge.}
+\loomsceneuse{maps}{diagrams/commuting-square.tex}{Two animated routes represent the composites h after f and k after g. Their common endpoint represents equality of the resulting functions, not a numerical coordinate.}
+
+\loomblock{upper-route}{proof}{First go right, then down}
+{For an arbitrary $x\in\mathbb R$, applying $f$ and then $h$ gives
+\[(h\circ f)(x)=h(x+1)=2(x+1)=2x+2.\]}
+{Start with any real number x. Going right applies f and gives x plus one. Going down then applies h, giving twice the quantity x plus one, which is two x plus two.}
+
+\loomblock{lower-route}{proof}{First go down, then right}
+{Applying $g$ and then $k$ to the same input gives
+\[(k\circ g)(x)=k(2x)=2x+2.\]}
+{Now start with that same input x and take the other route. Going down applies g and gives two x. Going right applies k and adds two, again giving two x plus two.}
+
+\loomblock{commutativity}{proof}{Conclude equality of functions}
+{Both composites have domain $A=\mathbb R$ and codomain $D=\mathbb R$, and both take every $x$ to $2x+2$. Hence $h\circ f=k\circ g$, so this square commutes.}
+{The two composites have the same domain and codomain. We have also shown that they agree at every real input. They are therefore equal as functions, which proves that the square commutes.}
+
+\loomblock{numerical-check}{example}{A check at one input}
+{At $x=3$, the upper route gives $3\mapsto4\mapsto8$, while the lower route gives $3\mapsto6\mapsto8$. This illustrates the identity; a check at one input alone would not prove equality of functions.}
+{At the input three, the upper route goes from three to four to eight. The lower route goes from three to six to eight. This illustrates our proof. Checking only this one input would not, by itself, establish an identity of functions.}
+
+\loomblock{interpretation}{remark}{Which equality was proved?}
+{Commutativity here is the equation $h\circ f=k\circ g$. It does not assert $f\circ g=g\circ f$. Indeed, for these real formulas, $(f\circ g)(x)=2x+1$ and $(g\circ f)(x)=2x+2$, so those two functions are different.}
+{The equality in this diagram is h after f equals k after g. It is not a claim that f and g commute with each other. In fact, f after g gives two x plus one, while g after f gives two x plus two. Those functions differ.}
+\end{document}

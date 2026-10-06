@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage{texloom-lecture}
+\loomlecturesetup{\usepackage{amsmath,amssymb}}
+\begin{document}
+\loomlecture{hausdorff-compact-closed}{Compact subsets of Hausdorff spaces are closed}
+
+\loomblock{statement}{theorem}{The claim}
+{Let $X$ be a Hausdorff topological space, and let $K\subseteq X$ be compact with its subspace topology. Then $K$ is closed in $X$.}
+{Let X be a Hausdorff topological space, and let K be a compact subset, with its subspace topology. We will prove that K is closed in X.}
+
+\loomblock{hausdorff}{definition}{Separate two distinct points}
+{A space is Hausdorff if any two distinct points have disjoint open neighborhoods. Thus, for $x\ne y$, there are open sets $U_y,V_y\subseteq X$ with $y\in U_y$, $x\in V_y$, and $U_y\cap V_y=\varnothing$.}
+{The Hausdorff property separates two distinct points by disjoint open neighborhoods. We name the neighborhood of y, U sub y, and the neighborhood of x, V sub y. Their intersection is empty.}
+
+\loomblock{compactness}{definition}{The form of compactness we need}
+{For a compact subset $K$, every cover of $K$ by sets open in $X$ has a finite subcover: intersecting the covering sets with $K$ gives an open cover in the subspace topology.}
+{We will use covers of K by sets open in X. Intersecting each covering set with K gives a cover by sets open in the subspace topology. Compactness therefore gives a finite subcover.}
+
+\loomblock{empty-case}{proof}{Handle the empty subset}
+{If $K=\varnothing$, then $X\setminus K=X$ is open, so $K$ is closed. Henceforth suppose $K\ne\varnothing$. It remains to prove that $X\setminus K$ is open.}
+{If K is empty, its complement is X, which is open, so K is closed. We may therefore suppose K is nonempty. Our remaining goal is to prove that the complement of K is open.}
+
+\loomblock{fix-point}{proof}{Fix one point outside the compact set}
+{Let $x\in X\setminus K$ be arbitrary. We will construct an open set $V$ such that $x\in V\subseteq X\setminus K$. If $X\setminus K$ is empty, it is already open and there is nothing to construct.}
+{Fix an arbitrary point x outside K. We will find an open neighborhood V of x contained in the complement of K. If the complement is empty, it is already open and this construction is unnecessary.}
+
+\loomblock{local-separation}{proof}{One separation for each point of K}
+{For every $y\in K$, we have $y\ne x$. By the Hausdorff property, choose open sets $U_y,V_y\subseteq X$ such that $y\in U_y$, $x\in V_y$, and $U_y\cap V_y=\varnothing$. The family $\{U_y:y\in K\}$ covers $K$.}
+{For each point y in K, y is distinct from x. Choose disjoint open neighborhoods U sub y of y and V sub y of x. Since every y belongs to its own U sub y, these U sets cover K.}
+\loomsceneuse{local-separation}{diagrams/hausdorff-separation.tex}{Schematic neighborhoods for one point y. The illustration does not assume that X is a metric or Euclidean space.}
+
+\loomblock{finite-cover}{proof}{Use compactness once}
+{Compactness gives points $y_1,\ldots,y_m\in K$, with $m\ge1$, such that
+\[K\subseteq U_{y_1}\cup\cdots\cup U_{y_m}.\]
+Only these finitely many neighborhoods will be needed.}
+{Compactness gives finitely many points y one through y m whose U neighborhoods cover K. Since K is nonempty, at least one neighborhood is needed. From now on, we use only this finite collection.}
+
+\loomblock{finite-intersection}{proof}{Build a common open neighborhood of x}
+{Set $V=V_{y_1}\cap\cdots\cap V_{y_m}$. This is open because it is a finite intersection of open sets. Also $x\in V$, because $x$ belongs to every $V_{y_i}$.}
+{Define V to be the intersection of the selected V neighborhoods. It is open because the intersection is finite. Every selected neighborhood contains x, so their intersection also contains x.}
+
+\loomblock{disjointness}{proof}{Check that V misses all of K}
+{Suppose, for a contradiction, that $z\in V\cap K$. The finite subcover gives an index $i$ with $z\in U_{y_i}$. Since $z\in V\subseteq V_{y_i}$, we obtain $z\in U_{y_i}\cap V_{y_i}$, contradicting their disjointness. Thus $V\cap K=\varnothing$.}
+{Suppose a point z belonged to both V and K. The finite subcover places z in some U sub y i. Membership in V also places z in V sub y i. Those two neighborhoods are disjoint, a contradiction. Thus V misses K.}
+
+\loomblock{conclusion}{proof}{The complement is open}
+{We have found an open neighborhood $V$ of the arbitrary point $x\in X\setminus K$, with $V\subseteq X\setminus K$. Therefore $X\setminus K$ is open, and $K$ is closed in $X$. The finite subcover is what makes the final intersection open.}
+{Every point outside K has an open neighborhood contained in its complement. The complement is therefore open, so K is closed in X. The key role of compactness was to make the final intersection finite, and hence open.}
+\end{document}

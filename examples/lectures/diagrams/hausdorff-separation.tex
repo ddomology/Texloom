@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\loomsetup{\usepackage{cmbright}
+  \definecolor{mint}{HTML}{9BD6BF}
+  \definecolor{gold}{HTML}{EACB8D}
+  \definecolor{ink}{HTML}{EDEEE5}
+  \definecolor{muted}{HTML}{A5B9AD}}
+\loomset{label/.style={text=ink,font=\fontsize{23}{27}\selectfont},
+  small/.style={text=muted,font=\fontsize{13}{17}\selectfont}}
+\begin{document}
+\begin{loomscene}[width=760,height=420,duration=8,title={Separate x from one point of K}]
+\loomnode[label] (title) at (380,35) {Separate $x$ from one point of $K$};
+\loompath (compact) {\draw[mint,opacity=.65,line width=1.5bp,dashed] (212,215) ellipse[x radius=163bp,y radius=117bp];};
+\loomnode[label,text=mint] (compact-label) at (88,122) {$K$};
+\loomgeometry[draw=gold,line width=2bp,fill=none] (neighborhood-u)
+  {(157,215) .. controls (139,127) and (298,123) .. (312,213)
+    .. controls (323,305) and (169,302) .. (157,215)};
+\loomgeometry[draw=mint,line width=2bp,fill=none] (neighborhood-v)
+  {(486,214) .. controls (477,129) and (642,131) .. (654,214)
+    .. controls (665,302) and (496,305) .. (486,214)};
+\loomnode[label,text=gold] (u-label) at (241,140) {$U_y$};
+\loomnode[label,text=mint] (v-label) at (574,139) {$V_y$};
+\TLNode{y-point}{point}{"x":235,"y":215,"r":4,"style":{"fill":"#EACB8D"}}
+\TLNode{x-point}{point}{"x":569,"y":215,"r":4,"style":{"fill":"#EDEEE5"}}
+\loomnode[label,text=gold] (y-label) at (255,216) {$y$};
+\loomnode[label] (x-label) at (590,216) {$x$};
+\loomnode[label] (identity) at (380,369) {$y\in U_y,\quad x\in V_y,\quad U_y\cap V_y=\varnothing$};
+\loomnode[small] (caption) at (380,403) {Schematic only: no Euclidean or metric structure is assumed.};
+% The points and disjointness remain fixed while the boundaries vary.
+\loomcontrol[duration=4] (neighborhood-u) {contour-0}{segment-0}{c1}{(174,150)};
+\loomcontrol[duration=4] (neighborhood-u) {contour-0}{segment-0}{c2}{(276,111)};
+\loomcontrol[delay=4,duration=4] (neighborhood-u) {contour-0}{segment-0}{c1}{(139,127)};
+\loomcontrol[delay=4,duration=4] (neighborhood-u) {contour-0}{segment-0}{c2}{(298,123)};
+\loomcontrol[duration=4] (neighborhood-v) {contour-0}{segment-1}{c1}{(631,318)};
+\loomcontrol[duration=4] (neighborhood-v) {contour-0}{segment-1}{c2}{(510,283)};
+\loomcontrol[delay=4,duration=4] (neighborhood-v) {contour-0}{segment-1}{c1}{(665,302)};
+\loomcontrol[delay=4,duration=4] (neighborhood-v) {contour-0}{segment-1}{c2}{(496,305)};
+\end{loomscene}
+\end{document}

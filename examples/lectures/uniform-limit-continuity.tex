@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{texloom-lecture}
+\loomlecturesetup{\usepackage{amsmath,amssymb}}
+\begin{document}
+\loomlecture{uniform-limit-continuity}{A uniform limit of continuous functions is continuous}
+
+\loomblock{statement}{theorem}{Assumptions and conclusion}
+{Let $(X,d)$ be a metric space. Suppose each $f_n:X\to\mathbb R$ is continuous, and $f_n\to f:X\to\mathbb R$ uniformly on $X$. Then $f$ is continuous on $X$.}
+{Let X be a metric space with metric d. Suppose every function f sub n from X to the real numbers is continuous. Suppose also that this sequence converges uniformly on X to a function f. We will prove that f is continuous on X.}
+
+\loomblock{uniform-convergence}{definition}{One index works on the whole domain}
+{Uniform convergence means that for every $\eta>0$ there exists $N\in\mathbb N$ such that, for every $n\ge N$ and every $x\in X$, we have $|f_n(x)-f(x)|<\eta$. The index $N$ may depend on $\eta$, but not on $x$.}
+{Uniform convergence says that for each positive error tolerance eta, one index N works for every later function and every point of X. Beyond N, the error is less than eta everywhere. N may depend on eta, but it cannot depend on the point x.}
+
+\loomblock{strategy}{explanation}{Compare through one continuous function}
+{We will compare $f(x)$ with $f(a)$ by inserting $f_N(x)$ and $f_N(a)$. Two errors will be controlled by uniform convergence. The middle error will be controlled by continuity of the single function $f_N$.}
+{To compare f of x with f of a, we insert f sub N of x and f sub N of a. Uniform convergence will control the first and last errors. Continuity of one fixed function, f sub N, will control the middle error.}
+
+\loomblock{fix-point}{proof}{Fix the point and error tolerance}
+{If $X=\varnothing$, continuity is vacuous. Otherwise fix $a\in X$ and $\varepsilon>0$. We must find $\delta>0$ such that $d(x,a)<\delta$ implies $|f(x)-f(a)|<\varepsilon$ for every $x\in X$.}
+{If X is empty, there is nothing to prove. Otherwise, fix a point a in X and a positive epsilon. Our goal is to find a positive delta such that every x within delta of a satisfies the desired error bound for f.}
+
+\loomblock{choose-index}{proof}{Choose N before choosing delta}
+{By uniform convergence with $\eta=\varepsilon/3$, choose $N$ such that
+\[|f_N(z)-f(z)|<\varepsilon/3\qquad\text{for every }z\in X.\]
+In particular this one estimate holds both at $z=x$ and at $z=a$.}
+{Use uniform convergence with tolerance epsilon divided by three. Choose N so that the error between f sub N and f is less than epsilon divided by three at every point z of X. The same choice of N therefore works at both x and a.}
+
+\loomblock{choose-radius}{proof}{Now use continuity of f sub N}
+{The function $f_N$ is continuous at $a$. Hence there is $\delta>0$ such that, for every $x\in X$,
+\[d(x,a)<\delta\quad\Longrightarrow\quad |f_N(x)-f_N(a)|<\varepsilon/3.\]}
+{Now N is fixed. Because f sub N is continuous at a, there is a positive delta such that points x within delta of a have f sub N values within epsilon divided by three of f sub N of a.}
+
+\loomblock{triangle-inequality}{proof}{Split the difference into three terms}
+{For any $x\in X$ with $d(x,a)<\delta$, the triangle inequality gives
+\[\begin{aligned}|f(x)-f(a)|\le{}&|f(x)-f_N(x)|\\&+|f_N(x)-f_N(a)|\\&+|f_N(a)-f(a)|.\end{aligned}\]}
+{Take any x within delta of a. Insert the two intermediate values and apply the triangle inequality. The distance from f of x to f of a is at most the error at x, plus the change in f sub N, plus the error at a.}
+\loomsceneuse{triangle-inequality}{diagrams/epsilon-three-terms.tex}{A schematic chain of three error bounds. The positions are not ordered real function values and are not drawn to scale.}
+
+\loomblock{three-bounds}{proof}{Apply the three estimates}
+{The first and third terms are each less than $\varepsilon/3$ by uniform convergence. The middle term is less than $\varepsilon/3$ by the choice of $\delta$. Consequently,
+\[|f(x)-f(a)|<\varepsilon/3+\varepsilon/3+\varepsilon/3=\varepsilon.\]}
+{Uniform convergence makes the first and third terms less than epsilon divided by three. Our choice of delta gives the same bound for the middle term. Adding the three strict bounds gives a total error strictly less than epsilon.}
+
+\loomblock{conclusion}{proof}{Finish the continuity argument}
+{We have found the required $\delta$ for every $\varepsilon>0$, so $f$ is continuous at $a$. Since $a\in X$ was arbitrary, $f$ is continuous on $X$. The proof did not require one $\delta$ to work for all points $a$.}
+{For every positive epsilon, we found a suitable delta. Thus f is continuous at a. Since a was arbitrary, f is continuous on X. Notice that ordinary continuity allows this delta to depend on the point a.}
+
+\loomblock{why-uniform}{remark}{Pointwise convergence is insufficient}
+{On $[0,1]$, the continuous functions $f_n(x)=x^n$ converge pointwise to a function that is $0$ for $0\le x<1$ and $1$ at $x=1$. This limit is discontinuous at $1$. Thus pointwise convergence alone cannot replace uniform convergence in the theorem.}
+{On the closed interval from zero to one, consider x to the n. These continuous functions converge pointwise to zero at every point less than one, and to one at the endpoint one. The limit is discontinuous there. Pointwise convergence is therefore not enough for our theorem.}
+\end{document}

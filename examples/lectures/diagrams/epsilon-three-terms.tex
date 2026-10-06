@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage{texloom-tikz}
+\loomsetup{\usepackage{cmbright}
+  \definecolor{mint}{HTML}{9BD6BF}
+  \definecolor{gold}{HTML}{EACB8D}
+  \definecolor{ink}{HTML}{EDEEE5}
+  \definecolor{muted}{HTML}{A5B9AD}}
+\loomset{label/.style={text=ink,font=\fontsize{22}{27}\selectfont},
+  small/.style={text=muted,font=\fontsize{13}{17}\selectfont}}
+\begin{document}
+\begin{loomscene}[width=860,height=400,duration=8,title={Three errors, each less than epsilon over three}]
+\loomnode[label] (title) at (430,34) {One fixed $N$, then one local $\delta$};
+\loomgeometry[draw=mint,line width=3bp,reveal=0] (error-x) {(115,165)--(325,165)};
+\loomgeometry[draw=gold,line width=3bp,reveal=0] (middle-error) {(325,165)--(535,165)};
+\loomgeometry[draw=mint,line width=3bp,reveal=0] (error-a) {(535,165)--(745,165)};
+\TLTrack{error-x}{reveal}{linear}{[[0,0],[1,1],[8,1]]}
+\TLTrack{middle-error}{reveal}{linear}{[[0,0],[1.5,0],[2.5,1],[8,1]]}
+\TLTrack{error-a}{reveal}{linear}{[[0,0],[3,0],[4,1],[8,1]]}
+\TLNode{point-fx}{point}{"x":115,"y":165,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{point-fnx}{point}{"x":325,"y":165,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{point-fna}{point}{"x":535,"y":165,"r":4,"style":{"fill":"#EDEEE5"}}
+\TLNode{point-fa}{point}{"x":745,"y":165,"r":4,"style":{"fill":"#EDEEE5"}}
+\loomnode[label] (fx) at (115,207) {$f(x)$};
+\loomnode[label] (fnx) at (325,207) {$f_N(x)$};
+\loomnode[label] (fna) at (535,207) {$f_N(a)$};
+\loomnode[label] (fa) at (745,207) {$f(a)$};
+\loomnode[label,text=mint] (bound-x) at (220,128) {$<\varepsilon/3$};
+\loomnode[label,text=gold] (bound-middle) at (430,128) {$<\varepsilon/3$};
+\loomnode[label,text=mint] (bound-a) at (640,128) {$<\varepsilon/3$};
+\loomnode[small,text=mint] (reason-x) at (220,91) {uniform convergence};
+\loomnode[small,text=gold] (reason-middle) at (430,91) {continuity of $f_N$};
+\loomnode[small,text=mint] (reason-a) at (640,91) {uniform convergence};
+\loomnode[label] (sum) at (430,288) {$|f(x)-f(a)|<\varepsilon/3+\varepsilon/3+\varepsilon/3=\varepsilon$};
+\loomnode[small] (condition) at (430,337) {$d(x,a)<\delta$ controls the middle term; the same $N$ controls both endpoint errors.};
+\loomnode[small] (caption) at (430,380) {Schematic chain of estimates: positions are not ordered real values or drawn to scale.};
+\end{loomscene}
+\end{document}

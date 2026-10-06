@@ -1,0 +1,24 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{texloom-lecture}[2026/10/04 Executed lecture-note capture]
+\RequirePackage{xparse}
+\newwrite\TLLrecords
+\newwrite\TLLfield
+\newcount\TLLserial
+\TLLserial=0
+\immediate\openout\TLLrecords=\jobname.tl-lecture.jsonl\relax
+\AtBeginDocument{\null}
+\AtEndDocument{\immediate\closeout\TLLrecords}
+\def\TLLstart#1{%
+  \global\advance\TLLserial by 1
+  \edef\TLLbase{\jobname.tl-lecture-\the\TLLserial}%
+  \immediate\write\TLLrecords{\string{"type":"#1","file":"\TLLbase","line":\the\inputlineno\string}}}
+\long\def\TLLwrite#1#2{%
+  \immediate\openout\TLLfield=\TLLbase.#1.txt\relax
+  \immediate\write\TLLfield{\detokenize{#2}}%
+  \immediate\closeout\TLLfield}
+\NewDocumentCommand\loomlecture{m m}{\TLLstart{lecture}\TLLwrite{id}{#1}\TLLwrite{title}{#2}}
+\NewDocumentCommand\loomlecturesetup{+m}{\TLLstart{setup}\TLLwrite{setup}{#1}}
+\NewDocumentCommand\loomblock{m m m +m +m}{%
+  \TLLstart{block}\TLLwrite{id}{#1}\TLLwrite{kind}{#2}\TLLwrite{title}{#3}\TLLwrite{tex}{#4}\TLLwrite{say}{#5}}
+\NewDocumentCommand\loomsceneuse{m m m}{\TLLstart{scene}\TLLwrite{block}{#1}\TLLwrite{file}{#2}\TLLwrite{caption}{#3}}
+\endinput
